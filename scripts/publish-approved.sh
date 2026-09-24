@@ -26,8 +26,9 @@ for item in "${items[@]}"; do
     continue
   fi
   echo "正在发布：$code"
-  if bash "$root/scripts/deploy-student.sh" "$code" "$item"; then
-    url="https://codexai.site/works/$code/money/"
+  if result="$(bash "$root/scripts/deploy-student.sh" "$code" "$item")"; then
+    printf '%s\n' "$result"
+    url="$(printf '%s\n' "$result" | sed -n 's/^作品已发布：//p')"
     qr="$root/preparation/二维码/学生作品/$code.png"
     printf '%s,%s,%s,成功\n' "$code" "$url" "$qr" >> "$report"
     ((success+=1))

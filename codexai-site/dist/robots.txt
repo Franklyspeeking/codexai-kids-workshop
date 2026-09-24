@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /share/
+Disallow: /preview/
+Disallow: /works/
+Disallow: /projects/
+Disallow: /teacher/
+Disallow: /student/
+Disallow: /api/
+Sitemap: https://codexai.site/sitemap.xml

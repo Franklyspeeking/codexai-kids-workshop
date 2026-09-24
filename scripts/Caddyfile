@@ -8,8 +8,10 @@ codexai.site {
     @code path *.html *.js *.css *.webmanifest
     header @code Cache-Control "no-cache"
     header /money/manifest.webmanifest Content-Type application/manifest+json
-    @works path /works/* /projects/*
+    @works path /works/* /projects/* /share/*
     header @works Content-Security-Policy "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    header @works X-Robots-Tag "noindex, nofollow, noarchive"
+    header @works Referrer-Policy no-referrer
     @preview path /preview/*
     header @preview Content-Security-Policy "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
     handle /teacher/* {
@@ -25,6 +27,15 @@ codexai.site {
         reverse_proxy 127.0.0.1:8766
     }
     handle /preview/* {
+        reverse_proxy 127.0.0.1:8766
+    }
+    handle /share/* {
+        reverse_proxy 127.0.0.1:8766
+    }
+    handle /works/* {
+        reverse_proxy 127.0.0.1:8766
+    }
+    handle /projects/* {
         reverse_proxy 127.0.0.1:8766
     }
     handle {

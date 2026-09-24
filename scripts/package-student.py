@@ -20,4 +20,4 @@ if n!=1:raise SystemExit('未找到config.js作品id，请手工检查输出后�
 f.write_text(text)
 m=out/'money/manifest.webmanifest';d=json.loads(m.read_text());d.update(id='./',start_url='./',scope='./');m.write_text(json.dumps(d,ensure_ascii=False))
 (out/'index.html').write_text('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=money/"><a href="money/">打开我的作品</a>')
-print(out);print('建议独立地址：https://codexai.site/works/'+a.code+'/money/');print('打包不代表安全审查通过，发布前请按验收清单检查。')
+print(out);print('作品打包完成；家长链接须在教师后台审核发布后生成。');print('打包不代表安全审查通过，发布前请按验收清单检查。')

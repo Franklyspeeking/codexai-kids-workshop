@@ -11,7 +11,7 @@ function credentials() {
 }
 async function request(path, options = {}) {
   const response = await fetch(path, options);
-  const data = await response.json();
+  const data = await response.json().catch(()=>{throw Error('暂时连不上上传服务，请检查网络后重试。');});
   if (!response.ok) throw Error(data.error || '服务器暂时无法处理，请稍后重试');
   return data;
 }
@@ -21,7 +21,7 @@ function delivery(data) {
   publishedUrl = data.url;
   $('work-link').href = data.url;
   $('work-link').textContent = data.url;
-  $('qr').src = '/api/works/' + encodeURIComponent(data.code) + '/qr.png';
+  $('qr').src = data.qr;
 }
 async function check() {
   if (checking) return;
