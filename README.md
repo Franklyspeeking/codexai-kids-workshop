@@ -1,6 +1,6 @@
-# 儿童 AI 创作工作坊｜首课准备
+# 儿童 AI 创作工作坊｜课程与作品平台
 
-正式网站：[codexai.site](https://codexai.site/) · 教师演示作品：[零花钱计划师](https://codexai.site/money/) · [学生下载入口](https://codexai.site/classroom/) · [学生提交入口](https://codexai.site/classroom/submit/) · [教师工作台](https://codexai.site/teacher/)
+正式网站：[codexai.site](https://codexai.site/) · 教师演示作品：[零花钱计划师](https://codexai.site/money/) · [学生下载入口](https://codexai.site/classroom/) · [学生提交入口](https://codexai.site/classroom/submit/) · [教师工作台](https://www.codexai.site/teacher/) · [学生后台](https://www.codexai.site/student/) · [学生作品展](https://codexai.site/showcase/)
 
 本文件夹是老师的本地工作区。`codexai-site/dist` 是已部署的公开网站；`preparation` 是课堂资料；`scripts` 是发布工具。不要把整个工作区上传到公网。九张 PNG 为用户提供的原始海报，网站使用压缩后的 JPG。
 
@@ -11,6 +11,7 @@
 - [渠道演示与家长使用卡](preparation/03-渠道演示与家长使用卡.md)：演示顺序和家长手机操作。
 - [发布与长期维护手册](preparation/04-发布与维护手册.md)：收作业、审核、上线、回滚、备份。
 - [在线收件与发布](preparation/05-在线收件与发布.md)：正式班的建班、学生上传、教师审核、家长交付和备份。
+- [多课程平台产品方案与 PRD](preparation/06-多课程平台产品方案与PRD.md)：教师、学生和作品展的长期结构。
 - [学生模板说明](preparation/templates/README.md)：`starter` 是课堂起点，`standard` 是救援版本。
 - [网站二维码](preparation/二维码/课程网站.png) / [示范工具二维码](preparation/二维码/零花钱计划师.png)。
 
@@ -22,6 +23,15 @@
 4. 老师按名单把各自链接或二维码交给家长。家长首次联网打开，等离线准备完成，添加到手机桌面，并从桌面入口重开、记一笔、飞行模式复测。课后双击[一键备份课堂作品.command](一键备份课堂作品.command)保存 VPS 之外的副本。
 
 在线收件服务只接受老师预先生成的编号与上传码；学生作品经过自动检查后仍需老师确认，才会公开发布。每个编号沿用同一地址，服务器保留原 ZIP 和版本。手机账本留在该手机浏览器中，不会同步到服务器。首次联网后页面会准备离线缓存，但浏览器清理数据或换手机仍可能丢失账本，家长要定期导出备份。
+
+## 新课题与多日营
+
+1. 老师打开[教师工作台](https://www.codexai.site/teacher/)：先创建班级并下载账号名单；再创建“半天课”或 1–30 天“创作营”，按天添加课题，给每个通用网页课题上传 ZIP 起始包，然后把课程分配给班级。已有“零花钱计划师”自动分配给现有和新班级。
+2. 孩子打开[我的创作空间](https://www.codexai.site/student/)，使用原编号与访问码登录。每个课题都能单独下载起始包、上传项目 ZIP、查看老师反馈和已发布作品。新增通用课题的 ZIP 须有一个 `index.html`，放在压缩包根目录或唯一的一层项目文件夹内；不依赖外部 CDN。
+3. 老师按“学生 × 课题”查看提交，打开隔离预览，退回或发布。每个课题有固定的家长链接和二维码；旧版本保留，更新作品不改变链接。老师可决定是否把该作品放入[公开作品展](https://codexai.site/showcase/)，从作品展移出不会使家长链接失效。
+4. 家长首次联网打开链接，再按手机浏览器的“添加到主屏幕”操作。通用课题已自动配离线页面缓存；需在家长实际手机上打开一次后断网验证。首课账本仅存在当前手机，换手机不会自动同步数据。
+
+本地备份脚本会保存数据库、原始 ZIP 和所有已发布版本。真实姓名与家长联系方式仅存于老师下载后保管的本地名单；不要上传到作品展。
 
 ## 尚需老师现场完成
 

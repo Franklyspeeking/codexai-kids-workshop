@@ -11,8 +11,8 @@ fi
 release="$(date -u +%Y%m%dT%H%M%SZ)"
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
-cp "$root/scripts/upload-service.py" "$root/scripts/unpack-student-zip.py" "$root/scripts/package-student.py" "$scratch/"
-tar -czf "$scratch/service.tar.gz" -C "$scratch" upload-service.py unpack-student-zip.py package-student.py
+cp "$root/scripts/upload-service.py" "$root/scripts/unpack-student-zip.py" "$root/scripts/package-student.py" "$root/scripts/prepare-web-zip.py" "$scratch/"
+tar -czf "$scratch/service.tar.gz" -C "$scratch" upload-service.py unpack-student-zip.py package-student.py prepare-web-zip.py
 ssh_args=(-i "$key_path" -o IdentitiesOnly=yes -o ConnectTimeout=12)
 retry() {
   local n

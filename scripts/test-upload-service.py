@@ -1,10 +1,12 @@
 """End-to-end API smoke test without touching the real VPS."""
 import importlib.util
+import io
 import json
 import os
 import tempfile
 import threading
 import unittest
+from zipfile import ZipFile
 from concurrent.futures import ThreadPoolExecutor
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -35,17 +37,20 @@ class UploadFlow(unittest.TestCase):
     def call(self, path, method='GET', data=None, headers=None, status=200):
         req = Request(self.base+path, data=data, method=method, headers=headers or {})
         try:
-            with urlopen(req) as resp: code, body, kind = resp.status,resp.read(),resp.headers.get('Content-Type')
+            with urlopen(req) as resp:
+                code, body, kind = resp.status,resp.read(),resp.headers.get('Content-Type')
+                self.last_headers = resp.headers
         except HTTPError as exc:
             code, body, kind = exc.code,exc.read(),exc.headers.get('Content-Type')
+            self.last_headers = exc.headers
             exc.close()
         self.assertEqual(code,status,body[:500])
-        return body if kind == 'image/png' or kind.startswith('text/') else json.loads(body)
+        return body if kind in ('image/png','application/zip') or kind.startswith('text/') else json.loads(body)
 
     def test_submit_review_publish_and_resubmit(self):
         admin = {'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
         self.call('/api/admin/classes','POST',json.dumps({'class_id':'c260924a','count':2}).encode(),admin|{'Content-Type':'application/json'},201)
-        slots = self.call('/api/admin/slots',headers=admin)
+        slots = [s for s in self.call('/api/admin/slots',headers=admin) if s['class_id']=='c260924a']
         self.assertEqual(len(slots),2)
         roster = self.call('/api/admin/roster.csv?class_id=c260924a',headers=admin)
         self.assertIn(b'c260924a-s01',roster)
@@ -83,6 +88,42 @@ class UploadFlow(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=20) as pool:
             results = list(pool.map(send,slots))
         self.assertEqual([row['status'] for row in results],['待审核']*20)
+
+    def test_student_portal_multiple_topics_and_public_gallery(self):
+        admin={'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
+        self.call('/api/admin/classes','POST',json.dumps({'class_id':'c260924c','count':1}).encode(),admin|{'Content-Type':'application/json'},201)
+        slot=next(s for s in self.call('/api/admin/slots',headers=admin) if s['class_id']=='c260924c')
+        program=self.call('/api/admin/programs','POST',json.dumps({'slug':'summer-test','title':'暑期创作营','kind':'camp','days':8,'description':'八天'}).encode(),admin|{'Content-Type':'application/json'},201)
+        lesson=self.call('/api/admin/lessons','POST',json.dumps({'program_id':program['id'],'slug':'story-test','title':'互动故事','day_no':2}).encode(),admin|{'Content-Type':'application/json'},201)
+        self.call('/api/admin/enroll-class','POST',json.dumps({'class_id':'c260924c','program_id':program['id']}).encode(),admin|{'Content-Type':'application/json'})
+        zip_bytes=io.BytesIO()
+        with ZipFile(zip_bytes,'w') as z:
+            z.writestr('my-project/index.html','<!doctype html><html><head><title>测试故事</title></head><body><h1>故事开始</h1></body></html>')
+            z.writestr('my-project/style.css','body{color:green}')
+        starter=zip_bytes.getvalue()
+        self.call('/api/admin/lessons/'+str(lesson['id'])+'/starter','POST',starter,admin|{'Content-Type':'application/zip'})
+        self.call('/api/student/login','POST',json.dumps({'code':slot['code'],'token':'wrong'}).encode(),
+                  {'Origin':'https://www.codexai.site','Content-Type':'application/json'},403)
+        self.call('/api/student/login','POST',json.dumps({'code':slot['code'],'token':slot['upload_token']}).encode(),
+                  {'Origin':'https://www.codexai.site','Content-Type':'application/json'})
+        cookie=self.last_headers.get('Set-Cookie').split(';',1)[0]
+        student={'Cookie':cookie,'Origin':'https://www.codexai.site'}
+        dashboard=self.call('/api/student/dashboard',headers=student)
+        self.assertEqual({item['lesson_slug'] for item in dashboard['lessons']},{'money','story-test'})
+        self.assertEqual(self.call('/api/student/lessons/'+str(lesson['id'])+'/starter.zip',headers=student)[:2],b'PK')
+        self.call('/api/student/submit/'+str(lesson['id']),'POST',starter,
+                  student|{'Origin':'https://codexai.site','Content-Type':'application/zip'},403)
+        first=self.call('/api/student/submit/'+str(lesson['id']),'POST',starter,student|{'Content-Type':'application/zip'},201)
+        self.call('/api/admin/reject/'+str(first['id']),'POST',json.dumps({'reason':'请补一个按钮'}).encode(),admin|{'Content-Type':'application/json'})
+        self.assertEqual(next(x for x in self.call('/api/student/dashboard',headers=student)['lessons'] if x['lesson_slug']=='story-test')['status'],'需修改')
+        second=self.call('/api/student/submit/'+str(lesson['id']),'POST',starter,student|{'Content-Type':'application/zip'},201)
+        published=self.call('/api/admin/publish/'+str(second['id']),'POST',b'',admin)
+        self.assertEqual(published['url'],f'https://codexai.site/projects/{slot["code"]}/story-test/')
+        self.assertTrue((self.app.WORKS/'v2/current'/slot['code']/'story-test'/'index.html').is_file())
+        self.assertIn(slot['code'],[x['code'] for x in self.call('/api/public/showcase')])
+        self.call('/api/admin/visibility/'+slot['code']+'/'+str(lesson['id']),'POST',json.dumps({'listed':False}).encode(),admin|{'Content-Type':'application/json'})
+        self.assertNotIn(slot['code'],[x['code'] for x in self.call('/api/public/showcase')])
+        self.assertTrue(self.call('/api/projects/'+slot['code']+'/story-test/qr.png')[:8]==b'\x89PNG\r\n\x1a\n')
 
 
 if __name__ == '__main__': unittest.main()

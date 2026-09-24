@@ -27,7 +27,10 @@ sudo -n chown -R root:root /srv/codexai/releases/"$release"
 sudo -n find /srv/codexai/releases/"$release" -type d -exec chmod 755 {} +
 sudo -n find /srv/codexai/releases/"$release" -type f -exec chmod 644 {} +
 sudo -n install -d -m 755 /srv/codexai-students/current /srv/codexai-students/releases
+sudo -n install -d -o codexai -g codexai -m 755 /srv/codexai-students/v2/current /srv/codexai-students/v2/releases
+sudo -n chmod 755 /srv/codexai-students/v2
 sudo -n ln -sfn /srv/codexai-students/current /srv/codexai/releases/"$release"/works
+sudo -n ln -sfn /srv/codexai-students/v2/current /srv/codexai/releases/"$release"/projects
 sudo -n caddy validate --config /tmp/codexai-Caddyfile --adapter caddyfile
 sudo -n install -m 644 /tmp/codexai-Caddyfile /etc/caddy/Caddyfile
 sudo -n ln -sfn /srv/codexai/releases/"$release" /srv/codexai/next
