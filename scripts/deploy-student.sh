@@ -44,6 +44,9 @@ sudo -n test -f "$target/money/config.js"
 sudo -n chown -R root:root "$target"
 sudo -n find "$target" -type d -exec chmod 755 {} +
 sudo -n find "$target" -type f -exec chmod 644 {} +
+if id codexai >/dev/null 2>&1; then
+  sudo -n chown codexai:codexai "/srv/codexai-students/releases/$code" "$target"
+fi
 sudo -n ln -sfn "../releases/$code/$release" "/srv/codexai-students/current/$code.next"
 sudo -n mv -Tf "/srv/codexai-students/current/$code.next" "/srv/codexai-students/current/$code"
 rm -f "/tmp/codexai-student-$code-$release.tar.gz"

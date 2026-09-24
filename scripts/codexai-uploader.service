@@ -1,0 +1,24 @@
+[Unit]
+Description=CodexAI classroom submissions and publishing
+After=network.target
+
+[Service]
+Type=simple
+User=codexai
+Group=codexai
+WorkingDirectory=/opt/codexai-uploader/current
+EnvironmentFile=/etc/codexai-uploader.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/codexai-uploader/current/upload-service.py
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/codexai-uploader /srv/codexai-students
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

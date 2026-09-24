@@ -1,7 +1,5 @@
-codexai.site, www.codexai.site {
-    root * /srv/codexai/current
+codexai.site {
     encode gzip zstd
-    file_server
     header {
         X-Content-Type-Options nosniff
         Referrer-Policy strict-origin-when-cross-origin
@@ -10,4 +8,29 @@ codexai.site, www.codexai.site {
     @code path *.html *.js *.css *.webmanifest
     header @code Cache-Control "no-cache"
     header /money/manifest.webmanifest Content-Type application/manifest+json
+    @works path /works/*
+    header @works Content-Security-Policy "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    @teacher path /teacher/*
+    header @teacher Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+    header @teacher Cross-Origin-Opener-Policy same-origin
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8766
+    }
+    handle {
+        root * /srv/codexai/current
+        file_server
+    }
+}
+
+www.codexai.site {
+    encode gzip zstd
+    handle /preview/* {
+        header Content-Security-Policy "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-ancestors https://codexai.site"
+        header Referrer-Policy no-referrer
+        header X-Content-Type-Options nosniff
+        reverse_proxy 127.0.0.1:8766
+    }
+    handle {
+        redir https://codexai.site{uri} 308
+    }
 }
