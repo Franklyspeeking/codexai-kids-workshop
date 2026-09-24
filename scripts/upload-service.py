@@ -413,6 +413,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/admin/enroll-class':
                 if not self.admin(): return
                 self.enroll_class()
+            elif path == '/api/admin/enroll-student':
+                if not self.admin(): return
+                self.enroll_student()
             elif re.fullmatch(r'/api/admin/lessons/\d+/starter',path):
                 if not self.admin(): return
                 self.upload_starter(path)
@@ -487,6 +490,19 @@ class Handler(BaseHTTPRequestHandler):
             conn.executemany('INSERT OR IGNORE INTO enrollments(code,program_id) VALUES (?,?)',
                              [(code,program_id) for code in codes])
         self.send_bytes(200,{'enrolled':len(codes)})
+
+    def enroll_student(self):
+        body=self.read_json()
+        code,program_id=body.get('code'),body.get('program_id')
+        if not isinstance(code,str) or not CODE_RE.fullmatch(code) or type(program_id) is not int:
+            return self.error(400,'学生编号或课程信息不正确')
+        with db() as conn:
+            if not conn.execute('SELECT 1 FROM slots WHERE code=?',(code,)).fetchone():
+                return self.error(404,'学生编号不存在')
+            if not conn.execute('SELECT 1 FROM programs WHERE id=?',(program_id,)).fetchone():
+                return self.error(404,'课程不存在')
+            conn.execute('INSERT OR IGNORE INTO enrollments(code,program_id) VALUES (?,?)',(code,program_id))
+        self.send_bytes(200,{'enrolled':code})
 
     def visibility(self,path):
         match=re.fullmatch(r'/api/admin/visibility/([a-z][a-z0-9-]{2,30})/(\d+)',path)

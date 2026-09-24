@@ -26,13 +26,15 @@ function fillSelect(id, items, valueKey='id', textKey='title') {
 }
 async function refresh() {
   try {
-    const [nextCatalog, assignments]=await Promise.all([api('/api/admin/catalog'),api('/api/admin/assignments')]);
+    const [nextCatalog, assignments, slots]=await Promise.all([api('/api/admin/catalog'),api('/api/admin/assignments'),api('/api/admin/slots')]);
     catalog=nextCatalog;
     $('dashboard').hidden=false;
     const classes=catalog.classes;
     if(!classes.some(x=>x.class_id===selectedClass))selectedClass=classes[0]?.class_id||'';
     fillSelect('filter-class',classes,'class_id','class_id');$('filter-class').value=selectedClass;
     fillSelect('lesson-program',catalog.programs);fillSelect('enroll-program',catalog.programs);
+    fillSelect('enroll-student-program',catalog.programs);
+    fillSelect('enroll-student',slots.filter(x=>x.class_id===selectedClass),'code','code');
     renderLessons();renderAssignments(assignments.filter(x=>x.class_id===selectedClass));
     msg(selectedClass?`正在查看 ${selectedClass}，共有 ${assignments.filter(x=>x.class_id===selectedClass).length} 项课题任务。`:'请先创建一个班级。');
   } catch(error) { $('dashboard').hidden=true;msg(error.message); }
@@ -82,6 +84,7 @@ $('create-class').onclick=async()=>{const class_id=$('class-id').value.trim().to
 $('create-program').onclick=async()=>{const value={title:$('program-title').value.trim(),slug:$('program-slug').value.trim().toLowerCase(),kind:$('program-kind').value,days:Number($('program-days').value),description:$('program-description').value.trim()};try{await api('/api/admin/programs',payload(value));await refresh();msg(`课程 ${value.title} 已创建，请继续添加课题。`);}catch(e){msg(e.message);}};
 $('create-lesson').onclick=async()=>{const value={program_id:Number($('lesson-program').value),title:$('lesson-title').value.trim(),slug:$('lesson-slug').value.trim().toLowerCase(),day_no:Number($('lesson-day').value)};try{await api('/api/admin/lessons',payload(value));await refresh();msg(`课题 ${value.title} 已添加，请上传起始包。`);}catch(e){msg(e.message);}};
 $('enroll').onclick=async()=>{const program_id=Number($('enroll-program').value);if(!selectedClass)return msg('请先选择班级');try{await api('/api/admin/enroll-class',payload({class_id:selectedClass,program_id}));await refresh();msg('课程已分配给全班。学生登录后即可看到。');}catch(e){msg(e.message);}};
+$('assign-student').onclick=async()=>{const code=$('enroll-student').value,program_id=Number($('enroll-student-program').value);if(!code)return msg('请先选择一位学生');try{await api('/api/admin/enroll-student',payload({code,program_id}));await refresh();msg(`课程已分配给 ${code}。`);}catch(e){msg(e.message);}};
 $('filter-class').onchange=()=>{selectedClass=$('filter-class').value;refresh();};
 $('refresh').onclick=refresh;
 $('csv').onclick=async()=>{if(!selectedClass)return msg('请先创建班级');try{const blob=await api('/api/admin/roster.csv?class_id='+encodeURIComponent(selectedClass));const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=selectedClass+'-账号名单.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){msg(e.message);}};

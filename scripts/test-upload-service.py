@@ -91,17 +91,23 @@ class UploadFlow(unittest.TestCase):
 
     def test_student_portal_multiple_topics_and_public_gallery(self):
         admin={'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
-        self.call('/api/admin/classes','POST',json.dumps({'class_id':'c260924c','count':1}).encode(),admin|{'Content-Type':'application/json'},201)
-        slot=next(s for s in self.call('/api/admin/slots',headers=admin) if s['class_id']=='c260924c')
+        self.call('/api/admin/classes','POST',json.dumps({'class_id':'c260924c','count':2}).encode(),admin|{'Content-Type':'application/json'},201)
+        camp_slots=[s for s in self.call('/api/admin/slots',headers=admin) if s['class_id']=='c260924c']
+        slot,other=camp_slots
         program=self.call('/api/admin/programs','POST',json.dumps({'slug':'summer-test','title':'暑期创作营','kind':'camp','days':8,'description':'八天'}).encode(),admin|{'Content-Type':'application/json'},201)
         lesson=self.call('/api/admin/lessons','POST',json.dumps({'program_id':program['id'],'slug':'story-test','title':'互动故事','day_no':2}).encode(),admin|{'Content-Type':'application/json'},201)
-        self.call('/api/admin/enroll-class','POST',json.dumps({'class_id':'c260924c','program_id':program['id']}).encode(),admin|{'Content-Type':'application/json'})
+        self.call('/api/admin/enroll-student','POST',json.dumps({'code':slot['code'],'program_id':program['id']}).encode(),admin|{'Content-Type':'application/json'})
         zip_bytes=io.BytesIO()
         with ZipFile(zip_bytes,'w') as z:
             z.writestr('my-project/index.html','<!doctype html><html><head><title>测试故事</title></head><body><h1>故事开始</h1></body></html>')
             z.writestr('my-project/style.css','body{color:green}')
         starter=zip_bytes.getvalue()
         self.call('/api/admin/lessons/'+str(lesson['id'])+'/starter','POST',starter,admin|{'Content-Type':'application/zip'})
+        self.call('/api/student/login','POST',json.dumps({'code':other['code'],'token':other['upload_token']}).encode(),
+                  {'Origin':'https://www.codexai.site','Content-Type':'application/json'})
+        other_cookie=self.last_headers.get('Set-Cookie').split(';',1)[0]
+        other_dashboard=self.call('/api/student/dashboard',headers={'Cookie':other_cookie})
+        self.assertEqual({item['lesson_slug'] for item in other_dashboard['lessons']},{'money'})
         self.call('/api/student/login','POST',json.dumps({'code':slot['code'],'token':'wrong'}).encode(),
                   {'Origin':'https://www.codexai.site','Content-Type':'application/json'},403)
         self.call('/api/student/login','POST',json.dumps({'code':slot['code'],'token':slot['upload_token']}).encode(),
