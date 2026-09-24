@@ -1,0 +1,13 @@
+codexai.site, www.codexai.site {
+    root * /srv/codexai/current
+    encode gzip zstd
+    file_server
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options SAMEORIGIN
+    }
+    @code path *.html *.js *.css *.webmanifest
+    header @code Cache-Control "no-cache"
+    header /money/manifest.webmanifest Content-Type application/manifest+json
+}

@@ -1,0 +1,62 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>04-发布与维护手册</title><style>body{max-width:900px;margin:40px auto;font:16px/1.8 sans-serif;padding:20px;color:#183e30}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:8px;text-align:left}h1{font-size:28px}h2{margin-top:32px}pre{white-space:pre-wrap} @media print{body{margin:0;font-size:12pt}h2,h3{break-after:avoid}tr{break-inside:avoid}}</style><body><h1 id="作品发布与长期维护">作品发布与长期维护</h1>
+<h2 id="本项目结构">本项目结构</h2>
+<ul>
+<li>codexai-site/dist：公开网站、money工具和课堂通用下载包；不要放教师密钥、内部文件或学生身份表。</li>
+<li>preparation：教师材料、学生模板，不自动发布到公网。</li>
+<li>scripts：部署与学生打包工具，仅老师使用。</li>
+</ul>
+<h2 id="发给孩子">发给孩子</h2>
+<ol type="1">
+<li>投屏或写出
+<code>https://codexai.site/classroom/</code>。每个孩子用自己的笔记本下载同一份“零花钱计划师-起始包.zip”，解压整个文件夹，再在
+TRAE
+国内版中打开该文件夹。没有网络时，可用老师电脑上的这份ZIP通过U盘、隔空投送或课堂已有传输方式分发。</li>
+<li>老师给每人一个不重复的作品编号，例如
+<code>s001</code>。下一班换新编号，不覆盖上一班；不要把真实姓名放进网址。</li>
+<li>孩子按任务卡改文件、预览并测试，结束时把<strong>整个项目文件夹</strong>压缩成
+<code>s001.zip</code> 交回老师，或者直接交回名为 <code>s001</code>
+的文件夹。不要只交一个HTML文件。</li>
+</ol>
+<h2 id="收作业与审核">收作业与审核</h2>
+<p>把收回的ZIP或文件夹放在本机其他收件位置，先打开并按测试卡验收，再把合格项目移到
+<code>preparation/待发布-已审核/</code>。文件名必须是
+<code>s001.zip</code> 或 <code>s001</code>
+这类作品编号。不要收真实姓名、家庭账目导出文件、账号、密钥、node_modules。检查HTML/JS没有外部联网代码、密钥或不必要的追踪；自动打包器只能检查部分文件规则，不能代替老师审核。</p>
+<p>保存“编号—项目版本—链接—验收结果”的本地清单。家长姓名和联系方式若另有招生系统，不复制进网站。</p>
+<h2 id="单个学生作品发布">单个学生作品发布</h2>
+<p>在项目根目录运行
+<code>bash scripts/deploy-student.sh s001 /收件位置/s001.zip</code>，也可以传入项目文件夹路径。脚本会安全解压、打包、上传到独立版本目录、切换当前版本，检查正式网页，并生成
+<code>preparation/二维码/学生作品/s001.png</code>。默认使用老师电脑
+<code>~/.ssh/codexai_oracle</code>；换电脑时设置
+<code>CODEXAI_SSH_KEY</code>
+指向可用私钥。不要把私钥复制进学生文件夹。</p>
+<h2 id="一条命令发布全班已审核作品">一条命令发布全班已审核作品</h2>
+<p>把审核通过的ZIP或文件夹放入
+<code>preparation/待发布-已审核/</code>，在项目根目录运行
+<code>bash scripts/publish-approved.sh</code>。脚本按文件名逐个发布，生成
+<code>preparation/交付清单/日期时间.csv</code>，列出每个作品链接、二维码位置和成功/失败。失败作品留在原处，修复后可单独重发。重发沿用同一编号和网址，不清空家长账本。</p>
+<p>发布后仍要用实际手机验证HTTPS、布局、记账、刷新和桌面入口；脚本成功只证明服务器链接可访问。</p>
+<p>所有作品沿用已配置的域名和HTTPS，每个编号有独立目录和可回滚版本。不同作品使用不同存储ID，但同一个手机浏览器的同域名网页在技术上共享存储权限，所以发布前仍须审查学生代码，不开放任意上传入口。文件仅静态托管，不执行学生后端程序。</p>
+<h2 id="给家长">给家长</h2>
+<p>作品地址形式是
+<code>https://codexai.site/works/s001/money/</code>。可把二维码图片发给家长，或从交付清单复制<strong>完整网址</strong>；两者打开同一网页。家长首次需联网，在手机系统浏览器打开并等“离线页面已准备好”；然后添加到手机桌面，从桌面图标联网打开一次，再开飞行模式检查能否继续打开和记账。手机账目只存于当前手机的这个浏览器/桌面环境，VPS只托管网页文件。若设备清理网站数据或换手机，仍可能失去本地缓存和账目，务必定期导出JSON备份。</p>
+<h2 id="发布清单可复制为csv">发布清单（可复制为CSV）</h2>
+<p>作品编号,版本,链接,收支验收,预算验收,刷新验收,HTTPS验收,手机桌面实测,二维码交付,备注
+s001,,,,,,,,,</p>
+<h2 id="长期保留">长期保留</h2>
+<p>作品不设置自动过期删除。保留当前版本和可恢复版本；服务器或域名迁移时维持原地址及作品ID。
+域名已购买不等于永久持有，需要续费。每次发布保留本机副本，另复制一份到用户自己的长期备份位置。只在同一VPS保存备份不能抵御整机丢失。
+定期检查域名到期、证书自动续期、磁盘和网站访问。建议老师每月检查一次；本任务不自动创建提醒或付费服务。
+手机账目不在服务器备份中，家长必须导出自己的数据。</p>
+<h2 id="回滚">回滚</h2>
+<p>不要直接覆盖最后一个可用版本。发布脚本写入新releases目录，再切换current软链接。失败时把
+<code>/srv/codexai-students/current/编号</code>
+指回上一个版本并复测。静态文件回滚一般不需删除家长浏览器记录。</p>
+<h2 id="服务故障">服务故障</h2>
+<ul>
+<li>域名不解析：检查Hostinger记录及到期状态。</li>
+<li>HTTPS错误：检查证书续期日志、DNS、80/443网络可达；不指导家长绕过证书警告。</li>
+<li>页面可开但资源缺失：检查相对路径及大小写。</li>
+<li>数据消失：先确认手机、浏览器、域名和入口一致；不要立即清数据，再检查家长导出备份。</li>
+</ul>
+</body></html>
