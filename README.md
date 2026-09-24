@@ -17,7 +17,7 @@
 
 1. 孩子在笔记本打开 `https://codexai.site/classroom/`，下载统一的ZIP起始包，解压整个文件夹，在TRAE国内版中修改。老师给每人独立编号，如 `s001`；下一班换新编号。
 2. 孩子把整个项目文件夹压缩成 `s001.zip` 交回老师。老师先预览、测试并检查文件，把通过的ZIP或同名文件夹放进 `preparation/待发布-已审核/`。
-3. 在此项目根目录运行 `bash scripts/publish-approved.sh`。脚本逐个上传，生成 `preparation/交付清单/日期时间.csv` 和每人一张二维码。单个补发可运行 `bash scripts/deploy-student.sh s001 /收件位置/s001.zip`。
+3. 在Mac上双击[一键发布已审核作品.command](一键发布已审核作品.command)，或在此项目根目录运行 `bash scripts/publish-approved.sh`。脚本逐个上传，生成 `preparation/交付清单/日期时间.csv` 和每人一张二维码。单个补发可运行 `bash scripts/deploy-student.sh s001 /收件位置/s001.zip`。
 4. 家长扫描二维码或复制交付清单里的完整链接，在手机系统浏览器打开 `https://codexai.site/works/s001/money/`，等离线准备完成，添加桌面，并从桌面入口重开、记一笔、飞行模式复测。
 
 发布脚本默认使用本机 `~/.ssh/codexai_oracle`。它只上传经老师选定的静态文件，保留服务器历史版本。每个编号沿用同一地址；手机账本留在该手机浏览器中，不会同步到服务器。首次联网后页面会准备离线缓存，但浏览器清理数据或换手机仍可能丢失账本，家长要定期导出备份。二维码生成功能使用 `scripts/.venv` 中的 Python 依赖，换电脑时按 `scripts/qr-requirements.txt` 安装。
