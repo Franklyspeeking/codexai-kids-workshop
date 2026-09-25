@@ -268,7 +268,11 @@ function renderLeads(){
 }
 async function action(path, options={}){try{await api(path,{method:'POST',...options});await refresh();}catch(error){msg(error.message);}}
 function payload(value){return{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)};}
-$('login').onclick=()=>{key=$('key').value.trim();$('key').value='';refresh();};
+$('login').onclick=()=>{
+  const username=$('username').value.trim().toLowerCase();
+  if(username!=='admin')return msg('教师账号或管理密码不正确');
+  key=$('key').value.trim();$('key').value='';refresh();
+};
 $('logout').onclick=()=>{key='';catalog=null;$('dashboard').hidden=true;msg('已退出教师工作台');};
 $('create-class').onclick=async()=>{const class_id=$('class-id').value.trim().toLowerCase(),count=Number($('count').value);if(!confirm(`创建 ${count} 个学生账号？`))return;try{await api('/api/admin/classes',payload({class_id,count}));selectedClass=class_id;await refresh();msg('班级已创建。请下载名单，分别发给孩子。');}catch(e){msg(e.message);}};
 $('create-program').onclick=async()=>{const value={title:$('program-title').value.trim(),slug:$('program-slug').value.trim().toLowerCase(),kind:$('program-kind').value,days:Number($('program-days').value),description:$('program-description').value.trim()};try{await api('/api/admin/programs',payload(value));await refresh();msg(`课程 ${value.title} 已创建，请继续添加课题。`);}catch(e){msg(e.message);}};

@@ -4,9 +4,13 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 key_path="${CODEXAI_SSH_KEY:-$HOME/.ssh/codexai_oracle}"
 token_file="$root/preparation/.teacher-admin-token"
 test -r "$key_path" || { echo "找不到 SSH 私钥：$key_path" >&2; exit 2; }
+if python3 -c 'import sys' >/dev/null 2>&1; then python_cmd=python3
+elif python -c 'import sys' >/dev/null 2>&1; then python_cmd=python
+else echo '找不到可用的 Python 3' >&2; exit 2
+fi
 if [ ! -f "$token_file" ]; then
   umask 077
-  python3 -c 'import secrets,sys; open(sys.argv[1],"w").write(secrets.token_hex(32)+"\n")' "$token_file"
+  "$python_cmd" -c 'import secrets,sys; open(sys.argv[1],"w").write(secrets.token_hex(32)+"\n")' "$token_file"
 fi
 release="$(date -u +%Y%m%dT%H%M%SZ)"
 scratch="$(mktemp -d)"

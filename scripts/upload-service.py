@@ -28,6 +28,10 @@ BASE = Path(__file__).resolve().parent
 DATA = Path(os.environ.get('CODEXAI_DATA_DIR', '/var/lib/codexai-uploader'))
 WORKS = Path(os.environ.get('CODEXAI_WORKS_DIR', '/srv/codexai-students'))
 ADMIN_TOKEN = os.environ.get('CODEXAI_ADMIN_TOKEN', '')
+MIN_ADMIN_PASSWORD_LENGTH = 7
+PUBLIC_ORIGIN = os.environ.get('CODEXAI_PUBLIC_ORIGIN', 'https://www.codexai.site').rstrip('/')
+STATIC_DIR_VALUE = os.environ.get('CODEXAI_STATIC_DIR', '')
+STATIC_DIR = Path(STATIC_DIR_VALUE).resolve() if STATIC_DIR_VALUE else None
 MAX_ZIP = 25_000_000
 CODE_RE = re.compile(r'[a-z][a-z0-9-]{2,30}\Z')
 CLASS_RE = re.compile(r'[a-z][a-z0-9-]{2,16}\Z')
@@ -40,7 +44,7 @@ TEACHER_INTRO = (
     '我会持续学习、实践和更新内容，把自己弄明白的方法认真分享出来。希望家长看得清孩子在学什么，孩子也能一步步学会把 AI 用好。'
 )
 DEFAULT_FAQS = [
-    {'q':'孩子没有编程基础，能参加吗？','a':'可以。首课面向 10–14 岁零基础孩子，使用老师准备的可运行起始包。孩子要练习的是说明需求、做选择和测试结果。'},
+    {'q':'孩子没有编程基础，能参加吗？','a':'可以。首课面向 9–16 岁零基础孩子，使用老师准备的可运行起始包。孩子要练习的是说明需求、做选择和测试结果。'},
     {'q':'需要自己带电脑吗？','a':'孩子需要带笔记本电脑参加。具体浏览器与 AI 工具的登录、网络要求，报名后由老师提前告知并协助检查。'},
     {'q':'半天能做完什么？','a':'首课约 3.5 小时。孩子完成一个可在浏览器打开的零花钱网页工具，并能向家长介绍目标、规则和改动。不同孩子的功能与完成程度会有差异。'},
     {'q':'作品是孩子做的，还是 AI 直接生成的？','a':'AI 负责协助实现，孩子要决定问题、规则、页面和测试标准。课堂会保留需求卡、修改与测试过程，老师会引导孩子解释自己的选择。'},
@@ -49,6 +53,64 @@ DEFAULT_FAQS = [
     {'q':'作品会自动公开吗？','a':'不会。通过审核后先得到给家长的非公开分享链接；只有老师线下取得家长同意并登记后，作品才可能进入公开展。分享链接可由持有者转发，必要时可联系老师撤销。'},
     {'q':'作品会保留多久？换手机怎么办？','a':'平台计划长期保存作品文件和已发布版本，并定期备份。零花钱等工具里的个人记录留在家长使用的那部手机浏览器；换机或清理数据前应自行导出备份。'},
     {'q':'其他八个主题什么时候开课？','a':'它们目前是课程方向，尚未公布具体排期。网站只对已标为开放咨询的课程提供报名咨询；可联系老师了解后续更新。'},
+]
+DEFAULT_COURSES = [
+    {
+        'slug':'chores','title':'家务积分银行','lesson_slug':'chores-tool',
+        'description':'把家务规则变成孩子参与设计、全家都看得懂的积分工具。',
+        'summary':'孩子设计任务、积分和兑换规则，在真实家庭情景中检查规则是否公平。',
+        'outcome':'一套可调整任务与奖励规则的家务积分网页工具',
+        'parent_role':'家长和孩子一起试用规则，讨论怎样分工更公平',
+    },
+    {
+        'slug':'weekend','title':'周末时间调度员','lesson_slug':'weekend-planner',
+        'description':'把想做的事排进周末，也学会为休息和变化留出空间。',
+        'summary':'孩子安排活动、发现时间冲突并比较方案，做自己的周末日程工具。',
+        'outcome':'一份能发现冲突、调整顺序的周末日程网页工具',
+        'parent_role':'家长提供家庭安排，和孩子一起比较并确认周末方案',
+    },
+    {
+        'slug':'screen-time','title':'屏幕时间协商器','lesson_slug':'screen-time-agreement',
+        'description':'把“能不能再玩一会儿”变成双方都能参与的清楚约定。',
+        'summary':'孩子表达自己的需要，也听见家长的担心，共同设计可执行的屏幕时间约定。',
+        'outcome':'一份可记录、复盘和调整的家庭屏幕时间协商工具',
+        'parent_role':'家长提出边界和原因，与孩子共同试用并复盘约定',
+    },
+    {
+        'slug':'family-trip','title':'家庭旅行合伙人','lesson_slug':'family-trip-planner',
+        'description':'从“我想去哪儿”开始，比较路线、预算和全家人的偏好。',
+        'summary':'孩子收集家人的旅行偏好，比较时间与预算，提出有理由的旅行方案。',
+        'outcome':'一份能收集偏好、比较方案的家庭旅行规划网页工具',
+        'parent_role':'家长提供真实约束，让孩子解释并完善自己的旅行提案',
+    },
+    {
+        'slug':'healthy-habits','title':'健康习惯挑战板','lesson_slug':'habit-challenge',
+        'description':'让微小行动被看见，把“坚持”设计成每天都能完成的挑战。',
+        'summary':'孩子选择自己的小目标、打卡方式和鼓励规则，观察怎样更容易坚持。',
+        'outcome':'一块带目标、打卡和自定义鼓励规则的习惯挑战板',
+        'parent_role':'家长陪孩子选择小而可行的目标，用鼓励代替催促',
+    },
+    {
+        'slug':'recycling','title':'垃圾分类挑战赛','lesson_slug':'recycling-quiz',
+        'description':'孩子自己当出题人，把环保知识做成一场能玩的挑战赛。',
+        'summary':'孩子查找并核对分类知识，设计题目、提示和计分规则，再邀请家人闯关。',
+        'outcome':'一套包含原创题目、反馈和计分规则的垃圾分类游戏',
+        'parent_role':'家长作为第一位玩家，帮助孩子发现题目是否清楚准确',
+    },
+    {
+        'slug':'book-swap','title':'家庭阅读交换站','lesson_slug':'book-exchange',
+        'description':'让读过的好书继续旅行，也让推荐理由比书名更有温度。',
+        'summary':'孩子整理书架、设计借还规则并写阅读推荐，做家庭里的图书交换站。',
+        'outcome':'一个能管理书架、借还和阅读推荐的家庭网页工具',
+        'parent_role':'家长贡献家庭书单，和孩子一起制定容易执行的借还规则',
+    },
+    {
+        'slug':'story-director','title':'AI 互动故事导演','lesson_slug':'interactive-story',
+        'description':'不是只读故事，而是亲手决定人物、选择和每一种结局。',
+        'summary':'孩子设计角色、分支和结局，用测试找出故事断点，让读者参与剧情。',
+        'outcome':'一个可以选择剧情路线、拥有不同结局的互动故事网页',
+        'parent_role':'家长试玩不同路线，听孩子讲述设计取舍和修改过程',
+    },
 ]
 
 
@@ -68,8 +130,10 @@ def db():
 
 
 def init():
-    if not ADMIN_TOKEN or len(ADMIN_TOKEN) < 24:
-        raise RuntimeError('CODEXAI_ADMIN_TOKEN is required and must be at least 24 characters')
+    if not ADMIN_TOKEN or len(ADMIN_TOKEN) < MIN_ADMIN_PASSWORD_LENGTH:
+        raise RuntimeError(
+            f'CODEXAI_ADMIN_TOKEN is required and must be at least {MIN_ADMIN_PASSWORD_LENGTH} characters'
+        )
     for path in (DATA, DATA / 'archives', DATA / 'prepared', DATA / 'starters', DATA/'site',
                  WORKS / 'current', WORKS / 'releases', WORKS / 'v2/current', WORKS / 'v2/releases',
                  WORKS / 'free/current', WORKS / 'free/releases'):
@@ -196,7 +260,7 @@ def init():
              marketing_audience,marketing_outcome,marketing_duration,marketing_parent_role)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
             (LEGACY_PROGRAM,'零花钱计划师','workshop',1,'半天 AI 创作工作坊首课',now(),
-             'consulting','孩子为自己的小愿望制作零花钱记录与计划工具。','10–14 岁，零基础可参加',
+             'consulting','孩子为自己的小愿望制作零花钱记录与计划工具。','9–16 岁，零基础可参加',
              '一个能在家长手机打开并添加到桌面的网页工具','约 3.5 小时','家长在课后接收链接、扫码测试作品'))
         if marketing_is_new:
             conn.execute("UPDATE programs SET marketing_status='consulting' WHERE slug=?",(LEGACY_PROGRAM,))
@@ -212,8 +276,20 @@ def init():
         lesson_id = conn.execute('SELECT id FROM lessons WHERE slug=?',(LEGACY_LESSON,)).fetchone()['id']
         conn.execute('UPDATE submissions SET lesson_id=? WHERE lesson_id IS NULL',(lesson_id,))
         conn.execute('INSERT OR IGNORE INTO enrollments(code,program_id) SELECT code,? FROM slots',(program_id,))
+        for course in DEFAULT_COURSES:
+            conn.execute('''INSERT OR IGNORE INTO programs
+                (slug,title,kind,days,description,created_at,marketing_status,marketing_summary,
+                 marketing_audience,marketing_outcome,marketing_duration,marketing_parent_role)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+                (course['slug'],course['title'],'workshop',1,course['description'],now(),'draft',
+                 course['summary'],'9–16 岁，零基础可参加',course['outcome'],'约 3.5 小时',
+                 course['parent_role']))
+            course_id = conn.execute('SELECT id FROM programs WHERE slug=?',(course['slug'],)).fetchone()['id']
+            conn.execute('''INSERT OR IGNORE INTO lessons
+                (program_id,slug,title,day_no,format,starter_path,created_at) VALUES (?,?,?,?,?,?,?)''',
+                (course_id,course['lesson_slug'],course['title'],1,'web','',now()))
         for row in conn.execute('SELECT code,MAX(id) sid FROM submissions WHERE status=? AND lesson_id=? GROUP BY code',('已发布',lesson_id)):
-            if (WORKS/'current'/row['code']).is_symlink():
+            if (WORKS/'current'/row['code']).is_symlink() or (WORKS/'current'/row['code']).is_dir():
                 token = secrets.token_urlsafe(32)
                 conn.execute('''INSERT OR IGNORE INTO published_works
                     (code,lesson_id,submission_id,url,listed,published_at,share_token,legacy_allowed)
@@ -227,6 +303,26 @@ def now():
 
 def work_url(code):
     return f'https://codexai.site/works/{code}/money/'
+
+
+def activate_release(link, link_target, target):
+    """Switch the current release; copy on Windows without symlink privileges."""
+    next_path = link.parent/(link.name+'.next-'+secrets.token_hex(4))
+    try:
+        next_path.symlink_to(link_target)
+        os.replace(next_path,link)
+        return
+    except OSError:
+        if next_path.is_symlink() or next_path.is_file():
+            next_path.unlink(missing_ok=True)
+        elif next_path.is_dir():
+            shutil.rmtree(next_path)
+    shutil.copytree(target,next_path)
+    if link.is_symlink() or link.is_file():
+        link.unlink(missing_ok=True)
+    elif link.is_dir():
+        shutil.rmtree(link)
+    os.replace(next_path,link)
 
 
 def project_url(code, slug):
@@ -287,7 +383,7 @@ class Handler(BaseHTTPRequestHandler):
     def admin(self):
         provided = self.headers.get('X-Admin-Token', '')
         if not hmac.compare_digest(provided, ADMIN_TOKEN):
-            self.error(401, '教师密钥不正确')
+            self.error(401, '教师账号或管理密码不正确')
             return False
         return True
 
@@ -320,7 +416,7 @@ class Handler(BaseHTTPRequestHandler):
         return code
 
     def student_post_origin(self):
-        if self.headers.get('Origin') != 'https://www.codexai.site':
+        if self.headers.get('Origin') != PUBLIC_ORIGIN:
             self.error(403,'请从学生后台提交')
             return False
         return True
@@ -464,7 +560,7 @@ class Handler(BaseHTTPRequestHandler):
                 'qr': qr_url(published['share_token']) if published and published['share_active'] and published['share_token'] else None})
         elif path.startswith('/api/works/') and path.endswith('/qr.png'):
             code = path.removeprefix('/api/works/').removesuffix('/qr.png')
-            if not CODE_RE.fullmatch(code) or not (WORKS/'current'/code).is_symlink():
+            if not CODE_RE.fullmatch(code) or not ((WORKS/'current'/code).is_symlink() or (WORKS/'current'/code).is_dir()):
                 return self.error(404, '作品尚未发布')
             with db() as conn:
                 legacy = conn.execute('''SELECT legacy_allowed,share_active FROM published_works WHERE code=?
@@ -494,10 +590,15 @@ class Handler(BaseHTTPRequestHandler):
             with db() as conn:
                 rows = conn.execute('SELECT class_id,code,upload_token FROM slots WHERE (?="" OR class_id=?) ORDER BY class_id,code', (selected,selected)).fetchall()
             out = io.StringIO(); writer = csv.writer(out)
-            writer.writerow(['班级编号','作品编号','上传码','学生姓名（老师填写）','家长联系方式（老师填写）'])
+            writer.writerow(['班级编号','学生账号','初始密码','学生姓名（老师填写）','家长联系方式（老师填写）'])
             for r in rows: writer.writerow([r['class_id'],r['code'],r['upload_token'],'',''])
             self.send_bytes(200, ('\ufeff'+out.getvalue()).encode('utf-8'), 'text/csv; charset=utf-8',
                 {'Content-Disposition': 'attachment; filename="classroom-roster.csv"'})
+        elif STATIC_DIR:
+            relative = path.lstrip('/')
+            if not relative or path.endswith('/'):
+                relative += 'index.html'
+            self.static_file(STATIC_DIR, relative)
         else:
             self.error(404, '页面不存在')
 
@@ -1332,7 +1433,8 @@ class Handler(BaseHTTPRequestHandler):
                     if not chunk: return self.error(400,'上传中断，请重试')
                     output.write(chunk); remaining-=len(chunk)
             result=subprocess.run([sys.executable,str(BASE/'prepare-web-zip.py'),str(archive),str(scratch/'checked'),
-                                   '--title',lesson['title']],capture_output=True,text=True,timeout=30)
+                                   '--title',lesson['title']],capture_output=True,text=True,encoding='utf-8',
+                                  errors='replace',timeout=30)
             if result.returncode:
                 return self.error(422,'起始包检查未通过：'+(result.stderr or result.stdout).strip()[-250:])
             target=DATA/'starters'/f'{lesson_id}.zip'
@@ -1380,7 +1482,8 @@ class Handler(BaseHTTPRequestHandler):
                            if lesson and lesson['format']=='money' else ([sys.executable,str(BASE/'prepare-web-zip.py'),
                             str(archive),str(temp/'packages'/code),'--title',independent_title or lesson['title']],)
                 for command in commands:
-                    result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+                    result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
+                                            errors='replace', timeout=30)
                     if result.returncode:
                         raise ValueError((result.stderr or result.stdout).strip()[-300:])
                 shutil.move(str(temp/'packages'/code), DATA/'prepared'/str(sid))
@@ -1432,9 +1535,7 @@ class Handler(BaseHTTPRequestHandler):
             os.chmod(item,0o755 if item.is_dir() else 0o644)
         link.parent.mkdir(exist_ok=True,mode=0o755)
         os.chmod(link.parent,0o755)
-        next_link = link.parent/(link.name+'.next-'+secrets.token_hex(4))
-        next_link.symlink_to(link_target)
-        os.replace(next_link,link)
+        activate_release(link,link_target,target)
         published_at=now()
         with db() as conn:
             conn.execute('UPDATE submissions SET status=?,published_at=? WHERE id=?',('已发布',published_at,row['id']))
@@ -1500,8 +1601,7 @@ class Handler(BaseHTTPRequestHandler):
             os.chmod(item,0o755 if item.is_dir() else 0o644)
         link.parent.mkdir(exist_ok=True,mode=0o755)
         os.chmod(link.parent,0o755)
-        next_link=link.parent/(link.name+'.next-'+secrets.token_hex(4))
-        next_link.symlink_to(link_target);os.replace(next_link,link)
+        activate_release(link,link_target,target)
         changed=now()
         with db() as conn:
             if row['independent_id'] is not None:

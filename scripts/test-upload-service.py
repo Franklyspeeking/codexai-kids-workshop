@@ -49,6 +49,19 @@ class UploadFlow(unittest.TestCase):
         self.assertEqual(code,status,body[:500])
         return body if kind in ('image/png','application/zip') or kind.startswith(('text/','application/xml')) else json.loads(body)
 
+    def test_default_catalog_contains_all_nine_course_topics(self):
+        admin = {'X-Admin-Token': os.environ['CODEXAI_ADMIN_TOKEN']}
+        catalog = self.call('/api/admin/catalog', headers=admin)
+        self.assertEqual(len(catalog['programs']), 9)
+        self.assertEqual(len(catalog['lessons']), 9)
+        self.assertEqual({program['title'] for program in catalog['programs']}, {
+            '零花钱计划师', '家务积分银行', '周末时间调度员', '屏幕时间协商器',
+            '家庭旅行合伙人', '健康习惯挑战板', '垃圾分类挑战赛',
+            '家庭阅读交换站', 'AI 互动故事导演',
+        })
+        self.assertTrue(all(program['marketing_audience'].startswith('9–16 岁')
+                            for program in catalog['programs']))
+
     def test_submit_review_publish_and_resubmit(self):
         admin = {'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
         self.call('/api/admin/classes','POST',json.dumps({'class_id':'c260924a','count':2}).encode(),admin|{'Content-Type':'application/json'},201)
@@ -267,7 +280,7 @@ class UploadFlow(unittest.TestCase):
         self.assertNotIn('camp-test',[row['slug'] for row in self.call('/api/public/courses')])
         self.call('/courses/camp-test/',status=404)
         details={'status':'consulting','summary':'孩子每天完成一个自己的网页作品。',
-            'audience':'10–14 岁零基础孩子','outcome':'一个可以带回家的作品集',
+            'audience':'9–16 岁零基础孩子','outcome':'一个可以带回家的作品集',
             'duration':'8 天创作营','parent_role':'家长在结营时测试孩子的作品'}
         path=f'/api/admin/programs/{program["id"]}/marketing'
         self.call(path,'POST',json.dumps(details|{'outcome':''}).encode(),admin|{'Content-Type':'application/json'},400)
@@ -336,7 +349,10 @@ class ExistingSiteMigration(unittest.TestCase):
                                  ('old-student',lesson_id,sid,app.work_url('old-student'),1,app.now()))
                 release=app.WORKS/'releases/old-student/initial';(release/'money').mkdir(parents=True)
                 (release/'money/index.html').write_text('<html>existing</html>')
-                (app.WORKS/'current/old-student').symlink_to('../releases/old-student/initial')
+                try:
+                    (app.WORKS/'current/old-student').symlink_to('../releases/old-student/initial')
+                except OSError:
+                    self.skipTest('Windows 当前用户没有创建符号链接的权限')
                 app.init()
                 with app.db() as conn:
                     work=conn.execute('SELECT * FROM published_works WHERE code=?',('old-student',)).fetchone()

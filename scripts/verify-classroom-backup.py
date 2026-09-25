@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Restore an off-VPS classroom backup into a temporary directory and audit its contents."""
 import argparse
+from contextlib import closing
 import json
+import posixpath
 import sqlite3
 import tarfile
 import tempfile
@@ -13,13 +15,29 @@ def verify(archive_path: Path):
         root=Path(folder)
         with tarfile.open(archive_path,'r:gz') as archive:
             names=archive.getnames()
+            members={member.name:member for member in archive.getmembers()}
             if 'var/lib/codexai-uploader/classroom.sqlite3' not in names:
                 raise ValueError('备份缺少数据库')
             if not any(name.startswith('srv/codexai-students/') for name in names):
                 raise ValueError('备份缺少已发布作品目录')
             archive.extractall(root,filter='data')
+
+        def archived_file_exists(name: str) -> bool:
+            direct=members.get(name)
+            if direct and direct.isfile():
+                return True
+            parts=name.split('/')
+            for index in range(len(parts)-1,0,-1):
+                parent='/'.join(parts[:index])
+                member=members.get(parent)
+                if member and (member.issym() or member.islnk()):
+                    resolved=posixpath.normpath(posixpath.join(posixpath.dirname(parent),member.linkname,
+                                                              *parts[index:]))
+                    target=members.get(resolved)
+                    return bool(target and target.isfile())
+            return False
         database=root/'var/lib/codexai-uploader/classroom.sqlite3'
-        with sqlite3.connect(f'file:{database}?mode=ro',uri=True) as conn:
+        with closing(sqlite3.connect(database.resolve().as_uri()+'?mode=ro',uri=True)) as conn:
             conn.row_factory=sqlite3.Row
             if conn.execute('PRAGMA integrity_check').fetchone()[0]!='ok':
                 raise ValueError('数据库完整性检查失败')
@@ -37,10 +55,12 @@ def verify(archive_path: Path):
             code=course['code']
             current=(works/'current'/code/'money/index.html' if course['format']=='money'
                      else works/'v2/current'/code/course['slug']/'index.html')
-            if not current.is_file():missing.append(str(current.relative_to(root)))
+            relative=current.relative_to(root).as_posix()
+            if not archived_file_exists(relative):missing.append(relative)
         for item in free:
             current=works/'free/current'/item['code']/str(item['id'])/'index.html'
-            if not current.is_file():missing.append(str(current.relative_to(root)))
+            relative=current.relative_to(root).as_posix()
+            if not archived_file_exists(relative):missing.append(relative)
         zips=list((root/'var/lib/codexai-uploader/archives').rglob('*.zip'))
         if counts['submissions'] and not zips:
             raise ValueError('有提交记录，但备份中没有原始 ZIP')
