@@ -29,7 +29,7 @@ cat > "$scratch/remote-install.sh" <<'REMOTE'
 set -euo pipefail
 if ! getent group codexai >/dev/null; then sudo -n groupadd --system codexai; fi
 if ! id codexai >/dev/null 2>&1; then sudo -n useradd --system --gid codexai --no-create-home --shell /usr/sbin/nologin codexai; fi
-sudo -n apt-get install -y -qq python3-qrcode >/dev/null
+sudo -n apt-get install -y -qq python3-qrcode python3-pil >/dev/null
 sudo -n install -d -m 755 /opt/codexai-uploader/releases/"$release" /opt/codexai-uploader
 sudo -n tar -xzf /tmp/codexai-uploader-service.tar.gz -C /opt/codexai-uploader/releases/"$release"
 sudo -n chown -R root:root /opt/codexai-uploader/releases/"$release"

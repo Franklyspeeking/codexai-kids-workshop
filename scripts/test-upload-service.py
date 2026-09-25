@@ -47,7 +47,7 @@ class UploadFlow(unittest.TestCase):
             self.last_headers = exc.headers
             exc.close()
         self.assertEqual(code,status,body[:500])
-        return body if kind in ('image/png','application/zip') or kind.startswith('text/') else json.loads(body)
+        return body if kind in ('image/png','application/zip') or kind.startswith(('text/','application/xml')) else json.loads(body)
 
     def test_submit_review_publish_and_resubmit(self):
         admin = {'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
@@ -69,6 +69,7 @@ class UploadFlow(unittest.TestCase):
         second = self.call('/api/submit/'+code,'POST',zip_data,upload_headers,201)
         self.call('/api/admin/publish/'+str(first['id']),'POST',b'',admin,409)
         published = self.call('/api/admin/publish/'+str(second['id']),'POST',b'',admin)
+        self.assertTrue(any(event['submission_id']==second['id'] for event in self.call('/api/admin/publication-events',headers=admin)))
         share_path=urlsplit(published['url']).path
         self.assertRegex(share_path,r'^/share/[A-Za-z0-9_-]{32,64}/$')
         self.assertTrue((self.app.WORKS/'current'/code/'money/index.html').is_file())
@@ -135,18 +136,36 @@ class UploadFlow(unittest.TestCase):
         self.assertIn('测试故事',self.call(share_path).decode())
         self.call(f'/projects/{slot["code"]}/story-test/',status=404)
         self.assertTrue((self.app.WORKS/'v2/current'/slot['code']/'story-test'/'index.html').is_file())
+        self.call('/api/admin/collections','POST',json.dumps({'code':other['code'],'program_id':program['id'],
+            'active':True}).encode(),admin|{'Content-Type':'application/json'},403)
+        collection=self.call('/api/admin/collections','POST',json.dumps({'code':slot['code'],
+            'program_id':program['id'],'active':True}).encode(),admin|{'Content-Type':'application/json'})
+        collection_path=urlsplit(collection['url']).path
+        self.assertIn('互动故事',self.call(collection_path).decode())
+        self.assertIn(collection['url'],[item['url'] for item in self.call('/api/student/dashboard',headers=student)['collections']])
+        self.assertIn(collection['url'],[item['url'] for item in self.call('/api/admin/collections',headers=admin)])
+        self.assertNotIn(collection_path,self.call('/sitemap.xml').decode())
+        self.call('/api/admin/collections','POST',json.dumps({'code':slot['code'],
+            'program_id':program['id'],'active':False}).encode(),admin|{'Content-Type':'application/json'})
+        self.call(collection_path,status=404)
         self.assertNotIn(slot['code'],[x['code'] for x in self.call('/api/public/showcase')])
         self.call('/api/admin/visibility/'+slot['code']+'/'+str(lesson['id']),'POST',json.dumps({'listed':True}).encode(),admin|{'Content-Type':'application/json'},409)
         consent=self.call('/api/admin/consents','POST',json.dumps({'code':slot['code'],'lesson_id':lesson['id'],
             'independent_id':None,'guardian_ref':'S01 家长','channel':'现场签署','consent_at':'2026-09-24',
             'evidence_ref':'本地同意表 01'}).encode(),admin|{'Content-Type':'application/json'},201)
         self.call('/api/admin/visibility/'+slot['code']+'/'+str(lesson['id']),'POST',json.dumps({'listed':True}).encode(),admin|{'Content-Type':'application/json'})
-        self.assertIn(slot['code'],[x['code'] for x in self.call('/api/public/showcase')])
+        gallery=next(x for x in self.call('/api/public/showcase') if x['code']==slot['code'])
+        gallery_path=urlsplit(gallery['url']).path
+        self.assertTrue(gallery_path.startswith('/gallery/'))
+        self.assertIn('测试故事',self.call(gallery_path).decode())
+        self.assertIn(gallery_path,self.call('/sitemap.xml').decode())
         revision=self.call('/api/student/submit/'+str(lesson['id']),'POST',starter,
                            student|{'Content-Type':'application/zip'},201)
         republished=self.call('/api/admin/publish/'+str(revision['id']),'POST',b'',admin)
         self.assertEqual(republished['url'],published['url'])
         self.assertNotIn(slot['code'],[x['code'] for x in self.call('/api/public/showcase')])
+        self.call(gallery_path,status=404)
+        self.assertNotIn(gallery_path,self.call('/sitemap.xml').decode())
         self.call('/api/admin/visibility/'+slot['code']+'/'+str(lesson['id']),'POST',json.dumps({'listed':True}).encode(),
                   admin|{'Content-Type':'application/json'},409)
         self.call('/api/admin/consents/'+str(consent['id'])+'/revoke','POST',b'',admin)
@@ -240,6 +259,54 @@ class UploadFlow(unittest.TestCase):
         self.assertIn('parent-wang-01',csv_data.decode())
         self.call(f'/api/admin/consultations/{lead_id}/delete','POST',b'',admin)
         self.assertFalse(any(x['id']==lead_id for x in self.call('/api/admin/consultations',headers=admin)))
+
+    def test_public_courses_require_manual_marketing_publication(self):
+        admin={'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
+        program=self.call('/api/admin/programs','POST',json.dumps({'slug':'camp-test','title':'八天创作营',
+            'kind':'camp','days':8,'description':'逐日完成作品'}).encode(),admin|{'Content-Type':'application/json'},201)
+        self.assertNotIn('camp-test',[row['slug'] for row in self.call('/api/public/courses')])
+        self.call('/courses/camp-test/',status=404)
+        details={'status':'consulting','summary':'孩子每天完成一个自己的网页作品。',
+            'audience':'10–14 岁零基础孩子','outcome':'一个可以带回家的作品集',
+            'duration':'8 天创作营','parent_role':'家长在结营时测试孩子的作品'}
+        path=f'/api/admin/programs/{program["id"]}/marketing'
+        self.call(path,'POST',json.dumps(details|{'outcome':''}).encode(),admin|{'Content-Type':'application/json'},400)
+        self.call(path,'POST',json.dumps(details).encode(),admin|{'Content-Type':'application/json'},409)
+        self.call('/api/admin/lessons','POST',json.dumps({'program_id':program['id'],'slug':'camp-day-one',
+            'title':'第一天的网页','day_no':1}).encode(),admin|{'Content-Type':'application/json'},201)
+        self.call(path,'POST',json.dumps(details).encode(),admin|{'Content-Type':'application/json'})
+        self.assertIn('camp-test',[row['slug'] for row in self.call('/api/public/courses')])
+        page=self.call('/courses/camp-test/').decode()
+        self.assertIn('八天创作营',page)
+        self.assertIn('第一天的网页',page)
+        self.assertIn('/courses/camp-test/',self.call('/sitemap.xml').decode())
+        self.call(path,'POST',json.dumps(details|{'status':'paused'}).encode(),admin|{'Content-Type':'application/json'})
+        self.assertNotIn('camp-test',[row['slug'] for row in self.call('/api/public/courses')])
+        self.assertIn('暂停咨询',self.call('/courses/camp-test/').decode())
+        self.assertNotIn('/courses/camp-test/',self.call('/sitemap.xml').decode())
+
+    def test_site_content_and_qr_are_teacher_managed(self):
+        admin={'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
+        original=self.call('/api/public/site-content')
+        self.assertTrue(len(original['faqs'])>=5)
+        self.assertIn('我不是 IT 专业出身',original['teacher_intro'])
+        self.assertIn('/about/',self.call('/sitemap.xml').decode())
+        self.assertFalse(original['wechat_qr_available'])
+        self.call('/api/admin/site-content',headers={},status=401)
+        updated={'teacher_intro':'真实老师介绍会在取得资料后填写。',
+                 'demo_title':'首课教师示范','demo_summary':'用一个示范工具了解作品交付。',
+                 'faqs':[{'q':'如何联系老师？','a':'可以到咨询页复制微信号联系老师。'}]}
+        self.call('/api/admin/site-content','POST',json.dumps(updated).encode(),
+                  admin|{'Content-Type':'application/json'})
+        content=self.call('/api/public/site-content')
+        self.assertEqual(content['faqs'],updated['faqs'])
+        self.assertEqual(content['demo_title'],updated['demo_title'])
+        self.call('/api/admin/wechat-qr','POST',b'not an image',admin|{'Content-Type':'image/png'},400)
+        from PIL import Image
+        picture=io.BytesIO();Image.new('RGB',(180,180),'white').save(picture,'PNG')
+        self.call('/api/admin/wechat-qr','POST',picture.getvalue(),admin|{'Content-Type':'image/png'})
+        self.assertTrue(self.call('/api/public/site-content')['wechat_qr_available'])
+        self.assertEqual(self.call('/api/public/wechat-qr')[:8],b'\x89PNG\r\n\x1a\n')
 
 
 class ExistingSiteMigration(unittest.TestCase):

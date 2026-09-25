@@ -92,6 +92,8 @@ function renderCourses(data) {
     const first = rows[0], section = add(host,'section','','program');
     add(section,'span',first.kind==='camp'?`${first.days} 天创作营`:'半天创作课','eyebrow');
     add(section,'h3',first.program_title);
+    const collection=data.collections?.find(item=>item.program_id===first.program_id);
+    if(collection)link(section,'打开给家长的阶段作品集',collection.url);
     if (first.description) add(section,'p',first.description,'muted');
     const grid = add(section,'div','','topic');
     for (const item of rows) {

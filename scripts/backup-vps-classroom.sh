@@ -15,8 +15,7 @@ for attempt in 1 2 3 4 5; do
 set -euo pipefail
 scratch="$(mktemp -d)"
 trap 'sudo -n rm -rf -- "$scratch"' EXIT
-sudo -n install -d -m 700 "$scratch/var/lib/codexai-uploader"
-sudo -n python3 - "$scratch/var/lib/codexai-uploader/classroom.sqlite3" <<'PY'
+sudo -n python3 - "$scratch/db-snapshot.sqlite3" <<'PY'
 import sqlite3,sys
 source=sqlite3.connect('file:/var/lib/codexai-uploader/classroom.sqlite3?mode=ro',uri=True)
 target=sqlite3.connect(sys.argv[1])
@@ -24,8 +23,9 @@ source.backup(target)
 target.close();source.close()
 PY
 sudo -n tar --warning=no-file-changed --exclude=var/lib/codexai-uploader/classroom.sqlite3 \
+  --transform='s|^db-snapshot.sqlite3$|var/lib/codexai-uploader/classroom.sqlite3|' \
   -czf - -C / var/lib/codexai-uploader srv/codexai-students \
-  -C "$scratch" var/lib/codexai-uploader/classroom.sqlite3
+  -C "$scratch" db-snapshot.sqlite3
 REMOTE
     success=1; break
   fi

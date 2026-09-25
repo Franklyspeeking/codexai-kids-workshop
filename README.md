@@ -1,8 +1,8 @@
 # 儿童 AI 创作工作坊｜课程与作品平台
 
-正式网站：[codexai.site](https://codexai.site/) · 教师演示作品：[零花钱计划师](https://codexai.site/money/) · [学生下载入口](https://codexai.site/classroom/) · [学生提交入口](https://codexai.site/classroom/submit/) · [教师工作台](https://www.codexai.site/teacher/) · [学生后台](https://www.codexai.site/student/) · [学生作品展](https://codexai.site/showcase/)
+正式网站：[codexai.site](https://codexai.site/) · [关于我](https://codexai.site/about/) · 教师演示作品：[零花钱计划师](https://codexai.site/money/) · [学生下载入口](https://codexai.site/classroom/) · [学生提交入口](https://codexai.site/classroom/submit/) · [教师工作台](https://www.codexai.site/teacher/) · [学生后台](https://www.codexai.site/student/) · [学生作品展](https://codexai.site/showcase/)
 
-本文件夹是老师的本地工作区。`codexai-site/dist` 是已部署的公开网站；`preparation` 是课堂资料；`scripts` 是发布工具。不要把整个工作区上传到公网。九张 PNG 为用户提供的原始海报，网站使用压缩后的 JPG。
+本文件夹是老师的本地工作区。`codexai-site/dist` 是公开网站源码；`preparation` 是课堂资料；`scripts` 是发布工具。不要把整个工作区上传到公网。九张 PNG 为用户提供的原始海报，网站使用压缩后的 JPG。备份文件、教师密钥不进入 GitHub。运营步骤见 [持续创作与独立站运营手册](preparation/08-持续创作与独立站运营手册.md)。
 
 ## 先看这些
 
