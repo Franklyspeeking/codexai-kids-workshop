@@ -12,7 +12,7 @@ CHECKS=[
     ('咨询与作品数据库','https://codexai.site/api/health',b'"ok": true'),
     ('独立站内容','https://codexai.site/api/public/site-content',b'teacher_intro'),
     ('公开课程接口','https://codexai.site/api/public/courses',b'['),
-    ('教师后台','https://www.codexai.site/teacher/',b'CODEXAI'),
+    ('教师后台','https://www.codexai.site/teacher/',b'id="login-form"'),
     ('学生后台','https://www.codexai.site/student/',b'CODEXAI'),
 ]
 
