@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>教师工作台 · Code-X-Ai</title>
+  <meta name="description" content="Code-X-Ai 教师课程、班级、作品与招生管理工作台">
+  <link rel="icon" href="../../assets/favicon.svg">
+  <link rel="stylesheet" href="../portal.css">
+</head>
+<body class="teacher-dashboard-page">
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <a class="sidebar-brand" href="/teacher/dashboard/">
+        <span class="brand-mark">CX</span>
+        <span><strong>Code-X-Ai</strong><small>教师工作台</small></span>
+      </a>
+      <nav class="sidebar-nav" aria-label="教师后台模块">
+        <button class="nav-item active" data-view="home"><span>◫</span>首页</button>
+        <button class="nav-item" data-view="classes"><span>◎</span>班级与学生</button>
+        <button class="nav-item" data-view="courses"><span>▤</span>课程与课题</button>
+        <button class="nav-item" data-view="reviews"><span>✓</span>作品审核 <b id="review-badge" class="nav-badge" hidden></b></button>
+        <button class="nav-item" data-view="delivery"><span>◇</span>家长交付</button>
+        <button class="nav-item" data-view="leads"><span>↗</span>招生咨询 <b id="lead-badge" class="nav-badge" hidden></b></button>
+        <button class="nav-item" data-view="site"><span>⌂</span>网站内容</button>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="https://codexai.site/" target="_blank" rel="noopener noreferrer">查看公开网站 ↗</a>
+        <button id="logout" class="logout-button">退出登录</button>
+      </div>
+    </aside>
+    <button id="sidebar-scrim" class="sidebar-scrim" aria-label="关闭导航" hidden></button>
+
+    <div class="app-main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button id="menu-toggle" class="icon-button menu-toggle" aria-label="打开导航">☰</button>
+          <div><span id="page-kicker">总览</span><h1 id="page-title">工作台首页</h1></div>
+        </div>
+        <div class="topbar-actions">
+          <label id="class-switcher-wrap" class="class-switcher">当前班级
+            <select id="filter-class" aria-label="切换当前班级"></select>
+          </label>
+          <button id="refresh" class="icon-button" title="刷新数据" aria-label="刷新数据">↻</button>
+          <span class="teacher-avatar" title="教师账号 admin">A</span>
+        </div>
+      </header>
+
+      <p id="message" class="toast" role="status" aria-live="polite" hidden></p>
+      <main class="workspace">
+        <section class="view active" data-view-panel="home">
+          <div class="welcome-row">
+            <div><span class="eyebrow">TODAY'S CONTROL ROOM</span><h2>今天先处理最重要的事。</h2><p id="home-subtitle" class="muted">正在读取教学数据…</p></div>
+            <div class="date-card"><span id="today-week">—</span><strong id="today-date">—</strong></div>
+          </div>
+          <div id="kpi-grid" class="kpi-grid"></div>
+          <div class="dashboard-grid">
+            <article class="panel span-7"><div class="panel-head"><div><span class="panel-kicker">ACTION QUEUE</span><h3>今日待办</h3></div><button class="text-button" data-go="reviews">进入审核</button></div><div id="todo-list" class="todo-list"></div></article>
+            <article class="panel span-5 accent-panel"><div class="panel-head"><div><span class="panel-kicker">QUICK START</span><h3>快捷操作</h3></div></div><div class="quick-grid"><button data-dialog="create-class-dialog"><b>＋</b><span>创建班级<small>生成学生账号</small></span></button><button data-dialog="create-program-dialog"><b>＋</b><span>创建课程<small>半天课或创作营</small></span></button><button data-dialog="create-lesson-dialog"><b>＋</b><span>添加课题<small>安排课程任务</small></span></button><button data-go="site"><b>↗</b><span>更新网站<small>课程介绍与 FAQ</small></span></button></div></article>
+            <article class="panel span-7"><div class="panel-head"><div><span class="panel-kicker">WORK PROGRESS</span><h3>作品状态分布</h3></div><span id="work-total" class="panel-total">0 项</span></div><div id="work-chart" class="bar-chart"></div></article>
+            <article class="panel span-5"><div class="panel-head"><div><span class="panel-kicker">ENROLLMENT</span><h3>招生咨询漏斗</h3></div><button class="text-button" data-go="leads">查看咨询</button></div><div id="lead-funnel" class="funnel"></div></article>
+            <article class="panel span-12"><div class="panel-head"><div><span class="panel-kicker">RECENT ACTIVITY</span><h3>近期活动</h3></div></div><div id="recent-events" class="timeline"></div></article>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="classes">
+          <div class="section-heading"><div><span class="eyebrow">CLASSROOM</span><h2>班级与学生</h2><p>创建班级、管理学生账号，并把课程分配给全班或单个学生。</p></div><button class="primary" data-dialog="create-class-dialog">＋ 创建班级</button></div>
+          <div class="module-grid classes-layout">
+            <article class="panel"><div class="panel-head"><h3>班级列表</h3><span id="class-count" class="count-pill">0 个</span></div><div id="class-list" class="selection-list"></div></article>
+            <article class="panel"><div class="panel-head"><div><h3 id="students-title">学生账号</h3><p class="muted">真实姓名请只填写在下载到本地的名单中。</p></div><button id="csv" class="secondary">下载账号名单</button></div><div class="table-scroll"><table><thead><tr><th>学生账号</th><th>课程数</th><th>作品进度</th></tr></thead><tbody id="student-rows"></tbody></table></div><hr><div class="inline-form"><label>给全班分配课程<select id="enroll-program"></select></label><button id="enroll" class="primary">分配全班</button></div><div class="inline-form two-selects"><label>单个学生<select id="enroll-student"></select></label><label>课程<select id="enroll-student-program"></select></label><button id="assign-student" class="secondary">单独分配</button></div></article>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="courses">
+          <div class="section-heading"><div><span class="eyebrow">CURRICULUM</span><h2>课程与课题</h2><p>先管理课程结构和起始包，再为班级分配，不与公开招生内容混在一起。</p></div><div class="actions"><button class="secondary" data-dialog="create-lesson-dialog">＋ 添加课题</button><button class="primary" data-dialog="create-program-dialog">＋ 创建课程</button></div></div>
+          <div class="module-grid course-layout"><article class="panel"><div class="panel-head"><h3>课程目录</h3><span id="course-count" class="count-pill">0 门</span></div><div id="course-list" class="selection-list"></div></article><article class="panel"><div id="course-detail"></div></article></div>
+        </section>
+
+        <section class="view" data-view-panel="reviews">
+          <div class="section-heading"><div><span class="eyebrow">REVIEW QUEUE</span><h2>作品审核</h2><p>把课内作品和自由创作放进同一个审核中心，先处理待审核项。</p></div></div>
+          <div class="segmented" role="tablist"><button class="active" data-review-tab="course">课内作品</button><button data-review-tab="free">自由创作</button></div>
+          <article id="course-review-panel" class="panel"><div class="filter-row"><label>审核状态<select id="review-filter"><option value="">全部状态</option><option>待审核</option><option>需修改</option><option>已发布</option><option>未提交</option></select></label><label>课题<select id="lesson-filter"><option value="">全部课题</option></select></label></div><div class="table-scroll"><table><thead><tr><th>学生与课题</th><th>状态</th><th>审核操作</th></tr></thead><tbody id="rows"></tbody></table></div></article>
+          <article id="free-review-panel" class="panel" hidden><div class="filter-row"><label>作品类别<select id="free-filter"><option value="">全部类别</option></select></label></div><div class="table-scroll"><table><thead><tr><th>创作者与作品</th><th>状态</th><th>审核操作</th></tr></thead><tbody id="free-rows"></tbody></table></div></article>
+        </section>
+
+        <section class="view" data-view-panel="delivery">
+          <div class="section-heading"><div><span class="eyebrow">FAMILY DELIVERY</span><h2>家长交付</h2><p>集中管理家长分享、二维码、阶段作品集和公开展示授权。</p></div></div>
+          <div class="dashboard-grid"><article class="panel span-12"><div class="panel-head"><div><h3>已发布作品</h3><p class="muted">家长分享和公开作品展是两种不同权限。</p></div><select id="delivery-filter" aria-label="筛选交付状态"><option value="">全部交付状态</option><option value="shared">分享中</option><option value="revoked">已撤销分享</option><option value="listed">作品展公开</option></select></div><div class="table-scroll"><table><thead><tr><th>学生与作品</th><th>家长分享</th><th>公开展示</th><th>操作</th></tr></thead><tbody id="delivery-rows"></tbody></table></div></article>
+          <article class="panel span-6"><div class="panel-head"><div><h3>营期阶段作品集</h3><p class="muted">只收录已经审核发布的营期作品。</p></div></div><div class="inline-form stacked-mobile"><label>创作营<select id="collection-program"></select></label><label>学生账号<select id="collection-student"></select></label><button id="create-collection" class="primary">生成作品集</button></div><div id="collection-list" class="record-list"></div></article>
+          <article class="panel span-6"><div class="panel-head"><div><h3>公开展示同意记录</h3><p class="muted">登记、核对和撤回家长同意。</p></div></div><div id="consent-list" class="record-list"></div></article></div>
+        </section>
+
+        <section class="view" data-view-panel="leads">
+          <div class="section-heading"><div><span class="eyebrow">ENROLLMENT CRM</span><h2>招生咨询</h2><p>按来源和阶段跟进家长咨询，联系方式仅在教师后台显示。</p></div><button id="export-leads" class="secondary">导出咨询 CSV</button></div>
+          <div id="lead-summary" class="mini-stats"></div>
+          <article class="panel"><div class="filter-row"><label>跟进状态<select id="lead-filter"><option value="">全部状态</option><option>新咨询</option><option>已联系</option><option>已约体验</option><option>已报名</option><option>暂不跟进</option></select></label><label>咨询来源<select id="source-filter"><option value="">全部来源</option></select></label></div><div class="table-scroll"><table><thead><tr><th>时间与来源</th><th>家长与需求</th><th>跟进记录</th></tr></thead><tbody id="lead-rows"></tbody></table></div></article>
+        </section>
+
+        <section class="view" data-view-panel="site">
+          <div class="section-heading"><div><span class="eyebrow">PUBLIC WEBSITE</span><h2>网站内容</h2><p>管理公开课程介绍、老师资料、常见问题和咨询二维码。</p></div><a class="button secondary" href="https://codexai.site/" target="_blank" rel="noopener noreferrer">查看公开网站 ↗</a></div>
+          <div class="dashboard-grid"><article class="panel span-7"><div class="panel-head"><div><h3>课程对外发布</h3><p class="muted">后台新建课程不会自动出现在公开网站。</p></div></div><div class="form-grid two"><label>选择课程<select id="marketing-program"></select></label><label>对外状态<select id="marketing-status"><option value="draft">草稿</option><option value="consulting">开放咨询</option><option value="paused">暂停咨询</option><option value="archived">归档</option></select></label><label>课程时长<input id="marketing-duration" maxlength="100"></label><label>适合谁<input id="marketing-audience" maxlength="200"></label><label>孩子完成什么<input id="marketing-outcome" maxlength="300"></label><label>家长怎样参与<input id="marketing-parent-role" maxlength="300"></label><label class="full">对外课程简介<textarea id="marketing-summary" maxlength="500" rows="4"></textarea></label></div><div class="actions"><button id="save-marketing" class="primary">保存课程信息</button><a id="marketing-preview" class="button secondary" target="_blank" rel="noopener noreferrer">预览课程页 ↗</a></div></article>
+          <article class="panel span-5"><div class="panel-head"><div><h3>老师与示范内容</h3><p class="muted">只使用真实、已经确认的介绍。</p></div></div><label>老师介绍<textarea id="teacher-intro" rows="8" maxlength="600"></textarea></label><label>示范标题<input id="demo-title" maxlength="80"></label><label>示范说明<textarea id="demo-summary" rows="3" maxlength="300"></textarea></label></article>
+          <article class="panel span-8"><div class="panel-head"><div><h3>常见问题</h3><p class="muted">公开网站会按这里的顺序展示。</p></div><button id="add-faq" class="secondary">＋ 增加问题</button></div><div id="faq-editor" class="faq-list"></div></article>
+          <article class="panel span-4"><div class="panel-head"><div><h3>微信咨询二维码</h3><p class="muted">上传后请用自己的手机扫码验证。</p></div></div><img id="wechat-qr-preview" class="qr-preview" alt="当前微信咨询二维码" hidden><label class="file-drop">选择 PNG 或 JPEG<input id="wechat-qr-file" type="file" accept="image/png,image/jpeg"></label><button id="upload-wechat-qr" class="secondary wide">上传二维码</button></article>
+          <div class="span-12 save-bar"><span>网站内容修改后将立即用于公开页面。</span><button id="save-content" class="primary">保存网站内容</button></div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="create-class-dialog"><form method="dialog" class="dialog-card"><div class="dialog-head"><div><span class="eyebrow">NEW CLASS</span><h2>创建班级</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div><label>班级编号<input id="class-id" placeholder="例如 autumn-a" autocomplete="off"></label><label>学生人数<input id="count" type="number" min="1" max="25" value="20"></label><p class="muted">系统将生成独立学生账号和初始密码。</p><div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button id="create-class" value="default" type="button" class="primary">创建并生成账号</button></div></form></dialog>
+  <dialog id="create-program-dialog"><form method="dialog" class="dialog-card"><div class="dialog-head"><div><span class="eyebrow">NEW PROGRAM</span><h2>创建课程</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div><div class="form-grid two"><label>课程名称<input id="program-title" placeholder="暑期 AI 创作营"></label><label>课程代号<input id="program-slug" placeholder="summer-2026"></label><label>课程类型<select id="program-kind"><option value="workshop">半天课</option><option value="camp">多日营</option></select></label><label>天数<input id="program-days" type="number" min="1" max="30" value="1"></label><label class="full">课程简介<textarea id="program-description" rows="3" placeholder="孩子将完成什么"></textarea></label></div><div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button id="create-program" value="default" type="button" class="primary">创建课程</button></div></form></dialog>
+  <dialog id="create-lesson-dialog"><form method="dialog" class="dialog-card"><div class="dialog-head"><div><span class="eyebrow">NEW LESSON</span><h2>添加课题</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div><label>所属课程<select id="lesson-program"></select></label><div class="form-grid two"><label>课题名称<input id="lesson-title" placeholder="AI 互动故事"></label><label>课题代号<input id="lesson-slug" placeholder="story-01"></label><label>第几天<input id="lesson-day" type="number" min="1" max="30" value="1"></label></div><div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button id="create-lesson" value="default" type="button" class="primary">添加课题</button></div></form></dialog>
+  <dialog id="versions-dialog"><div class="dialog-card wide-dialog"><div class="dialog-head"><div><span class="eyebrow">VERSION HISTORY</span><h2>作品版本</h2></div><button id="versions-close" class="icon-button" aria-label="关闭">×</button></div><p class="muted">回退后家长分享链接保持不变，公开作品展需要重新登记当前版本的家长同意。</p><div id="versions-list" class="record-list"></div></div></dialog>
+  <dialog id="consent-dialog"><div class="dialog-card"><div class="dialog-head"><div><span class="eyebrow">GUARDIAN CONSENT</span><h2>登记公开展示同意</h2></div><button id="cancel-consent" class="icon-button" aria-label="关闭">×</button></div><p id="consent-work" class="selection-note"></p><input id="consent-code" type="hidden"><input id="consent-lesson" type="hidden"><input id="consent-free" type="hidden"><div class="form-grid two"><label>家长确认人<input id="guardian-ref" maxlength="80" placeholder="例如 S01 家长"></label><label>同意渠道<select id="consent-channel"><option>现场签署</option><option>微信确认</option><option>电话确认并留记录</option></select></label><label>同意日期<input id="consent-date" type="date"></label><label>凭据存放位置<input id="evidence-ref" maxlength="200" placeholder="本地文件名或表单编号"></label></div><div class="dialog-actions"><button id="save-consent" class="primary">登记同意</button></div></div></dialog>
+  <dialog id="qr-dialog"><div class="dialog-card qr-dialog"><div class="dialog-head"><h2>家长扫码查看</h2><button id="qr-close" class="icon-button" aria-label="关闭">×</button></div><img id="qr-image" alt="家长作品二维码"><p id="qr-link" class="muted break-all"></p></div></dialog>
+  <script src="dashboard.js" defer></script>
+</body>
+</html>

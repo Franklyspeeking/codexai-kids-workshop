@@ -29,6 +29,7 @@ DATA = Path(os.environ.get('CODEXAI_DATA_DIR', '/var/lib/codexai-uploader'))
 WORKS = Path(os.environ.get('CODEXAI_WORKS_DIR', '/srv/codexai-students'))
 ADMIN_TOKEN = os.environ.get('CODEXAI_ADMIN_TOKEN', '')
 MIN_ADMIN_PASSWORD_LENGTH = 7
+ADMIN_SESSION_SECONDS = 12 * 60 * 60
 PUBLIC_ORIGIN = os.environ.get('CODEXAI_PUBLIC_ORIGIN', 'https://www.codexai.site').rstrip('/')
 STATIC_DIR_VALUE = os.environ.get('CODEXAI_STATIC_DIR', '')
 STATIC_DIR = Path(STATIC_DIR_VALUE).resolve() if STATIC_DIR_VALUE else None
@@ -38,6 +39,15 @@ CLASS_RE = re.compile(r'[a-z][a-z0-9-]{2,16}\Z')
 SLUG_RE = re.compile(r'[a-z][a-z0-9-]{2,30}\Z')
 LEGACY_PROGRAM = 'workshop01'
 LEGACY_LESSON = 'money'
+MONEY_SCHEDULE_HTML = '''<p class="schedule-intro">这不是连续听讲的 3.5 小时。孩子会经历“提出想法—说清需求—动手制作—测试改进—发布讲解”的全过程，每个阶段都有看得见的任务和成果。</p>
+<div class="steps course-schedule">
+<article class="step-card"><strong>01</strong><h3>0–40 分钟｜找到问题，画出自己的工具</h3><p><b>孩子会做：</b>从一个虚构的小愿望出发，想清楚工具给谁用、要解决什么问题，并决定目标金额、收支分类、预算规则和页面布局。<br><b>老师会带：</b>用生活案例讲清“需求、给 AI 的任务说明、测试”三个概念，帮助孩子把模糊想法改成可以验证的具体要求。<br><b>阶段成果：</b>一张属于自己的需求卡和工具草图，而不是照抄老师的答案。</p></article>
+<article class="step-card"><strong>02</strong><h3>40–95 分钟｜第一次和 AI 合作，跑通核心记账</h3><p><b>孩子会做：</b>打开可运行的起始项目，先修改名称与愿望，再让工具能够记录收入和支出、自动计算余额，并尝试刷新、删除和小数金额。<br><b>老师会带：</b>示范怎样把要求说清楚、一次只改一件事、看到结果后再继续；遇到卡点时帮助孩子缩小问题，而不是直接替孩子完成。<br><b>阶段成果：</b>一个能真正记账、计算并保存记录的基础版本。完成本阶段后安排约 10 分钟离屏休息。</p></article>
+<article class="step-card"><strong>03</strong><h3>95–125 分钟｜把愿望和预算变成看得见的进度</h3><p><b>孩子会做：</b>加入愿望目标、完成百分比和分类预算，用“初始 20 元、收入 30 元、支出 12 元”等情景亲手核对结果。<br><b>老师会带：</b>帮助孩子理解“预算是计划，不会直接扣掉余额”，并引导孩子先写出预期结果，再操作工具验证。<br><b>阶段成果：</b>能显示余额、愿望进度和本月分类预算的完整工具。</p></article>
+<article class="step-card"><strong>04</strong><h3>125–160 分钟｜加入孩子自己的规则与表达</h3><p><b>孩子会做：</b>从预算提醒、愿望达成祝贺、余额不足提示中选择一项进行设计，也可以调整工具名称、提示语和配色。<br><b>老师会带：</b>追问“什么时候出现、显示什么、怎样证明它生效”，让孩子理解功能背后的条件和逻辑，而不只是换颜色。<br><b>阶段成果：</b>至少一项由孩子提出并完成测试的个性化规则。中间安排短暂休息，并保存当前可用版本。</p></article>
+<article class="step-card"><strong>05</strong><h3>160–180 分钟｜同伴互测，把问题找出来</h3><p><b>孩子会做：</b>两人交换作品，检查空金额、负数、刷新保存、删除记录和手机显示等情况，用“我做了什么—应该怎样—实际怎样”描述问题。<br><b>老师会带：</b>教孩子根据测试结果向 AI 提出更准确的修复要求，并保留上一版，避免越改越乱。<br><b>阶段成果：</b>一张测试记录和一个经过同伴实际操作、完成修正的定稿版本。</p></article>
+<article class="step-card"><strong>06</strong><h3>180–210 分钟｜发布作品，交到家长手机里</h3><p><b>孩子会做：</b>上传完整作品，向老师和家长用一分钟讲清楚“我想解决什么、我做了哪些决定、我是怎样测试的”。<br><b>老师会带：</b>检查文件、隐私信息和基本功能，通过后生成孩子自己的作品链接与二维码，并协助家长在手机浏览器打开和保存入口。<br><b>阶段成果：</b>一个经过审核的作品链接、二维码和可继续改进的网页工具；若当堂尚未通过审核，会如实说明并在修改完成后交付。</p></article>
+</div>'''
 TEACHER_INTRO = (
     '你好，我是 Code-X-Ai 的创建者。我不是 IT 专业出身。正因为如此，我更能体会普通人刚接触 AI 时的疑问：从哪里开始？怎样提问？AI 给出的答案能不能相信？这些工具又能怎样帮到自己？\n\n'
     '我建立 Code-X-Ai，是希望用通俗的语言和动手练习，让 AI 成为普通人也能用得上的工具。对孩子来说，学习 AI 不只是学会操作，更是学会借助工具探索问题、表达想法，同时保持独立思考，懂得核对信息和保护隐私。\n\n'
@@ -382,10 +392,37 @@ class Handler(BaseHTTPRequestHandler):
 
     def admin(self):
         provided = self.headers.get('X-Admin-Token', '')
-        if not hmac.compare_digest(provided, ADMIN_TOKEN):
-            self.error(401, '教师账号或管理密码不正确')
-            return False
-        return True
+        if provided and hmac.compare_digest(provided, ADMIN_TOKEN):
+            return True
+        raw = self.headers.get('Cookie', '')[:2048]
+        cookie = SimpleCookie()
+        try:
+            cookie.load(raw)
+        except Exception:
+            cookie = SimpleCookie()
+        value = cookie.get('codexai_admin')
+        if value:
+            try:
+                payload, signature = value.value.split('.', 1)
+                decoded = base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4)).decode()
+                role, expiry_text = decoded.split(':', 1)
+                expiry = int(expiry_text)
+                expected = hmac.new(ADMIN_TOKEN.encode(), payload.encode(), 'sha256').hexdigest()
+                if role == 'admin' and expiry >= int(datetime.now(timezone.utc).timestamp()) and hmac.compare_digest(signature, expected):
+                    return True
+            except (ValueError, UnicodeDecodeError):
+                pass
+        self.error(401, '教师登录已失效，请重新登录')
+        return False
+
+    def admin_cookie(self, max_age=ADMIN_SESSION_SECONDS):
+        if max_age <= 0:
+            return 'codexai_admin=; Path=/api/admin; Max-Age=0; HttpOnly; SameSite=Strict' + ('; Secure' if PUBLIC_ORIGIN.startswith('https://') else '')
+        expiry = int(datetime.now(timezone.utc).timestamp()) + max_age
+        payload = base64.urlsafe_b64encode(f'admin:{expiry}'.encode()).decode().rstrip('=')
+        signature = hmac.new(ADMIN_TOKEN.encode(), payload.encode(), 'sha256').hexdigest()
+        secure = '; Secure' if PUBLIC_ORIGIN.startswith('https://') else ''
+        return f'codexai_admin={payload}.{signature}; Path=/api/admin; Max-Age={max_age}; HttpOnly; SameSite=Strict{secure}'
 
     def student(self):
         raw = self.headers.get('Cookie','')[:1024]
@@ -485,6 +522,9 @@ class Handler(BaseHTTPRequestHandler):
                     (SELECT 1 FROM public_consents c WHERE c.code=f.code AND c.independent_id=f.id
                      AND c.submission_id=f.published_submission_id AND c.revoked_at='')''')]
             self.send_bytes(200,sorted(rows,key=lambda row:row['published_at'],reverse=True)[:300])
+        elif path == '/api/admin/session':
+            if not self.admin(): return
+            self.send_bytes(200, {'authenticated': True, 'username': 'admin'})
         elif path == '/api/admin/catalog':
             if not self.admin(): return
             self.admin_catalog()
@@ -697,7 +737,7 @@ class Handler(BaseHTTPRequestHandler):
 <p>孩子在 {collection['days']} 天课程中逐步完成的网页作品。这里仅收录老师已审核发布的版本，后续更新仍沿用各自的作品链接。</p></div>
 <section class="section"><div class="course-list">{cards}</div></section>
 <p class="muted">这条作品集链接可被持有者转发，请只发给需要查看的家人。作品里的个人记录仍留在使用它的手机浏览器。</p></main>
-<footer><strong>Code-X-Ai · 儿童 AI 创作工作坊</strong></footer></body></html>'''
+<footer><strong>Code-X-Ai · 创作工作坊</strong></footer></body></html>'''
         self.send_bytes(200,page,'text/html; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'})
 
     def serve_legacy(self,path):
@@ -943,6 +983,16 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == '/api/public/consultations':
                 self.create_consultation()
+            elif path == '/api/admin/login':
+                body = self.read_json()
+                username, password = body.get('username'), body.get('password')
+                if username != 'admin' or not isinstance(password, str) or not hmac.compare_digest(password, ADMIN_TOKEN):
+                    return self.error(401, '教师账号或管理密码不正确')
+                self.send_bytes(200, {'authenticated': True, 'username': 'admin'},
+                                extra={'Set-Cookie': self.admin_cookie()})
+            elif path == '/api/admin/logout':
+                self.send_bytes(200, {'authenticated': False},
+                                extra={'Set-Cookie': self.admin_cookie(0)})
             elif re.fullmatch(r'/api/admin/consultations/\d+',path):
                 if not self.admin(): return
                 self.update_consultation(int(path.rsplit('/',1)[1]))
@@ -1163,6 +1213,8 @@ class Handler(BaseHTTPRequestHandler):
         title=e(program['title']);description=e(program['marketing_summary'])
         label='开放咨询' if program['marketing_status']=='consulting' else '暂停咨询'
         day_list=''.join(f'<li>第 {lesson["day_no"]} 天 · {e(lesson["title"])}</li>' for lesson in lessons)
+        schedule=(MONEY_SCHEDULE_HTML if slug==LEGACY_PROGRAM else
+                  f'<p>{description}</p><ul>{day_list}</ul><p>家长参与：{e(program["marketing_parent_role"])}</p>')
         if program['marketing_status']=='consulting':
             action=f'<a class="button" href="/consult/?course={e(slug)}" data-track-consult>咨询这门课程</a>'
         else:
@@ -1174,9 +1226,9 @@ class Handler(BaseHTTPRequestHandler):
 <main><div class="breadcrumb"><a href="/">首页</a> / <a href="/courses/">课程与创作营</a> / {title}</div>
 <section class="page-head"><span class="eyebrow">{label} · {e(program['kind'])}</span><h1>{title}</h1><p>{description}</p>{action}</section>
 <section class="section"><div class="facts"><div class="fact"><strong>{e(program['marketing_audience'])}</strong><span>适合谁</span></div><div class="fact"><strong>{e(program['marketing_duration'])}</strong><span>课程时长</span></div><div class="fact"><strong>{e(program['marketing_outcome'])}</strong><span>孩子带走的作品</span></div></div></section>
-<section class="section"><span class="eyebrow">课程安排</span><h2>孩子会经历什么？</h2><p>{description}</p><ul>{day_list}</ul><p>家长参与：{e(program['marketing_parent_role'])}</p></section>
+<section class="section"><span class="eyebrow">详细课程安排</span><h2>{'约 3.5 小时，完成一次完整的创作过程。' if slug==LEGACY_PROGRAM else '孩子会经历什么？'}</h2>{schedule}</section>
 <section class="section"><div class="cta-panel"><div><h2>有问题想先问老师？</h2><p>具体排期和费用请在咨询时了解。</p></div>{action}</div></section></main>
-<footer><div><strong>Code-X-Ai · 儿童 AI 创作工作坊</strong></div><div><a href="/consult/">咨询方式</a><a href="/privacy/">隐私说明</a><a href="https://www.codexai.site/teacher/">教师登录</a></div></footer></body></html>'''
+<footer><div><strong>Code-X-Ai · 创作工作坊</strong></div><div><a href="/consult/">咨询方式</a><a href="/privacy/">隐私说明</a><a href="https://www.codexai.site/teacher/">教师登录</a></div></footer></body></html>'''
         self.send_bytes(200,page,'text/html; charset=utf-8',{'X-Robots-Tag':'index, follow' if program['marketing_status']=='consulting' else 'noindex, nofollow'})
 
     def public_sitemap(self):

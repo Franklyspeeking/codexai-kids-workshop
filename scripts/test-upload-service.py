@@ -61,6 +61,29 @@ class UploadFlow(unittest.TestCase):
         })
         self.assertTrue(all(program['marketing_audience'].startswith('9–16 岁')
                             for program in catalog['programs']))
+        money_page = self.call('/courses/money/').decode()
+        self.assertIn('详细课程安排', money_page)
+        self.assertIn('0–40 分钟｜找到问题，画出自己的工具', money_page)
+        self.assertIn('180–210 分钟｜发布作品，交到家长手机里', money_page)
+        self.assertEqual(money_page.count('class="step-card"'), 6)
+
+    def test_teacher_login_uses_http_only_session_cookie(self):
+        wrong = json.dumps({'username': 'admin', 'password': 'wrong'}).encode()
+        self.call('/api/admin/login', 'POST', wrong, {'Content-Type': 'application/json'}, 401)
+        credentials = json.dumps({
+            'username': 'admin',
+            'password': os.environ['CODEXAI_ADMIN_TOKEN'],
+        }).encode()
+        self.call('/api/admin/login', 'POST', credentials, {'Content-Type': 'application/json'})
+        cookie_header = self.last_headers.get('Set-Cookie')
+        self.assertIn('codexai_admin=', cookie_header)
+        self.assertIn('HttpOnly', cookie_header)
+        cookie = cookie_header.split(';', 1)[0]
+        session = self.call('/api/admin/session', headers={'Cookie': cookie})
+        self.assertEqual(session, {'authenticated': True, 'username': 'admin'})
+        self.call('/api/admin/catalog', headers={'Cookie': cookie})
+        self.call('/api/admin/logout', 'POST', b'')
+        self.assertIn('Max-Age=0', self.last_headers.get('Set-Cookie'))
 
     def test_submit_review_publish_and_resubmit(self):
         admin = {'X-Admin-Token':os.environ['CODEXAI_ADMIN_TOKEN']}
