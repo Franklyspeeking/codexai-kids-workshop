@@ -1,7 +1,7 @@
 :root{--forest:#173d30;--forest-2:#245c42;--paper:#f5f7ef;--cream:#fffdf6;--line:#dbe4d7;--lime:#d8ef87;--gold:#e9ba66;--muted:#53675a}
 body.site{background:var(--paper);color:var(--forest);font-size:17px;line-height:1.7}
 html,body{max-width:100%;overflow-x:clip}.site header,.site main,.site footer{max-width:1200px;width:100%}.site header{padding-top:18px;padding-bottom:18px;background:var(--paper);position:relative;z-index:2}
-.site .brand{display:flex;align-items:center;gap:10px;font-size:18px;letter-spacing:.02em}.brand-logo{width:42px;height:42px;display:block;object-fit:contain}.brand-mark{width:32px;height:32px;display:grid;place-items:center;background:var(--lime);border:2px solid var(--forest);border-radius:10px;font-size:17px;transform:rotate(-8deg)}
+.site .brand{display:flex;align-items:center;gap:10px;font-size:18px;letter-spacing:.02em}.site .brand-logo{width:42px;height:42px}
 .site nav{gap:20px}.site nav a{font-size:15px}.site nav .nav-cta{background:var(--forest);color:white;padding:9px 17px;border-radius:999px;font-weight:700}.site nav .nav-login{border-left:1px solid var(--line);padding-left:20px}
 .site h1{font-size:clamp(42px,5.5vw,76px);line-height:1.12;letter-spacing:-.045em;text-wrap:balance}.site h2{font-size:clamp(30px,3.5vw,48px);line-height:1.22;letter-spacing:-.035em;margin:12px 0;text-wrap:balance}.site h3{font-size:22px;line-height:1.35;text-wrap:balance}.site p{margin:12px 0}.site .eyebrow{color:#4d714c;font-size:14px;letter-spacing:.12em}
 .site .button,.site button{border-radius:999px;min-height:48px;padding:12px 22px}.site .button.secondary,.site button.secondary{background:#e5eddd;color:var(--forest)}

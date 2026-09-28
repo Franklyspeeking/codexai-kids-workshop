@@ -731,8 +731,8 @@ class Handler(BaseHTTPRequestHandler):
         if not cards:cards='<p class="muted">目前还没有通过老师审核的作品，请稍后再来看。</p>'
         page=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>{e(collection['title'])}阶段作品集｜Code-X-Ai</title>
-<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/site.css"></head><body class="site">
-<header><a class="brand" href="/">✦ Code-X-Ai</a><nav><a href="/courses/">课程</a><a href="/consult/">联系老师</a></nav></header>
+<link rel="icon" href="/assets/code-x-ai-logo.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/site.css"></head><body class="site">
+<header><a class="brand" href="/"><img class="brand-logo" src="/assets/code-x-ai-logo.png" alt="" width="42" height="42">Code-X-Ai</a><nav><a href="/courses/">课程</a><a href="/consult/">联系老师</a></nav></header>
 <main><div class="page-head"><span class="eyebrow">家长专属作品集 · {e(collection['code'])}</span><h1>{e(collection['title'])}</h1>
 <p>孩子在 {collection['days']} 天课程中逐步完成的网页作品。这里仅收录老师已审核发布的版本，后续更新仍沿用各自的作品链接。</p></div>
 <section class="section"><div class="course-list">{cards}</div></section>
@@ -1221,8 +1221,8 @@ class Handler(BaseHTTPRequestHandler):
             action='<p class="notice">这门课程目前暂停咨询，开放时间请关注课程列表。</p>'
         page=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}｜Code-X-Ai 儿童 AI 创作工作坊</title><meta name="description" content="{description[:150]}">
-<link rel="canonical" href="https://codexai.site/courses/{e(slug)}/"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/site.css"><script src="/site.js" defer></script></head>
-<body class="site"><header><a class="brand" href="/">✦ Code-X-Ai</a><nav aria-label="主导航"><a href="/courses/">课程与创作营</a><a href="/showcase/">孩子作品</a><a href="/method/">怎么上课</a><a href="/about/">关于我</a><a href="/faq/">常见问题</a><a class="nav-cta" href="/consult/" data-track-consult>咨询课程</a><a class="nav-login" href="https://www.codexai.site/student/">学生登录</a></nav></header>
+<link rel="canonical" href="https://codexai.site/courses/{e(slug)}/"><link rel="icon" href="/assets/code-x-ai-logo.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/site.css"><script src="/site.js" defer></script></head>
+<body class="site"><header><a class="brand" href="/"><img class="brand-logo" src="/assets/code-x-ai-logo.png" alt="" width="42" height="42">Code-X-Ai</a><nav aria-label="主导航"><a href="/courses/">课程与创作营</a><a href="/showcase/">孩子作品</a><a href="/method/">怎么上课</a><a href="/about/">关于我</a><a href="/faq/">常见问题</a><a class="nav-cta" href="/consult/" data-track-consult>咨询课程</a><a class="nav-login" href="https://www.codexai.site/student/">学生登录</a></nav></header>
 <main><div class="breadcrumb"><a href="/">首页</a> / <a href="/courses/">课程与创作营</a> / {title}</div>
 <section class="page-head"><span class="eyebrow">{label} · {e(program['kind'])}</span><h1>{title}</h1><p>{description}</p>{action}</section>
 <section class="section"><div class="facts"><div class="fact"><strong>{e(program['marketing_audience'])}</strong><span>适合谁</span></div><div class="fact"><strong>{e(program['marketing_duration'])}</strong><span>课程时长</span></div><div class="fact"><strong>{e(program['marketing_outcome'])}</strong><span>孩子带走的作品</span></div></div></section>
