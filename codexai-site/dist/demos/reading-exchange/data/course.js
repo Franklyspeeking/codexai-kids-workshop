@@ -1,0 +1,20 @@
+window.COURSE = {
+  "id": "17",
+  "slug": "reading-exchange",
+  "title": "家庭阅读交换站",
+  "subtitle": "让读过的故事，遇见下一位读者。",
+  "group": "城市、文化与创造力",
+  "challenge": "改写推荐规则，并增加一个书架标签",
+  "prompt": "推荐近期没有被借过的可借图书，说明为什么推荐这本。",
+  "accent": "#ded5b3",
+  "ink": "#4e4936",
+  "paper": "#f7f5ed",
+  "boundary": "使用虚构数据和代号，不填写真实姓名、学校、住址、电话或账号凭证。",
+  "flow": "添加藏书 → 标签筛选 → 借阅归还与推荐",
+  "value": "阅读兴趣与物品管理",
+  "directory": "17-reading-exchange",
+  "productName": "家庭借阅馆",
+  "theme": "library",
+  "icon": "▥",
+  "productDirectory": "17-家庭阅读交换站"
+};

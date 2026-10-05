@@ -7,7 +7,7 @@ function valid(s){if(!s||s.version!==1||!Array.isArray(s.entries)||s.entries.len
 let state=defaults(), storageReady=true;
 try{const raw=localStorage.getItem(KEY);if(raw)state=valid(JSON.parse(raw));}catch(e){storageReady=false;setTimeout(()=>tell('原有数据无法读取；请先导出或联系老师，暂不覆盖原数据。'),100);}
 function tell(t){$('message').textContent=t;clearTimeout(tell.timer);tell.timer=setTimeout(()=>$('message').textContent='',6000);}
-function commit(next){try{valid(next);if(!storageReady)throw Error('当前存储异常，请先联系老师处理');localStorage.setItem(KEY,JSON.stringify(next));state=next;render();return true;}catch(e){tell('未保存：'+e.message);return false;}}
+function commit(next){try{valid(next);if(!storageReady)throw Error('当前存储异常，请先联系老师处理');localStorage.setItem(KEY,JSON.stringify(next));state=next;render();document.dispatchEvent(new Event('money-saved'));return true;}catch(e){tell('未保存：'+e.message);return false;}}
 function cents(v,zero=false){if(!/^\d+(\.\d{1,2})?$/.test(String(v).trim()))throw Error('请输入最多两位小数的金额');const n=Math.round(Number(v)*100);if(!Number.isSafeInteger(n)||n<(zero?0:1)||n>100000000)throw Error('金额超出范围');return n;}
 const totals=()=>state.entries.reduce((a,e)=>(a[e.kind]+=e.amount,a),{income:0,expense:0});
 function syncCategories(){const category=$('category'),options=$('kind').value==='income'?incomeCats:cats,previous=category.value;category.replaceChildren(...options.map(name=>{const option=document.createElement('option');option.textContent=name;return option;}));if(options.includes(previous))category.value=previous;}

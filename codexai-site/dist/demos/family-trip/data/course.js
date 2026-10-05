@@ -1,0 +1,20 @@
+window.COURSE = {
+  "id": "05",
+  "slug": "family-trip",
+  "title": "家庭旅行合伙人",
+  "subtitle": "每个人都说喜欢，一起选出走得成的旅行。",
+  "group": "家庭生活与自我管理",
+  "challenge": "改变偏好权重，并增加一个原创候选方案",
+  "prompt": "让最少被照顾到的偏好获得额外一票，展示评分解释。",
+  "accent": "#ffd4b0",
+  "ink": "#633e2d",
+  "paper": "#fff5eb",
+  "boundary": "使用虚构数据和代号，不填写真实姓名、学校、住址、电话或账号凭证。",
+  "flow": "添加多人偏好 → 调整预算 → 对比并选择方案",
+  "value": "规划与家庭沟通",
+  "directory": "05-family-trip",
+  "productName": "家庭出游社",
+  "theme": "travel",
+  "icon": "⌁",
+  "productDirectory": "05-家庭旅行合伙人"
+};

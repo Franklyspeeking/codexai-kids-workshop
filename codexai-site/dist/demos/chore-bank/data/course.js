@@ -1,0 +1,20 @@
+window.COURSE = {
+  "id": "02",
+  "slug": "chore-bank",
+  "title": "家务积分银行",
+  "subtitle": "一件小家务，一份看得见的家庭贡献。",
+  "group": "家庭生活与自我管理",
+  "challenge": "调整两件家务的积分，再增加一个合作任务",
+  "prompt": "增加需要两位家庭成员合作的任务类型，并解释积分如何计算。",
+  "accent": "#ffdb92",
+  "ink": "#63422b",
+  "paper": "#fbf6ed",
+  "boundary": "使用虚构数据和代号，不填写真实姓名、学校、住址、电话或账号凭证。",
+  "flow": "添加任务 → 完成或撤销 → 结算本周积分",
+  "value": "责任感与家庭协作",
+  "directory": "02-chore-bank",
+  "productName": "家庭协作社",
+  "theme": "chores",
+  "icon": "✦",
+  "productDirectory": "02-家务积分银行"
+};

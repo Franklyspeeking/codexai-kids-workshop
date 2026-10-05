@@ -1,4 +1,15 @@
 'use strict';
+const demoPaths={
+  '零花钱计划师':'/money/',
+  '家务积分银行':'/demos/chore-bank/',
+  '周末时间调度员':'/demos/weekend-planner/',
+  '屏幕时间协商器':'/demos/screen-agreement/',
+  '家庭旅行合伙人':'/demos/family-trip/',
+  '健康习惯挑战板':'/demos/habit-board/',
+  '垃圾分类挑战赛':'/demos/sorting-challenge/',
+  '家庭阅读交换站':'/demos/reading-exchange/',
+  'AI 互动故事导演':'/demos/story-director/'
+};
 fetch('/api/public/courses').then(async response=>{
   if(!response.ok)throw Error('课程列表暂时无法更新');
   return response.json();
@@ -12,6 +23,9 @@ fetch('/api/public/courses').then(async response=>{
     const summary=document.createElement('p');summary.textContent=course.summary;card.append(summary);
     const outcome=document.createElement('p');outcome.className='muted';outcome.textContent=`${course.duration} · ${course.audience} · ${course.outcome}`;card.append(outcome);
     const link=document.createElement('a');link.className='button';link.href=course.url;link.textContent='了解课程';card.append(link);
+    if(demoPaths[course.title]){
+      const demo=document.createElement('a');demo.className='button secondary demo-link';demo.href=demoPaths[course.title];demo.textContent='体验作品 Demo';card.append(demo);
+    }
     host.append(card);
     for(const direction of document.querySelectorAll('.course-list .poster')){
       if(direction.querySelector('h3')?.textContent===course.title)direction.hidden=true;

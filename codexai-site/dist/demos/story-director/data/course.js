@@ -1,0 +1,20 @@
+window.COURSE = {
+  "id": "18",
+  "slug": "story-director",
+  "title": "AI 互动故事导演",
+  "subtitle": "一个选择，让故事走向不同的明天。",
+  "group": "城市、文化与创造力",
+  "challenge": "改写一个镜头，再新增一个有后果的选择",
+  "prompt": "增加一个遵守角色约束的新分支和结局，测试所有结局仍然可达。",
+  "accent": "#d7d5f3",
+  "ink": "#3e3c5d",
+  "paper": "#f3f2f8",
+  "boundary": "使用虚构数据和代号，不填写真实姓名、学校、住址、电话或账号凭证。",
+  "flow": "设定角色 → 选择分支 → 探索三种结局与改写",
+  "value": "创造、约束与完整表达",
+  "directory": "18-story-director",
+  "productName": "分支故事剧场",
+  "theme": "story",
+  "icon": "✧",
+  "productDirectory": "18-AI 互动故事导演"
+};
