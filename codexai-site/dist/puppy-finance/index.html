@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>汪汪小金库 · 儿童理财工具原型</title>
+<link rel="icon" href="/assets/code-x-ai-logo.png">
 <style>
 /* ============ 设计系统：奶油纸账本 ============
    纸底 #FBF7EF · 墨色 #2D3229 · 攒钱绿 #2F6B4F
@@ -248,6 +249,7 @@ const CATS=[
 const SRC=[{name:'零花钱',ico:'coin'},{name:'劳动所得',ico:'broom'},{name:'压岁钱',ico:'gift'},{name:'其他',ico:'spark'}];
 const JARS={spend:'花钱罐',save:'攒钱罐',grow:'增长罐'};
 const money=c=>'¥'+(c/100).toFixed(2);
+const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const uid=()=>Math.random().toString(36).slice(2,10);
 const prevMonth=m=>{const y=+m.slice(0,4),mo=+m.slice(5);return mo===1?(y-1)+'-12':y+'-'+String(mo-1).padStart(2,'0')};
@@ -393,7 +395,7 @@ function render(){
       <div class="eyebrow">三只罐子 · 钱各归各位</div>
       <div class="jars">
         <div class="jar spend"><div class="jar-fig">${jarSVG('spend',mBud?mExp/mBud:0)}</div><div class="jar-name">花钱罐</div><div class="jar-amt amount">${money(jars.spend)}</div><div class="jar-desc">日常开销</div></div>
-        <div class="jar save"><div class="jar-fig">${jarSVG('save',jars.save/state.goal.target)}</div><div class="jar-name">攒钱罐</div><div class="jar-amt amount">${money(jars.save)}</div><div class="jar-desc">${state.goal.name}</div></div>
+        <div class="jar save"><div class="jar-fig">${jarSVG('save',jars.save/state.goal.target)}</div><div class="jar-name">攒钱罐</div><div class="jar-amt amount">${money(jars.save)}</div><div class="jar-desc">${esc(state.goal.name)}</div></div>
         <div class="jar grow"><div class="jar-fig">${jarSVG('grow',.68)}</div><div class="jar-name">增长罐</div><div class="jar-amt amount">${money(jars.grow)}</div><div class="jar-desc">长期不动</div></div>
       </div>
     </section>
@@ -409,7 +411,7 @@ function render(){
         return ws.length?ws.map(w=>{const left=Math.max(0,COOL_DAYS-daysSince(w.added));
         return `<div class="wish w-row">
           <div class="w-ico pink">${I.heart}</div>
-          <div class="info"><b>${w.name}</b><span>${money(w.price)} · ${w.added} 加入</span></div>
+          <div class="info"><b>${esc(w.name)}</b><span>${money(w.price)} · ${w.added} 加入</span></div>
           <div class="side">${left>0
             ?`<span class="cool-chip wait">还差 ${left} 天</span><button class="del-x" data-wish-x="${w.id}">不想要了</button>`
             :`<span class="cool-chip ok">冷静完成</span><div style="display:flex;gap:6px"><button class="mini-btn green" data-wish-buy="${w.id}">还想买</button><button class="mini-btn pink" data-wish-x="${w.id}">不想要了</button></div>`}
@@ -421,7 +423,7 @@ function render(){
       <div class="row"><h2 class="card-title">任务板 · 劳动赚钱</h2><button class="mini-btn green" id="add-task">挂牌</button></div>
       ${state.tasks.length?state.tasks.map(t=>`<div class="wish task t-row">
         <div class="w-ico">${I.checkI}</div>
-        <div class="info"><b>${t.name}</b><span>报酬 ${money(t.pay)}</span></div>
+        <div class="info"><b>${esc(t.name)}</b><span>报酬 ${money(t.pay)}</span></div>
         <div class="side" style="flex-direction:row;align-items:center;gap:8px"><button class="mini-btn green" data-task-do="${t.id}">完成</button><button class="del-x" data-task-x="${t.id}" title="取消任务">✕</button></div>
       </div>`).join(''):'<div class="muted" style="padding:12px 0">任务板空着，请家长挂牌：例如「洗碗 ¥5」。</div>'}
       ${(()=>{const earned=monthEntries().filter(e=>e.type==='income'&&e.fromTask).reduce((a,e)=>a+e.amount,0);
@@ -439,7 +441,7 @@ function render(){
     html+=`
     <section class="card">
       <div class="eyebrow">攒钱罐 · 目标计划</div>
-      <div class="goal-head"><div class="pct">${pct}%</div><div><b style="font-size:15px">${state.goal.name}</b><div class="muted">目标 ${money(state.goal.target)} · 每周存 ${money(state.goal.weekly)}</div></div></div>
+      <div class="goal-head"><div class="pct">${pct}%</div><div><b style="font-size:15px">${esc(state.goal.name)}</b><div class="muted">目标 ${money(state.goal.target)} · 每周存 ${money(state.goal.weekly)}</div></div></div>
       <div class="bar"><i style="width:${pct}%"></i></div>
       <div class="hint-box">按计划还要 <b>${weeksLeft} 周</b>（约 ${eta.getMonth()+1} 月 ${eta.getDate()} 日）就能达成。现在罐里有 ${money(b.save)}。</div>
     </section>
@@ -454,7 +456,7 @@ function render(){
     </section>
     <section class="card">
       <h2 class="card-title">调整计划</h2>
-      <label class="field">目标名称<input id="g-name" value="${state.goal.name}"></label>
+      <label class="field">目标名称<input id="g-name" value="${esc(state.goal.name)}"></label>
       <label class="field">目标金额（元）<input id="g-target" type="number" min="1" step="0.01" value="${(state.goal.target/100).toFixed(2)}"></label>
       <label class="field">每周存入（元）<input id="g-weekly" type="number" min="1" step="0.01" value="${(state.goal.weekly/100).toFixed(2)}"></label>
       <button class="btn primary" style="margin-top:16px" id="save-goal">更新储蓄计划</button>
@@ -525,7 +527,7 @@ function render(){
     <section class="card">
       <div class="eyebrow">想要支出 · 周报（${mLabel}）</div>
       <div class="wk-bars">${wk.map((v,i)=>`<div class="wk-col"><b>${v?money(v):'—'}</b><div class="bar-v ${v?'':'zero'}" style="height:${Math.max(4,v/wkMax*52)}px"></div><span>第${i+1}周</span></div>`).join('')}</div>
-      <div class="hint-box">本月最大单笔想要：${wantList[0]?'「'+(wantList[0].note||wantList[0].cat)+'」'+money(wantList[0].amount):'没有，很自律！'}</div>
+      <div class="hint-box">本月最大单笔想要：${wantList[0]?'「'+esc(wantList[0].note||wantList[0].cat)+'」'+money(wantList[0].amount):'没有，很自律！'}</div>
     </section>
     <section class="card">
       <div class="eyebrow">想要清单 · ${wantList.length} 笔 · 共 ${money(wantSum)}</div>
@@ -537,7 +539,7 @@ function render(){
     </section>
     <section class="card">
       <div class="eyebrow">下次可以更好的地方</div>
-      ${tips.map((t,i)=>`<div class="tip"><span class="n">${i+1}</span><div>${t}</div></div>`).join('')}
+      ${tips.map((t,i)=>`<div class="tip"><span class="n">${i+1}</span><div>${esc(t)}</div></div>`).join('')}
     </section>
     <section class="card">
       <div class="eyebrow">和上个月比</div>
@@ -569,7 +571,7 @@ function entryRow(e){
   const sub=isIn?e.date+' · 存入'+JARS[e.jar]:e.date+' · '+e.cat;
   const tag=!isIn?`<span class="tag ${e.nw}">${e.nw==='need'?'需要':'想要'}</span>`:'';
   return `<div class="entry"><div class="ico">${ico}</div>
-    <div class="info"><b>${e.note||'（无备注）'}${tag}</b><span>${sub}</span></div>
+    <div class="info"><b>${esc(e.note||'（无备注）')}${tag}</b><span>${esc(sub)}</span></div>
     <div class="amt ${isIn?'in':'out'}">${isIn?'+':'−'}${money(e.amount)}</div></div>`;
 }
 /* ============ 记账弹层 ============ */
@@ -668,7 +670,7 @@ function openTaskAdd(){
 }
 function openTaskDone(t){
   openSheet(`<h3>完成任务</h3>
-    <p style="font-size:14px;margin-top:6px">「${t.name}」· 报酬 <b>${money(t.pay)}</b></p>
+    <p style="font-size:14px;margin-top:6px">「${esc(t.name)}」· 报酬 <b>${money(t.pay)}</b></p>
     <div class="eyebrow" style="margin-top:10px">报酬存进哪只罐子？</div>
     <div class="jar-pick">
       <button data-jar="spend">${jarSVG('spend',.35)}花钱罐</button>

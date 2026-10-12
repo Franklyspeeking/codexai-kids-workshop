@@ -1,6 +1,6 @@
 'use strict';
 const demoPaths={
-  '零花钱计划师':'/money/',
+  '零花钱计划师':'/puppy-finance/',
   '家务积分银行':'/demos/chore-bank/',
   '周末时间调度员':'/demos/weekend-planner/',
   '屏幕时间协商器':'/demos/screen-agreement/',
