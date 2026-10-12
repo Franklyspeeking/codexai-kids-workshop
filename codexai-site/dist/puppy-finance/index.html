@@ -743,63 +743,66 @@ async function buildShareCard(m){
   const h=health(m),hp=health(prevMonth(m));
   const logDays=new Set(monthEntries(m).map(e=>e.date)).size;
   const mood=dogMood(h.total);
-  const W=750,H=1200,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const W=750,H=1440,cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const ctx=cv.getContext('2d');
   try{await document.fonts.ready}catch(e){}
   ctx.fillStyle='#FBF7EF';ctx.fillRect(0,0,W,H);
-  pawPrint(ctx,70,182,16,-.5,.08);pawPrint(ctx,662,244,20,.4,.08);pawPrint(ctx,640,1008,16,-.3,.08);pawPrint(ctx,86,986,14,.6,.08);
+  pawPrint(ctx,70,200,16,-.5,.08);pawPrint(ctx,662,262,20,.4,.08);pawPrint(ctx,640,1392,16,-.3,.08);pawPrint(ctx,86,1368,14,.6,.08);
   /* 页眉品牌 */
-  ctx.fillStyle='#2F6B4F';rr(ctx,40,40,64,64,18);ctx.fill();
-  ctx.fillStyle='#FDFBF6';rr(ctx,54,52,36,14,5);ctx.fill();rr(ctx,50,72,44,24,8);ctx.fill();
-  ctx.fillStyle='#2F6B4F';rr(ctx,56,78,32,12,6);ctx.fill();
-  ctx.textAlign='left';ctx.fillStyle='#2D3229';ctx.font='700 40px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText('汪汪小金库',124,78);
-  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('我的第一本理财账本',124,112);
-  ctx.textAlign='right';ctx.fillStyle='#2D3229';ctx.font='600 28px "PingFang SC",sans-serif';ctx.fillText(m.slice(0,4)+'年'+(+m.slice(5))+'月 · 财务月报',710,70);
+  ctx.fillStyle='#2F6B4F';rr(ctx,40,48,64,64,18);ctx.fill();
+  ctx.fillStyle='#FDFBF6';rr(ctx,54,60,36,14,5);ctx.fill();rr(ctx,50,80,44,24,8);ctx.fill();
+  ctx.fillStyle='#2F6B4F';rr(ctx,56,86,32,12,6);ctx.fill();
+  ctx.textAlign='left';ctx.fillStyle='#2D3229';ctx.font='700 40px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText('汪汪小金库',124,86);
+  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('我的第一本理财账本',124,120);
+  ctx.textAlign='right';ctx.fillStyle='#2D3229';ctx.font='600 28px "PingFang SC",sans-serif';ctx.fillText(m.slice(0,4)+'年'+(+m.slice(5))+'月 · 财务月报',710,78);
   /* 白色卡面 */
-  ctx.fillStyle='#FFFFFF';rr(ctx,36,150,678,970,26);ctx.fill();
-  ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,36,150,678,970,26);ctx.stroke();
+  ctx.fillStyle='#FFFFFF';rr(ctx,36,164,678,1200,28);ctx.fill();
+  ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,36,164,678,1200,28);ctx.stroke();
   /* 体检分环形 */
-  const cx=265,cy=390,R=105;
+  const cx=262,cy=430,R=110;
   ctx.lineWidth=20;ctx.lineCap='round';
   ctx.strokeStyle='#F0EBDD';ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
   const sc=h.total,col=sc>=80?'#5D8A3C':sc>=55?'#E09E3A':'#B23A3A';
   ctx.strokeStyle=col;ctx.beginPath();ctx.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+Math.min(100,sc)/100*Math.PI*2);ctx.stroke();
-  ctx.textAlign='center';ctx.fillStyle='#2D3229';ctx.font='700 72px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(sc,cx,cy+10);
-  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('财务体检分',cx,cy+50);
+  ctx.textAlign='center';ctx.fillStyle='#2D3229';ctx.font='700 74px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(sc,cx,cy+12);
+  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('财务体检分',cx,cy+54);
   ctx.font='22px "PingFang SC",sans-serif';
-  ctx.fillText('想要 '+(h.expSum?Math.round(h.wantRatio*100):0)+'% · 攒钱率 '+Math.round(h.saveRate*100)+'% · 记账 '+logDays+' 天',cx,cy+R+48);
+  ctx.fillText('想要 '+(h.expSum?Math.round(h.wantRatio*100):0)+'% · 攒钱率 '+Math.round(h.saveRate*100)+'% · 记账 '+logDays+' 天',cx,cy+R+58);
   /* 小狗 */
   const dogImg=await new Promise(res=>{const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(dogSVG(mood).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('width="100%"','width="140" height="132"'));});
-  if(dogImg)ctx.drawImage(dogImg,478,268,205,194);
+  if(dogImg)ctx.drawImage(dogImg,482,318,200,190);
   /* 三个数据块 */
   const chips=[[Math.round((h.expSum?h.wantRatio:0)*100)+'%','想要占比',(h.wantRatio<=.4?'#5D8A3C':h.wantRatio<=.6?'#E09E3A':'#B23A3A')],[Math.round(h.saveRate*100)+'%','攒钱率','#2F6B4F'],[logDays+' 天','记账坚持','#2E6E9E']];
   chips.forEach((c,i)=>{const x=76+i*214;
-    ctx.fillStyle='#FBF7EF';rr(ctx,x,580,196,116,18);ctx.fill();
-    ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,x,580,196,116,18);ctx.stroke();
-    ctx.fillStyle=c[2];ctx.font='700 46px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(c[0],x+98,644);
-    ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText(c[1],x+98,678);});
+    ctx.fillStyle='#FBF7EF';rr(ctx,x,680,196,126,18);ctx.fill();
+    ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,x,680,196,126,18);ctx.stroke();
+    ctx.fillStyle=c[2];ctx.font='700 46px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(c[0],x+98,748);
+    ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText(c[1],x+98,786);});
   /* 本月最大进步 */
   const diffs=[['攒钱率',Math.round((h.saveRate-hp.saveRate)*100)],['想要占比',h.expSum&&hp.expSum?-Math.round((h.wantRatio-hp.wantRatio)*100):0],['财务体检分',h.total-hp.total]].sort((a,b)=>b[1]-a[1]);
   const best=diffs[0];
-  ctx.fillStyle='#E3EFE7';rr(ctx,76,730,598,110,18);ctx.fill();
-  ctx.strokeStyle='#C6DECB';ctx.lineWidth=2;rr(ctx,76,730,598,110,18);ctx.stroke();
-  ctx.fillStyle='#2F6B4F';ctx.font='700 30px "PingFang SC",sans-serif';ctx.fillText(best[1]>0?'比上月进步：'+best[0]+' +'+best[1]:'这个月稳住了，下月继续加油',375,772);
-  ctx.font='23px "PingFang SC",sans-serif';ctx.fillStyle='#4E7A62';
-  ctx.fillText('「'+dogSay(h.total)+'」',375,812);
+  ctx.fillStyle='#E3EFE7';rr(ctx,76,864,598,128,18);ctx.fill();
+  ctx.strokeStyle='#C6DECB';ctx.lineWidth=2;rr(ctx,76,864,598,128,18);ctx.stroke();
+  ctx.fillStyle='#2F6B4F';ctx.font='700 30px "PingFang SC",sans-serif';ctx.fillText(best[1]>0?'比上月进步：'+best[0]+' +'+best[1]:'这个月稳住了，下月继续加油',375,918);
+  /* 小狗的话（文字过长时自动缩小，防溢出）*/
+  const say='「'+dogSay(h.total)+'」';
+  let saySize=23;ctx.fillStyle='#4E7A62';
+  do{ctx.font=saySize+'px "PingFang SC",sans-serif';if(ctx.measureText(say).width<=560)break;saySize--;}while(saySize>17);
+  ctx.fillText(say,375,968);
   /* 需要 vs 想要 比例条 */
   const needSum=h.expSum-h.wantSum,bw=598,wantR=h.expSum?h.wantSum/h.expSum:0;
-  ctx.fillStyle='#C24E6B';rr(ctx,76,884,bw,34,17);ctx.fill();
+  ctx.fillStyle='#C24E6B';rr(ctx,76,1056,bw,36,18);ctx.fill();
   const needW=bw*(1-wantR);
-  if(needW>34){ctx.save();ctx.beginPath();ctx.rect(76,884,needW,34);ctx.clip();ctx.fillStyle='#5D8A3C';rr(ctx,76,884,bw,34,17);ctx.fill();ctx.restore();}
-  ctx.textAlign='left';ctx.fillStyle='#5D8A3C';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('需要 '+money(needSum),76,946);
-  ctx.textAlign='right';ctx.fillStyle='#C24E6B';ctx.fillText('想要 '+money(h.wantSum)+'（'+Math.round(wantR*100)+'%）',674,946);
+  if(needW>36){ctx.save();ctx.beginPath();ctx.rect(76,1056,needW,36);ctx.clip();ctx.fillStyle='#5D8A3C';rr(ctx,76,1056,bw,36,18);ctx.fill();ctx.restore();}
+  ctx.textAlign='left';ctx.fillStyle='#5D8A3C';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('需要 '+money(needSum),76,1132);
+  ctx.textAlign='right';ctx.fillStyle='#C24E6B';ctx.fillText('想要 '+money(h.wantSum)+'（'+Math.round(wantR*100)+'%）',674,1132);
   /* 汇总行 */
   ctx.textAlign='center';ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';
-  ctx.fillText('本月支出 '+money(h.expSum)+' · 收入 '+money(h.incSum)+' · 存下 '+money(h.saved),375,1006);
+  ctx.fillText('本月支出 '+money(h.expSum)+' · 收入 '+money(h.incSum)+' · 存下 '+money(h.saved),375,1200);
   /* 页脚 */
-  ctx.strokeStyle='#E8E2D4';ctx.setLineDash([2,8]);ctx.beginPath();ctx.moveTo(76,1046);ctx.lineTo(674,1046);ctx.stroke();ctx.setLineDash([]);
-  pawPrint(ctx,375,1084,12,0,.5);
-  ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('汪汪小金库 · 记录每一笔，长大不慌张',375,1136);
+  ctx.strokeStyle='#E8E2D4';ctx.setLineDash([2,8]);ctx.beginPath();ctx.moveTo(76,1248);ctx.lineTo(674,1248);ctx.stroke();ctx.setLineDash([]);
+  pawPrint(ctx,375,1288,12,0,.5);
+  ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('汪汪小金库 · 记录每一笔，长大不慌张',375,1334);
   return cv;
 }
 async function openShareCard(m){
