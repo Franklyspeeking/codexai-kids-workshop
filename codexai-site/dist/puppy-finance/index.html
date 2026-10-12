@@ -100,8 +100,10 @@ h2.card-title{font-size:15.5px;font-weight:700}
 .btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
 
 /* 记录列表 */
-.entry{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1.5px solid var(--line)}
+.entry{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1.5px solid var(--line);cursor:pointer;transition:opacity .15s}
 .entry:last-child{border-bottom:0}
+.entry:active{opacity:.55}
+.entry .chev{color:var(--muted);font-size:17px;font-weight:700;flex:0 0 auto;padding-left:2px}
 .entry .ico{width:38px;height:38px;border-radius:12px;background:var(--paper);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 38px}
 .entry .ico svg{width:21px;height:21px}
 .entry .info{flex:1;min-width:0}
@@ -568,9 +570,9 @@ function entryRow(e){
   const ico=isIn?I[(SRC.find(s=>s.name===e.src)||{}).ico||'spark']:I[(CATS.find(c=>c.name===e.cat)||{}).ico||'basket'];
   const sub=isIn?e.date+' · 存入'+JARS[e.jar]:e.date+' · '+e.cat;
   const tag=!isIn?`<span class="tag ${e.nw}">${e.nw==='need'?'需要':'想要'}</span>`:'';
-  return `<div class="entry"><div class="ico">${ico}</div>
+  return `<div class="entry" data-eid="${e.id}" role="button" tabindex="0" aria-label="编辑这笔记录"><div class="ico">${ico}</div>
     <div class="info"><b>${e.note||'（无备注）'}${tag}</b><span>${sub}</span></div>
-    <div class="amt ${isIn?'in':'out'}">${isIn?'+':'−'}${money(e.amount)}</div></div>`;
+    <div class="amt ${isIn?'in':'out'}">${isIn?'+':'−'}${money(e.amount)}</div><div class="chev">›</div></div>`;
 }
 /* ============ 记账弹层 ============ */
 let sheetCtx=null;
@@ -624,6 +626,51 @@ function openIncome(){
     if(!amt||amt<1)return toast('请输入有效金额');
     state.entries.push({id:uid(),type:'income',amount:amt,src,jar:sheetCtx.jar,note:$('#note').value.trim(),date:$('#date').value});
     save();closeSheet();render();toast('收入已入罐：'+JARS[sheetCtx.jar]);
+  };
+}
+/* ============ 编辑 / 删除记录 ============ */
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function openEditEntry(id){
+  const e=state.entries.find(x=>x.id===id);
+  if(!e)return;
+  const isIn=e.type==='income';
+  const nwSeg=isIn?'':`<div class="seg seg-nw"><button class="${e.nw==='want'?'want on':''}" id="nw-want">想要的</button><button class="${e.nw==='need'?'need on':''}" id="nw-need">需要的</button></div>`;
+  const head=isIn
+    ?`<div class="seg" id="src-seg">${SRC.map(s=>`<button class="${s.name===e.src?'on':''}" data-src="${s.name}">${I[s.ico]}${s.name}</button>`).join('')}</div>`
+    :`<div class="seg" id="cat-seg">${CATS.map(c=>`<button class="${c.name===e.cat?'on':''}" data-cat="${c.name}">${I[c.ico]}${c.name}</button>`).join('')}</div>`;
+  const jarPick=isIn?`<div class="eyebrow" style="margin-top:10px">这笔钱存进哪只罐子？</div>
+    <div class="jar-pick">
+      <button data-jar="spend" class="${e.jar==='spend'?'on':''}">${jarSVG('spend',.35)}花钱罐</button>
+      <button data-jar="save" class="${e.jar==='save'?'on':''}">${jarSVG('save',.55)}攒钱罐</button>
+      <button data-jar="grow" class="${e.jar==='grow'?'on':''}">${jarSVG('grow',.68)}增长罐</button>
+    </div>`:'';
+  sheetCtx={type:e.type,cat:e.cat,src:e.src,jar:e.jar,nw:e.nw||'want',editId:id};
+  openSheet(`<h3>编辑这笔${isIn?'收入':'支出'}</h3>
+    ${head}${nwSeg}
+    <div class="amount-input"><span class="yen">¥</span><input id="amt" type="number" min="0.01" step="0.01" inputmode="decimal" value="${(e.amount/100).toFixed(2)}" aria-label="金额"></div>
+    ${jarPick}
+    <label class="field">备注（选填）<input id="note" maxlength="40" value="${esc(e.note||'')}"></label>
+    <label class="field">日期<input id="date" type="date" value="${e.date}" max="${todayStr()}"></label>
+    <button class="btn primary" style="margin-top:16px" id="confirm-edit">保存修改</button>
+    <button class="btn ghost" style="margin-top:10px;color:#a32d2d" id="del-entry">删除这笔记录</button>`);
+  const pickSeg=(sel,attr,cb)=>{const seg=$(sel);if(!seg)return;seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset[attr]);});};
+  pickSeg('#cat-seg','cat',v=>sheetCtx.cat=v);
+  pickSeg('#src-seg','src',v=>sheetCtx.src=v);
+  if(isIn)document.querySelectorAll('.jar-pick button').forEach(b=>b.onclick=()=>{sheetCtx.jar=b.dataset.jar;document.querySelectorAll('.jar-pick button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  const ww=$('#nw-want'),wn=$('#nw-need');
+  if(ww&&wn){const setNW=nw=>{sheetCtx.nw=nw;ww.classList.toggle('on',nw==='want');ww.classList.toggle('want',nw==='want');wn.classList.toggle('on',nw==='need');wn.classList.toggle('need',nw==='need');};ww.onclick=()=>setNW('want');wn.onclick=()=>setNW('need');}
+  $('#confirm-edit').onclick=()=>{
+    const amt=Math.round(parseFloat($('#amt').value||0)*100);
+    if(!amt||amt<1)return toast('请输入有效金额');
+    if($('#date').value>todayStr())return toast('日期不能晚于今天');
+    e.amount=amt;e.note=$('#note').value.trim();e.date=$('#date').value;
+    if(isIn){e.src=sheetCtx.src;e.jar=sheetCtx.jar;}else{e.cat=sheetCtx.cat;e.nw=sheetCtx.nw;}
+    save();closeSheet();render();toast('修改已保存，罐子和月报已同步更新');
+  };
+  $('#del-entry').onclick=()=>{
+    if(!confirm('删除这笔记录？余额、预算和月报会重新计算。'))return;
+    state.entries=state.entries.filter(x=>x.id!==id);
+    save();closeSheet();render();toast('记录已删除');
   };
 }
 /* ============ 心愿单 · 冷静期 ============ */
@@ -768,6 +815,7 @@ async function openShareCard(m){
 /* ============ 事件绑定 ============ */
 function bind(){
   document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render();window.scrollTo(0,0);});
+  document.querySelectorAll('.entry[data-eid]').forEach(el=>el.onclick=()=>openEditEntry(el.dataset.eid));
   document.querySelectorAll('#quick-cats .cat-btn').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;c==='__income'?openIncome():openExpense(c);});
   const aw=$('#add-wish');if(aw)aw.onclick=openWishAdd;
   const atk=$('#add-task');if(atk)atk.onclick=openTaskAdd;
