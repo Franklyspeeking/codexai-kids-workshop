@@ -1,8 +1,7 @@
-/* Offline shell for this one allowance tool. Account data remains in localStorage. */
-const CACHE = 'codexai-money-offline-v3:' + self.registration.scope;
+/* Offline shell for the new money demo at the original URL. Legacy data remains in localStorage. */
+const CACHE = 'codexai-money-offline-v4:' + self.registration.scope;
 const ASSETS = [
-  './', './index.html', './app.js', './config.js', './manifest.webmanifest',
-  './icon-192.png', './icon-512.png', '../demos/studio.css', './studio-money.js', '../assets/favicon.svg', '../assets/code-x-ai-logo.png'
+  './', './index.html', '../assets/code-x-ai-logo.png'
 ].map(path => new URL(path, self.registration.scope).href);
 const PROJECT_ROOT = new URL('../', self.registration.scope).href;
 

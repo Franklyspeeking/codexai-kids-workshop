@@ -25,6 +25,8 @@ html{-webkit-text-size-adjust:100%}
 body{font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
 .display{font-family:'Yuanti SC','YouYuan','Yuanti','PingFang SC','Hiragino Sans GB',sans-serif;font-weight:700}
 #app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);padding-bottom:96px;position:relative}
+.legacy-note{display:none;margin:0 14px 12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:12px;color:var(--muted)}
+.legacy-note a{color:var(--save);font-weight:700}
 button{-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px dashed var(--save);outline-offset:2px}
 
@@ -207,6 +209,7 @@ nav.tabbar button.on{color:var(--save);font-weight:700}
     </div>
     <div class="date-chip" id="today-label"></div>
   </header>
+  <p class="legacy-note" id="legacy-note">检测到旧版账本。<a href="/money-legacy/">打开旧版查看或导出数据</a>；新版账本单独保存。</p>
   <main id="views"></main>
   <nav class="tabbar" id="tabbar"></nav>
 
@@ -243,6 +246,10 @@ function jarSVG(kind,pct){
 
 /* ============ 数据层（逻辑与旧版完全一致） ============ */
 const KEY='puppy-finance:v1';
+try{if(localStorage.getItem('codexai:money-demo:v1'))document.getElementById('legacy-note').style.display='block'}catch(e){}
+if(location.pathname.startsWith('/money/')&&'serviceWorker' in navigator&&window.isSecureContext){
+  navigator.serviceWorker.register('/money/sw.js',{scope:'/money/'}).catch(()=>{});
+}
 const CATS=[
   {name:'零食',ico:'cookie'},{name:'文具',ico:'pencil'},{name:'娱乐',ico:'game'},{name:'其他',ico:'basket'}
 ];

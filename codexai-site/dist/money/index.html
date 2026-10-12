@@ -1,12 +1,814 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f7f8f5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="零花钱计划师"><title>零花钱计划师 · 我的小愿望</title><meta name="description" content="记录每一笔零花钱，安排分类预算，看见愿望一点点实现。"><link rel="stylesheet" href="../demos/studio.css"><link rel="icon" href="../assets/favicon.svg"><link rel="apple-touch-icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"></head><body>
-<header class="topbar"><a class="brand" href="/courses/"><img class="brand-logo" src="/assets/code-x-ai-logo.png" alt="" width="34" height="34"><span>Code-X-Ai</span></a><a class="back" href="/courses/">← 返回课程</a></header>
-<div class="layout"><header class="intro"><div><div class="eyebrow">零花钱计划师 · 课堂作品</div><h1 id="app-title">我的零花钱计划师</h1><p>让每一笔零花钱，都靠近一个小愿望。</p></div><span class="badge">本机保存</span></header>
-<nav class="nav" aria-label="工具导航"><button data-pane="ledger" aria-current="page"><span aria-hidden="true">▤</span>账本</button><button data-pane="wish"><span aria-hidden="true">☆</span>愿望</button><button data-pane="budget"><span aria-hidden="true">◴</span>预算</button><button id="open-help"><span aria-hidden="true">···</span>更多</button></nav>
-<main><section data-view="ledger"><div class="two-col"><div><section class="card feature"><div><span class="eyebrow">我的小金库</span><div class="big" id="balance">¥0.00</div><p id="totals"></p></div><div class="art" aria-hidden="true"><svg viewBox="0 0 170 165"><ellipse cx="86" cy="131" rx="60" ry="10" fill="#223c3415"/><g fill="#edbd65" stroke="#ad7b37" stroke-width="2"><rect x="29" y="90" width="56" height="23" rx="11"/><ellipse cx="57" cy="90" rx="28" ry="11"/><rect x="29" y="72" width="56" height="20" rx="10"/><ellipse cx="57" cy="72" rx="28" ry="11"/><circle cx="106" cy="76" r="37"/></g><circle cx="106" cy="76" r="28" fill="none" stroke="#ad7b37"/><text x="106" y="88" font-size="34" text-anchor="middle" fill="#80622d" font-family="Georgia">¥</text></svg></div></section><button id="open-entry" class="primary full" style="margin-top:16px">＋ 记一笔</button><div class="section-head"><h2>钱花在哪里了</h2><span class="hint" id="record-count"></span></div><ul class="records" id="records"></ul></div><aside class="stack"><section class="card"><span class="eyebrow">一点点靠近</span><h2 id="wish-preview" style="margin:14px 0">我的小愿望</h2><progress id="wish-preview-progress" max="100" value="0" aria-label="愿望进度预览"></progress><p class="hint" id="wish-preview-gap"></p><button class="secondary full" data-pane="wish" style="margin-top:18px">看看我的愿望 →</button></section><div class="subtle">收到零花钱，记收入。买了喜欢的东西，记支出。每笔记清楚，就更懂自己的选择。</div></aside></div></section>
-<section data-view="wish" hidden><div class="two-col"><section class="card"><span class="eyebrow">我的小愿望</span><h2 id="wish-name" style="margin:18px 0"></h2><div class="circle-meter" id="wish-ring"><div><b id="wish-percent">0%</b><small>离愿望又近了一点</small></div></div><progress id="wish-progress" max="100" value="0" aria-label="愿望完成进度"></progress><p id="wish-gap"></p><p class="hint">按当前余额全部用于这个愿望估算。</p></section><section class="card"><h2>下一件想实现的小事</h2><form id="wish-form" class="stack" style="margin-top:22px"><label for="wish">想攒钱做什么？<input id="wish" maxlength="40" required></label><label for="target">需要多少元？<input id="target" type="number" min="0.01" max="1000000" step="0.01" required inputmode="decimal"></label><details><summary>账本的初始设置</summary><div class="stack"><label for="title">给工具起个名字<input id="title" maxlength="24" required></label><label for="opening">开始记账前已有的钱 / 元<input id="opening" type="number" min="0" max="1000000" step="0.01" required inputmode="decimal"></label></div></details><button class="primary">保存我的愿望</button></form></section></div></section>
-<section data-view="budget" hidden><div class="two-col"><section class="card"><span class="eyebrow">先想一想，再花钱</span><h2 style="margin:12px 0">这个月的花钱计划</h2><p class="hint">左边是已花金额，右边是本月预算。</p><div id="budgets"></div><p class="hint" style="margin-top:18px">预算是计划，不会从余额里扣钱。</p></section><section class="card"><h2>每一类，想花多少？</h2><form id="budget-form" class="stack" style="margin-top:22px"><div id="budget-inputs" class="stack"></div><label for="reminder">用完预算时，对自己说<input id="reminder" maxlength="80" required></label><button class="primary">保存花钱计划</button></form></section></div></section>
-</main><p class="footer-note">9–14 岁创作工具 · 记录只在当前浏览器保存<br>不提供支付、借贷或投资服务</p></div>
-<dialog id="entry-dialog" class="dialog" aria-labelledby="entry-title"><div class="dialog-header"><h2 id="entry-title">记一笔小账</h2><button data-close="entry-dialog" aria-label="关闭">✕</button></div><div class="dialog-content"><form id="entry-form"><div class="fields"><label for="kind">这笔钱是<select id="kind"><option value="expense">花出去了</option><option value="income">收到了</option></select></label><label for="amount">多少元<input id="amount" inputmode="decimal" type="number" min="0.01" max="1000000" step="0.01" required placeholder="0.00"></label></div><div class="fields"><label for="category">属于哪一类<select id="category"><option>文具</option><option>零食</option><option>娱乐</option><option>其他</option></select></label><label for="date">哪一天<input id="date" type="date" required></label></div><label for="note">写一句备注（选填）<input id="note" maxlength="60" placeholder="例如：买了一支喜欢的钢笔"></label><button type="submit" class="primary full">保存这笔记录</button></form></div></dialog>
-<dialog id="help-dialog" class="dialog" aria-labelledby="help-title"><div class="dialog-header"><h2 id="help-title">把小账本带回家</h2><button data-close="help-dialog" aria-label="关闭">✕</button></div><div class="dialog-content stack" id="help"><p class="notice">记录只保存在当前设备，不会同步到其他手机。请定期导出备份。</p><details><summary>添加到手机桌面</summary><p class="hint">苹果手机用 Safari 分享菜单的“添加到主屏幕”；安卓浏览器在菜单中寻找“安装应用”或“添加到主屏幕”。首次联网打开，等离线页面准备好后再试。</p></details><p id="offline-status" class="hint" role="status">正在准备离线页面…</p><button id="export" class="primary">导出数据备份</button><label for="import">从备份恢复<input id="import" type="file" accept=".json,application/json"></label><button id="demo" class="secondary">载入课堂练习</button><p class="hint">载入练习或恢复备份前会请求确认，并下载原账本备份。示例不是真实家庭账目。</p><details><summary>清空账本</summary><button id="reset" class="danger">清空当前账本</button></details></div></dialog>
-<div class="toast" id="message" role="status" aria-live="polite"></div><script src="config.js"></script><script src="app.js"></script><script src="studio-money.js"></script></body></html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>汪汪小金库 · 儿童理财工具原型</title>
+<link rel="icon" href="/assets/code-x-ai-logo.png">
+<style>
+/* ============ 设计系统：奶油纸账本 ============
+   纸底 #FBF7EF · 墨色 #2D3229 · 攒钱绿 #2F6B4F
+   花钱陶 #C46A2E · 增长蓝 #2E6E9E · 想要莓红 #C24E6B */
+:root{
+  --paper:#FBF7EF; --card:#FFFFFF; --ink:#2D3229; --muted:#7C8273; --line:#E8E2D4; --track:#F0EBDD;
+  --save:#2F6B4F; --save-soft:#E3EFE7;
+  --spend:#C46A2E; --spend-soft:#F6E8DA;
+  --grow:#2E6E9E; --grow-soft:#E1ECF5;
+  --want:#C24E6B; --want-soft:#F7E7EC;
+  --need:#5D8A3C; --need-soft:#EAF1DF;
+  --amber:#E09E3A; --red:#B23A3A;
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+.display{font-family:'Yuanti SC','YouYuan','Yuanti','PingFang SC','Hiragino Sans GB',sans-serif;font-weight:700}
+#app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);padding-bottom:96px;position:relative}
+.legacy-note{display:none;margin:0 14px 12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:12px;color:var(--muted)}
+.legacy-note a{color:var(--save);font-weight:700}
+button{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px dashed var(--save);outline-offset:2px}
+
+/* 品牌区 */
+header.top{padding:20px 18px 12px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:38px;height:38px;border-radius:12px;background:var(--save);display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.brand .mark svg{width:24px;height:24px}
+.brand h1{font-size:20px;line-height:1.2;letter-spacing:.02em}
+.brand .sub{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.date-chip{font-size:11.5px;color:var(--muted);background:var(--card);border:1.5px solid var(--line);border-radius:99px;padding:3px 10px;font-variant-numeric:tabular-nums}
+
+main{padding:0 14px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:16px;margin-bottom:14px;box-shadow:0 12px 28px -20px rgba(45,50,41,.25)}
+.eyebrow{font-size:11px;color:var(--muted);letter-spacing:.08em;margin-bottom:6px;font-weight:600}
+h2.card-title{font-size:15.5px;font-weight:700}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.muted{color:var(--muted);font-size:13px}
+.amount{font-variant-numeric:tabular-nums}
+
+/* 小狗仪表盘 */
+.hero{display:flex;gap:12px;align-items:center;padding:14px 16px}
+.dog-stage{flex:0 0 100px;text-align:center}
+.dog-info{flex:1;min-width:0}
+.dog-say{font-size:13px;background:var(--paper);border:1.5px solid var(--line);border-radius:4px 14px 14px 14px;padding:9px 12px;color:var(--ink);margin-top:8px;position:relative}
+.health-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;border:1.5px solid transparent}
+.hp-good{background:var(--need-soft);color:var(--need);border-color:#C9DDB4}
+.hp-mid{background:#F8EEDC;color:#9A6E14;border-color:#EAD4A8}
+.hp-bad{background:#F9E6E6;color:var(--red);border-color:#EFC5C5}
+@keyframes wag{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(16deg)}}
+.dog-tail{transform-box:fill-box;transform-origin:0% 60%;animation:wag 1.5s ease-in-out infinite}
+
+/* 罐子区 */
+.jars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1.5px dashed var(--line)}
+.jar{text-align:center;padding:6px 4px;border-radius:var(--r-md);cursor:default}
+.jar .jar-fig{width:52px;margin:0 auto}
+.jar .jar-name{font-size:12px;font-weight:700;margin-top:4px}
+.jar .jar-amt{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
+.jar .jar-desc{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jar.spend .jar-name,.jar.spend .jar-amt{color:var(--spend)}
+.jar.save .jar-name,.jar.save .jar-amt{color:var(--save)}
+.jar.grow .jar-name,.jar.grow .jar-amt{color:var(--grow)}
+
+/* 快速记账 */
+.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.cat-btn{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-md);padding:10px 2px 8px;text-align:center;cursor:pointer;font-size:11.5px;color:var(--ink);transition:transform .12s var(--ease),border-color .15s,background .15s}
+.cat-btn svg{display:block;margin:0 auto 3px;width:26px;height:26px}
+.cat-btn:active{transform:scale(.93)}
+.cat-btn.on,.cat-btn:active{border-color:var(--save);background:var(--save-soft)}
+
+/* 弹层分段选择 */
+.seg{display:flex;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:3px;margin:10px 0;gap:3px}
+.seg button{flex:1;border:0;background:transparent;padding:8px 0;border-radius:9px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
+.seg button svg{width:18px;height:18px}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 2px 6px -2px rgba(45,50,41,.18)}
+.seg.seg-nw button.on.want{background:var(--want-soft);color:var(--want)}
+.seg.seg-nw button.on.need{background:var(--need-soft);color:var(--need)}
+.jar-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.jar-pick button{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-md);padding:8px 4px 6px;font-size:12px;cursor:pointer;color:var(--ink);transition:transform .12s var(--ease),border-color .15s,background .15s}
+.jar-pick button svg{width:34px;display:block;margin:0 auto 2px}
+.jar-pick button:active{transform:scale(.94)}
+.jar-pick button.on{border-color:var(--save);background:var(--save-soft);font-weight:700}
+
+.amount-input{display:flex;align-items:baseline;gap:6px;margin:14px 0 8px}
+.amount-input .yen{font-size:22px;font-weight:800}
+.amount-input input{flex:1;border:0;border-bottom:2.5px solid var(--line);font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;padding:2px 6px;outline:none;background:transparent;font-family:'Yuanti SC','PingFang SC',sans-serif;transition:border-color .2s}
+.amount-input input:focus{border-color:var(--save)}
+.hint-box{font-size:12.5px;color:var(--muted);background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 12px;margin-top:8px}
+.hint-box svg{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
+.hint-box b{color:var(--ink)}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 0;font-size:15px;font-weight:700;cursor:pointer;transition:transform .12s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--save);color:#FDFBF6;box-shadow:0 6px 14px -8px rgba(47,107,79,.55)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+
+/* 记录列表 */
+.entry{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1.5px solid var(--line)}
+.entry:last-child{border-bottom:0}
+.entry .ico{width:38px;height:38px;border-radius:12px;background:var(--paper);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.entry .ico svg{width:21px;height:21px}
+.entry .info{flex:1;min-width:0}
+.entry .info b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.entry .info span{font-size:11.5px;color:var(--muted)}
+.entry .amt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.entry .amt.in{color:var(--save)} .entry .amt.out{color:var(--ink)}
+.tag{display:inline-block;font-size:10px;padding:1px 8px;border-radius:99px;margin-left:5px;vertical-align:1px;font-weight:700}
+.tag.want{background:var(--want-soft);color:var(--want)} .tag.need{background:var(--need-soft);color:var(--need)}
+
+/* 进度条 */
+.budget-item{padding:12px 0;border-bottom:1.5px solid var(--line)}
+.budget-item:last-child{border-bottom:0}
+.budget-item .cat-line{display:flex;align-items:center;gap:7px}
+.budget-item .cat-line svg{width:19px;height:19px;flex:0 0 19px}
+.bar{height:12px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--save);transition:width .7s var(--ease)}
+.bar i.over{background:var(--red)} .bar i.warn80{background:var(--amber)}
+
+/* 月报 */
+.score-ring{position:relative;width:112px;height:112px;margin:8px auto 4px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-ring .val b{font-size:30px;line-height:1.1}
+.score-ring .val span{font-size:10.5px;color:var(--muted)}
+.share-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.share-row .cell{background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 10px}
+.share-row .cell b{font-size:15px;display:block;font-variant-numeric:tabular-nums}
+.share-row .cell span{font-size:11px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px;font-size:11.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.month-nav b{font-size:15px}
+.month-nav button{border:1.5px solid var(--line);background:var(--card);border-radius:var(--r-sm);width:36px;height:36px;font-size:14px;cursor:pointer;color:var(--ink);transition:transform .12s var(--ease)}
+.month-nav button:active{transform:scale(.92)}
+.month-nav button:disabled{opacity:.25}
+.tip{display:flex;gap:10px;font-size:13px;padding:10px 0;border-bottom:1.5px solid var(--line);line-height:1.55}
+.tip:last-child{border-bottom:0}
+.tip .n{flex:0 0 22px;height:22px;border-radius:99px;background:var(--save-soft);color:var(--save);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.cmp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1.5px solid var(--line);font-size:13.5px}
+.cmp-row:last-child{border-bottom:0}
+.cmp-row b{font-variant-numeric:tabular-nums}
+.wk-bars{display:flex;gap:7px;align-items:flex-end;height:100px;margin-top:10px}
+.wk-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;color:var(--muted)}
+.wk-col .bar-v{width:100%;border-radius:9px 9px 4px 4px;background:var(--want);transition:height .7s var(--ease)}
+.wk-col .bar-v.zero{background:var(--track)}
+.wk-col b{font-size:11px;color:var(--ink)}
+.grow-note{font-size:12.5px;color:var(--grow);background:var(--grow-soft);border:1.5px solid #C8DCEC;border-radius:var(--r-sm);padding:9px 12px;margin-top:12px}
+.goal-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.goal-head .pct{font-size:26px;font-weight:800;color:var(--save);font-family:'Yuanti SC','PingFang SC',sans-serif}
+label.field{display:block;font-size:12px;color:var(--muted);margin-top:12px}
+label.field input,label.field select{display:block;width:100%;margin-top:5px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 11px;font-size:14px;outline:none;background:var(--card);color:var(--ink);transition:border-color .2s}
+label.field input:focus{border-color:var(--save)}
+
+/* 底部标签栏 */
+nav.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:1.5px solid var(--line);display:flex;padding:7px 0 calc(7px + env(safe-area-inset-bottom));z-index:50}
+nav.tabbar button{flex:1;border:0;background:none;font-size:11px;color:var(--muted);cursor:pointer;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabbar button svg{width:23px;height:23px}
+nav.tabbar button.on{color:var(--save);font-weight:700}
+
+/* 弹层 */
+.sheet-mask{position:fixed;inset:0;background:rgba(45,50,41,.4);z-index:90;display:none;opacity:0;transition:opacity .25s}
+.sheet-mask.show{display:block;opacity:1}
+.sheet{position:fixed;bottom:0;left:50%;transform:translate(-50%,100%);width:100%;max-width:430px;background:var(--card);border-radius:24px 24px 0 0;padding:16px 18px calc(20px + env(safe-area-inset-bottom));z-index:95;display:none;max-height:86vh;overflow:auto;transition:transform .34s var(--ease);border:1.5px solid var(--line);border-bottom:0}
+.sheet.show{display:block;transform:translate(-50%,0)}
+.sheet .handle{width:40px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 12px}
+.sheet h3{font-size:16.5px;margin-bottom:2px}
+.sheet .close{position:absolute;right:14px;top:14px;border:0;background:var(--paper);width:30px;height:30px;border-radius:99px;font-size:13px;cursor:pointer;color:var(--muted);border:1.5px solid var(--line)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:108px;background:var(--ink);color:#FDFBF6;font-size:13px;border-radius:99px;padding:9px 18px;z-index:99;display:none;max-width:82vw;text-align:center;box-shadow:0 8px 20px -8px rgba(45,50,41,.5)}
+
+/* 心愿单 & 任务板 */
+.wish{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--line)}
+.wish:last-child{border-bottom:0}
+.wish .w-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 38px;border:1.5px solid var(--line)}
+.wish .w-ico.pink{background:var(--want-soft);border-color:#EBCBD5}
+.wish.task .w-ico{background:var(--save-soft);border-color:#C6DECB}
+.wish .w-ico svg{width:21px;height:21px}
+.wish .info{flex:1;min-width:0}
+.wish .info b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.wish .info span{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wish .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+.cool-chip{font-size:10.5px;padding:2px 9px;border-radius:99px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cool-chip.wait{background:#F8EEDC;color:#9A6E14}
+.cool-chip.ok{background:var(--need-soft);color:var(--need)}
+.mini-btn{border:1.5px solid var(--line);background:var(--card);border-radius:9px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--ink);transition:transform .12s var(--ease);white-space:nowrap}
+.mini-btn:active{transform:scale(.93)}
+.mini-btn.green{background:var(--save-soft);border-color:#C6DECB;color:var(--save)}
+.mini-btn.pink{background:var(--want-soft);border-color:#EBCBD5;color:var(--want)}
+.del-x{border:0;background:none;color:var(--muted);font-size:11.5px;cursor:pointer;padding:2px 4px;text-decoration:underline}
+#share-img{width:100%;border-radius:14px;border:1.5px solid var(--line);display:block;margin:10px 0}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:500px){ body{background:#EFEAE0} #app{box-shadow:0 0 40px rgba(45,50,41,.08)} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="5" rx="2" fill="#FDFBF6"/><path d="M4 9h16v9a3 3 0 01-3 3H7a3 3 0 01-3-3V9z" fill="#FDFBF6"/><rect x="6" y="12" width="12" height="5" rx="2.5" fill="#2F6B4F"/></svg></div>
+      <div><h1 class="display">汪汪小金库</h1><div class="sub">我的零花钱 · 我自己管</div></div>
+    </div>
+    <div class="date-chip" id="today-label"></div>
+  </header>
+  <p class="legacy-note" id="legacy-note">检测到旧版账本。<a href="/money-legacy/">打开旧版查看或导出数据</a>；新版账本单独保存。</p>
+  <main id="views"></main>
+  <nav class="tabbar" id="tabbar"></nav>
+
+  <div class="sheet-mask" id="mask"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ============ 图标系统（手绘 SVG，替代 emoji） ============ */
+const I={
+cookie:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#EDD9A3" stroke="#8A5A2B" stroke-width="1.8"/><circle cx="9" cy="9" r="1.5" fill="#8A5A2B"/><circle cx="14.5" cy="10.5" r="1.5" fill="#8A5A2B"/><circle cx="10.5" cy="14" r="1.5" fill="#8A5A2B"/><circle cx="15" cy="15" r="1.1" fill="#8A5A2B"/></svg>',
+pencil:'<svg viewBox="0 0 24 24"><path d="M5 19l1-4L16.5 4.5a2.1 2.1 0 013 3L9 18l-4 1z" fill="#F0C97D" stroke="#8A5A2B" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 6.5l3 3" stroke="#8A5A2B" stroke-width="1.8"/></svg>',
+game:'<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="5" fill="#CFE0EE" stroke="#2E6E9E" stroke-width="1.8"/><path d="M8 11v4M6 13h4" stroke="#2E6E9E" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11.8" r="1.3" fill="#2E6E9E"/><circle cx="18" cy="14" r="1.3" fill="#2E6E9E"/></svg>',
+basket:'<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.6 9a2 2 0 01-2 1.7H7.6a2 2 0 01-2-1.7L4 9z" fill="#EAD9C2" stroke="#8A5A2B" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9c0-3 1.5-5 4-5s4 2 4 5" fill="none" stroke="#8A5A2B" stroke-width="1.8" stroke-linecap="round"/></svg>',
+coin:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#F2D06B" stroke="#B07E1E" stroke-width="1.8"/><path d="M12 6.5v11M9.4 9.2c0-1.2 1.2-1.9 2.6-1.9s2.6.7 2.6 1.9-1 1.8-2.6 2.2-2.6 1-2.6 2.2 1.2 1.9 2.6 1.9 2.6-.7 2.6-1.9" fill="none" stroke="#B07E1E" stroke-width="1.7" stroke-linecap="round"/></svg>',
+broom:'<svg viewBox="0 0 24 24"><path d="M14 3l4.5 4.5-5.5 5.5" fill="none" stroke="#8A5A2B" stroke-width="2" stroke-linecap="round"/><path d="M4 15.5L9.5 10l5 5-3.5 5.5c-3.2-.6-6-3-7-5.5z" fill="#EAD9C2" stroke="#8A5A2B" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+gift:'<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#EDC9D4" stroke="#C24E6B" stroke-width="1.8"/><path d="M12 10v10M5 13.5h14" stroke="#C24E6B" stroke-width="1.8"/><path d="M12 10c-3 0-4.5-1.5-4-3s3-1 4 3c1-4 3.5-4 4-2s-1 2-4 2z" fill="#F6E1E8" stroke="#C24E6B" stroke-width="1.5"/></svg>',
+spark:'<svg viewBox="0 0 24 24"><path d="M12 3l2.2 6.2L20.5 11l-6.3 1.8L12 19l-2.2-6.2L3.5 11l6.3-1.8L12 3z" fill="#F2D06B" stroke="#B07E1E" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 012-2h12v16H7a2 2 0 00-2 2V5z"/><path d="M5 19a2 2 0 012-2h12"/><path d="M9 7h6"/></svg>',
+jarIco:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2.5" width="7" height="3.5" rx="1.5"/><path d="M6.5 6h11v11a4 4 0 01-4 4h-3a4 4 0 01-4-4V6z"/><path d="M8 12c2-1.2 4 1.2 6 0s2.5-.5 2.5-.5"/></svg>',
+chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20h16"/><path d="M7 20v-6M12 20V8M17 20v-9"/></svg>',
+medal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l3 5M16 3l-3 5"/><circle cx="12" cy="14" r="5.5"/><path d="M12 11.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2-1.4-1.4 2-.3z"/></svg>',
+heart:'<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.4 2.6 10.2C2 6.9 4.4 4.5 7.2 4.5c2 0 3.7 1.1 4.8 2.8 1.1-1.7 2.8-2.8 4.8-2.8 2.8 0 5.2 2.4 4.6 5.7C20.5 15.4 12 20.5 12 20.5z" fill="#F7E7EC" stroke="#C24E6B" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+checkI:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#E3EFE7"/><path d="M8 12.3l2.6 2.6L16 9.5" fill="none" stroke="#2F6B4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+paw:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="4.5" ry="3.6" fill="#2D3229"/><circle cx="5.8" cy="11" r="1.9" fill="#2D3229"/><circle cx="9.8" cy="8" r="1.9" fill="#2D3229"/><circle cx="14.2" cy="8" r="1.9" fill="#2D3229"/><circle cx="18.2" cy="11" r="1.9" fill="#2D3229"/></svg>'
+};
+/* 拟物罐子（液体高度随余额变化） */
+function jarSVG(kind,pct){
+  const col={spend:'#C46A2E',save:'#2F6B4F',grow:'#2E6E9E'}[kind];
+  const p=Math.max(.06,Math.min(1,pct)),lh=Math.round(50*p),ly=62-lh;
+  return `<svg viewBox="0 0 56 74"><rect x="17" y="2.5" width="22" height="7" rx="3.5" fill="#2D3229"/><clipPath id="jc-${kind}"><rect x="9.5" y="11" width="37" height="51" rx="12"/></clipPath><rect x="9.5" y="11" width="37" height="51" rx="12" fill="#FFFFFF"/><g clip-path="url(#jc-${kind})"><rect x="9.5" y="${ly}" width="37" height="${lh}" fill="${col}"/><ellipse cx="28" cy="${ly}" rx="20" ry="3.2" fill="#FDFBF6" opacity=".5"/></g><rect x="9.5" y="11" width="37" height="51" rx="12" fill="none" stroke="#2D3229" stroke-width="2.6"/><path d="M15 19c2.5-2 5.5-2 8 0" stroke="#2D3229" stroke-width="1.7" fill="none" stroke-linecap="round" opacity=".22"/></svg>`;
+}
+
+/* ============ 数据层（逻辑与旧版完全一致） ============ */
+const KEY='puppy-finance:v1';
+try{if(localStorage.getItem('codexai:money-demo:v1'))document.getElementById('legacy-note').style.display='block'}catch(e){}
+if(location.pathname.startsWith('/money/')&&'serviceWorker' in navigator&&window.isSecureContext){
+  navigator.serviceWorker.register('/money/sw.js',{scope:'/money/'}).catch(()=>{});
+}
+const CATS=[
+  {name:'零食',ico:'cookie'},{name:'文具',ico:'pencil'},{name:'娱乐',ico:'game'},{name:'其他',ico:'basket'}
+];
+const SRC=[{name:'零花钱',ico:'coin'},{name:'劳动所得',ico:'broom'},{name:'压岁钱',ico:'gift'},{name:'其他',ico:'spark'}];
+const JARS={spend:'花钱罐',save:'攒钱罐',grow:'增长罐'};
+const money=c=>'¥'+(c/100).toFixed(2);
+const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const uid=()=>Math.random().toString(36).slice(2,10);
+const prevMonth=m=>{const y=+m.slice(0,4),mo=+m.slice(5);return mo===1?(y-1)+'-12':y+'-'+String(mo-1).padStart(2,'0')};
+const nextMonth=m=>{const y=+m.slice(0,4),mo=+m.slice(5);return mo===12?(y+1)+'-01':y+'-'+String(mo+1).padStart(2,'0')};
+const M=todayStr().slice(0,7);
+const COOL_DAYS=3;
+const daysAgoStr=n=>{const d=new Date(Date.now()-n*864e5);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const daysSince=d=>Math.floor((new Date(todayStr()+'T00:00:00')-new Date(d+'T00:00:00'))/864e5);
+
+function demoState(){
+  return {
+    name:'小库主人', weekly:3000,
+    opening:{spend:4500,save:6500,grow:20000},
+    goal:{name:'一双滑板鞋',target:32000,weekly:2000},
+    budgets:{零食:4000,文具:3000,娱乐:5000,其他:2000},
+    entries:[
+      {id:uid(),type:'expense',amount:1500,cat:'零食',nw:'want',note:'薯片和可乐',date:M+'-02'},
+      {id:uid(),type:'expense',amount:1200,cat:'文具',nw:'need',note:'数学笔记本',date:M+'-03'},
+      {id:uid(),type:'expense',amount:2000,cat:'娱乐',nw:'want',note:'游戏月卡',date:M+'-05'},
+      {id:uid(),type:'income', amount:3000,src:'零花钱',jar:'spend',note:'本周零花钱',date:M+'-03'},
+      {id:uid(),type:'expense',amount:600,cat:'零食',nw:'want',note:'放学买辣条',date:M+'-07'},
+      {id:uid(),type:'income', amount:2000,src:'劳动所得',jar:'save',note:'帮邻居遛狗',date:M+'-08'},
+      {id:uid(),type:'expense',amount:2500,cat:'娱乐',nw:'want',note:'盲盒',date:M+'-09'},
+      {id:uid(),type:'expense',amount:500,cat:'文具',nw:'need',note:'笔芯',date:M+'-11'},
+      {id:uid(),type:'income', amount:3000,src:'零花钱',jar:'save',note:'本周零花钱存起来',date:M+'-10'},
+      {id:uid(),type:'expense',amount:2200,cat:'零食',nw:'want',note:'九月奶茶',date:'2026-09-05'},
+      {id:uid(),type:'expense',amount:1000,cat:'文具',nw:'need',note:'九月文具',date:'2026-09-10'},
+      {id:uid(),type:'expense',amount:3000,cat:'娱乐',nw:'want',note:'九月游戏',date:'2026-09-14'},
+      {id:uid(),type:'expense',amount:900,cat:'零食',nw:'want',note:'九月零食',date:'2026-09-20'},
+      {id:uid(),type:'expense',amount:1500,cat:'其他',nw:'need',note:'同学生日礼物',date:'2026-09-22'},
+      {id:uid(),type:'income', amount:12000,src:'零花钱',jar:'spend',note:'九月零花钱',date:'2026-09-06'},
+      {id:uid(),type:'income', amount:5000,src:'劳动所得',jar:'save',note:'九月家务奖励',date:'2026-09-15'},
+    ],
+    wishes:[
+      {id:uid(),name:'机械键盘',price:19900,added:daysAgoStr(1)},
+      {id:uid(),name:'限定手办',price:8800,added:daysAgoStr(5)},
+    ],
+    tasks:[
+      {id:uid(),name:'洗完碗并擦桌子',pay:500},
+      {id:uid(),name:'整理书桌和书包',pay:300},
+      {id:uid(),name:'给绿植浇水一周',pay:200},
+    ],
+    cooledSaved:0,
+    version:2
+  };
+}
+let state;
+try{const raw=localStorage.getItem(KEY);state=raw?JSON.parse(raw):demoState();}catch(e){state=demoState();}
+state.wishes=Array.isArray(state.wishes)?state.wishes:[];
+state.tasks=Array.isArray(state.tasks)?state.tasks:[];
+if(!Number.isInteger(state.cooledSaved))state.cooledSaved=0;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+const monthEntries=m=>state.entries.filter(e=>e.date.startsWith(m||M));
+function jarBalances(){
+  const b={...state.opening};
+  for(const e of state.entries){
+    if(e.type==='income')b[e.jar]+=e.amount; else b.spend-=e.amount;
+  }
+  b.spend=Math.max(0,b.spend);
+  return b;
+}
+/* ============ 财务体检分（逻辑与旧版一致） ============ */
+function health(m){
+  m=m||M;const es=monthEntries(m);
+  const exp=es.filter(e=>e.type==='expense'), inc=es.filter(e=>e.type==='income');
+  const expSum=exp.reduce((a,e)=>a+e.amount,0), incSum=inc.reduce((a,e)=>a+e.amount,0);
+  const wantSum=exp.filter(e=>e.nw==='want').reduce((a,e)=>a+e.amount,0);
+  const wantRatio=expSum?wantSum/expSum:0;
+  const sWant=Math.round(Math.max(0,1-wantRatio/0.7)*30);
+  let over=0;for(const c of Object.keys(state.budgets)){
+    const used=exp.filter(e=>e.cat===c).reduce((a,e)=>a+e.amount,0);
+    if(used>state.budgets[c])over++;
+  }
+  const sBudget=Math.max(0,25-over*8);
+  const saved=inc.filter(e=>e.jar!=='spend').reduce((a,e)=>a+e.amount,0);
+  const saveRate=incSum?saved/incSum:0;
+  const sSave=Math.round(Math.min(1,saveRate/0.4)*25);
+  const days=(m===M)?new Date().getDate():31;
+  const daySet=new Set(es.map(e=>e.date.slice(8)));
+  const sLog=Math.round(Math.min(1,daySet.size/Math.min(days,10))*20);
+  return {total:Math.min(100,sWant+sBudget+sSave+sLog),sWant,sBudget,sSave,sLog,expSum,incSum,wantSum,saved,saveRate,wantRatio};
+}
+/* ============ 视图 ============ */
+const $=s=>document.querySelector(s);
+let view='home';
+let reportMonth=M;
+const VIEWS=[
+  {id:'home',name:'记账',ico:'book'},
+  {id:'jars',name:'罐子',ico:'jarIco'},
+  {id:'budget',name:'预算',ico:'chart'},
+  {id:'report',name:'月报',ico:'medal'},
+];
+function dogSVG(mood){
+  const eyes=mood==='happy'
+    ?'<path d="M50 52 q5.5 -7 11 0 M79 52 q5.5 -7 11 0" stroke="#4A3418" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
+    :mood==='worried'
+    ?'<path d="M49 53l12-4M91 49l-12 4" stroke="#4A3418" stroke-width="3" stroke-linecap="round"/><circle cx="57" cy="54" r="3" fill="#4A3418"/><circle cx="83" cy="54" r="3" fill="#4A3418"/>'
+    :'<circle cx="57" cy="53" r="3.4" fill="#4A3418"/><circle cx="83" cy="53" r="3.4" fill="#4A3418"/><circle cx="58.2" cy="51.8" r="1" fill="#FDFBF6"/><circle cx="84.2" cy="51.8" r="1" fill="#FDFBF6"/>';
+  const mouth=mood==='happy'
+    ?'<path d="M61 66 q9 9 18 0" stroke="#4A3418" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    :mood==='worried'
+    ?'<path d="M63 71 q7 -6 14 0" stroke="#4A3418" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    :'<path d="M64 69h12" stroke="#4A3418" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  const brow=mood==='worried'?'':'';
+  return `<svg viewBox="0 0 140 132" width="100%">
+    <ellipse cx="70" cy="124" rx="42" ry="6" fill="#2D322912"/>
+    <path class="dog-tail" d="M106 92q17-3 15-19" stroke="#C99756" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="70" cy="100" rx="31" ry="21" fill="#E8B76A"/>
+    <ellipse cx="58" cy="119" rx="8" ry="5" fill="#F6E3C0"/><ellipse cx="82" cy="119" rx="8" ry="5" fill="#F6E3C0"/>
+    <ellipse cx="42" cy="50" rx="11" ry="19" fill="#C99756" transform="rotate(16 42 50)"/>
+    <ellipse cx="98" cy="50" rx="11" ry="19" fill="#C99756" transform="rotate(-16 98 50)"/>
+    <circle cx="70" cy="56" r="34" fill="#E8B76A"/>
+    <ellipse cx="70" cy="67" rx="20" ry="14" fill="#F6E3C0"/>
+    ${eyes}
+    <ellipse cx="70" cy="63.5" rx="5" ry="4" fill="#4A3418"/>
+    ${mouth}${brow}
+    <circle cx="47" cy="66" r="4.5" fill="#F0997B55"/><circle cx="93" cy="66" r="4.5" fill="#F0997B55"/>
+  </svg>`;
+}
+function dogMood(h){return h>=80?'happy':h>=55?'normal':'worried'}
+function dogSay(h){
+  if(h>=80)return '汪！你这个月管钱管得真棒，攒钱罐越来越沉啦！';
+  if(h>=55)return '汪～记账习惯不错哦，少买点想要的，我就能笑得更开心。';
+  return '汪呜…想要的东西买多了，预算也超啦，先看看月报里哪项爆表了吧。';
+}
+function render(){
+  $('#today-label').textContent=todayStr();
+  const h=health(), mood=dogMood(h.total), jars=jarBalances();
+  const mExp=monthEntries().filter(e=>e.type==='expense').reduce((a,e)=>a+e.amount,0);
+  const mBud=Object.values(state.budgets).reduce((a,v)=>a+v,0);
+  let html='';
+  if(view==='home'){
+    const recent=state.entries.filter(e=>e.date.startsWith(M)).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+    html+=`
+    <section class="card hero">
+      <div class="dog-stage">${dogSVG(mood)}</div>
+      <div class="dog-info">
+        <span class="health-pill hp-${h.total>=80?'good':h.total>=55?'mid':'bad'}">财务体检 ${h.total} 分</span>
+        <div class="dog-say">${dogSay(h.total)}</div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="eyebrow">三只罐子 · 钱各归各位</div>
+      <div class="jars">
+        <div class="jar spend"><div class="jar-fig">${jarSVG('spend',mBud?mExp/mBud:0)}</div><div class="jar-name">花钱罐</div><div class="jar-amt amount">${money(jars.spend)}</div><div class="jar-desc">日常开销</div></div>
+        <div class="jar save"><div class="jar-fig">${jarSVG('save',jars.save/state.goal.target)}</div><div class="jar-name">攒钱罐</div><div class="jar-amt amount">${money(jars.save)}</div><div class="jar-desc">${esc(state.goal.name)}</div></div>
+        <div class="jar grow"><div class="jar-fig">${jarSVG('grow',.68)}</div><div class="jar-name">增长罐</div><div class="jar-amt amount">${money(jars.grow)}</div><div class="jar-desc">长期不动</div></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2 class="card-title">记一笔</h2>
+      <div class="cats" id="quick-cats">${CATS.map(c=>`<button class="cat-btn" data-cat="${c.name}">${I[c.ico]}${c.name}</button>`).join('')}
+      <button class="cat-btn" data-cat="__income">${I.coin}收入</button></div>
+    </section>
+    <section class="card">
+      <div class="row"><h2 class="card-title">心愿单 · 冷静 ${COOL_DAYS} 天</h2><button class="mini-btn green" id="add-wish">+ 心愿</button></div>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">特别想要的东西先放进来冷静 ${COOL_DAYS} 天：还想要就变成攒钱目标，不想要就省下了。</p>
+      ${(()=>{const ws=state.wishes.slice().sort((a,b)=>a.added.localeCompare(b.added));
+        return ws.length?ws.map(w=>{const left=Math.max(0,COOL_DAYS-daysSince(w.added));
+        return `<div class="wish w-row">
+          <div class="w-ico pink">${I.heart}</div>
+          <div class="info"><b>${esc(w.name)}</b><span>${money(w.price)} · ${w.added} 加入</span></div>
+          <div class="side">${left>0
+            ?`<span class="cool-chip wait">还差 ${left} 天</span><button class="del-x" data-wish-x="${w.id}">不想要了</button>`
+            :`<span class="cool-chip ok">冷静完成</span><div style="display:flex;gap:6px"><button class="mini-btn green" data-wish-buy="${w.id}">还想买</button><button class="mini-btn pink" data-wish-x="${w.id}">不想要了</button></div>`}
+          </div>
+        </div>`;}).join(''):'<div class="muted" style="padding:12px 0">还没有心愿。遇到想买的，先加进来试试冷静 3 天。</div>';})()}
+      ${state.cooledSaved>0?`<div class="hint-box">${I.spark} 靠冷静期已经省下 <b>${money(state.cooledSaved)}</b>，汪！</div>`:''}
+    </section>
+    <section class="card">
+      <div class="row"><h2 class="card-title">任务板 · 劳动赚钱</h2><button class="mini-btn green" id="add-task">挂牌</button></div>
+      ${state.tasks.length?state.tasks.map(t=>`<div class="wish task t-row">
+        <div class="w-ico">${I.checkI}</div>
+        <div class="info"><b>${esc(t.name)}</b><span>报酬 ${money(t.pay)}</span></div>
+        <div class="side" style="flex-direction:row;align-items:center;gap:8px"><button class="mini-btn green" data-task-do="${t.id}">完成</button><button class="del-x" data-task-x="${t.id}" title="取消任务">✕</button></div>
+      </div>`).join(''):'<div class="muted" style="padding:12px 0">任务板空着，请家长挂牌：例如「洗碗 ¥5」。</div>'}
+      ${(()=>{const earned=monthEntries().filter(e=>e.type==='income'&&e.fromTask).reduce((a,e)=>a+e.amount,0);
+        return earned?`<div class="hint-box">${I.coin} 本月做任务已经赚到 <b>${money(earned)}</b>，靠自己赚钱的感觉不错吧！</div>`:'';})()}
+    </section>
+    <section class="card">
+      <div class="row"><h2 class="card-title">本月记录</h2><span class="muted">${monthEntries().length} 笔</span></div>
+      <div id="entry-list">${recent.length?recent.map(entryRow).join(''):'<div class="muted" style="padding:14px 0">还没有记录，点上面的图标开始吧。</div>'}</div>
+    </section>`;
+  }
+  if(view==='jars'){
+    const b=jarBalances(), pct=Math.min(100,Math.round(b.save/state.goal.target*100));
+    const weeksLeft=Math.max(0,Math.ceil((state.goal.target-b.save)/state.goal.weekly));
+    const eta=new Date(Date.now()+weeksLeft*7*864e5);
+    html+=`
+    <section class="card">
+      <div class="eyebrow">攒钱罐 · 目标计划</div>
+      <div class="goal-head"><div class="pct">${pct}%</div><div><b style="font-size:15px">${esc(state.goal.name)}</b><div class="muted">目标 ${money(state.goal.target)} · 每周存 ${money(state.goal.weekly)}</div></div></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="hint-box">按计划还要 <b>${weeksLeft} 周</b>（约 ${eta.getMonth()+1} 月 ${eta.getDate()} 日）就能达成。现在罐里有 ${money(b.save)}。</div>
+    </section>
+    <section class="card">
+      <div class="eyebrow">三只罐子 · 分工</div>
+      <div class="jars" style="margin-top:8px">
+        <div class="jar spend"><div class="jar-fig">${jarSVG('spend',mBud?mExp/mBud:0)}</div><div class="jar-name">花钱罐</div><div class="jar-amt amount">${money(b.spend)}</div><div class="jar-desc">日常花销</div></div>
+        <div class="jar save"><div class="jar-fig">${jarSVG('save',b.save/state.goal.target)}</div><div class="jar-name">攒钱罐</div><div class="jar-amt amount">${money(b.save)}</div><div class="jar-desc">为目标攒的</div></div>
+        <div class="jar grow"><div class="jar-fig">${jarSVG('grow',.68)}</div><div class="jar-name">增长罐</div><div class="jar-amt amount">${money(b.grow)}</div><div class="jar-desc">存着不动</div></div>
+      </div>
+      <div class="grow-note">增长罐时间机器：这 ${money(b.grow)} 如果存满 1 年，按 2% 利息会变成 <b>${money(Math.round(b.grow*1.02))}</b>，3 年 <b>${money(Math.round(b.grow*Math.pow(1.02,3)))}</b>。钱自己也会慢慢长大。</div>
+    </section>
+    <section class="card">
+      <h2 class="card-title">调整计划</h2>
+      <label class="field">目标名称<input id="g-name" value="${esc(state.goal.name)}"></label>
+      <label class="field">目标金额（元）<input id="g-target" type="number" min="1" step="0.01" value="${(state.goal.target/100).toFixed(2)}"></label>
+      <label class="field">每周存入（元）<input id="g-weekly" type="number" min="1" step="0.01" value="${(state.goal.weekly/100).toFixed(2)}"></label>
+      <button class="btn primary" style="margin-top:16px" id="save-goal">更新储蓄计划</button>
+    </section>`;
+  }
+  if(view==='budget'){
+    const exp=monthEntries().filter(e=>e.type==='expense');
+    html+=`<section class="card"><div class="eyebrow">本月预算 · ${M}</div>`;
+    for(const c of CATS){
+      const used=exp.filter(e=>e.cat===c.name).reduce((a,e)=>a+e.amount,0), bud=state.budgets[c.name];
+      const r=bud?used/bud*100:0, cls=r>100?'over':r>80?'warn80':'';
+      html+=`<div class="budget-item">
+        <div class="row"><div class="cat-line">${I[c.ico]}<b>${c.name}</b>${used>bud?' <span class="tag want">超支</span>':''}</div><div class="muted amount">${money(used)} / ${money(bud)}</div></div>
+        <div class="bar"><i class="${cls}" style="width:${Math.min(100,r)}%"></i></div>
+      </div>`;
+    }
+    html+=`</section>
+    <section class="card">
+      <h2 class="card-title">调整预算</h2>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">月初定好每一类的额度，月中随时对照。预算是计划，不是限制。</p>
+      ${CATS.map((c,i)=>`<label class="field">${c.name}（元）<input id="bud-${i}" type="number" min="0" step="0.01" value="${(state.budgets[c.name]/100).toFixed(2)}"></label>`).join('')}
+      <button class="btn primary" style="margin-top:16px" id="save-budget">保存预算</button>
+    </section>`;
+  }
+  if(view==='report'){
+    const rm=reportMonth;
+    const h2=health(rm),hPrev=health(prevMonth(rm));
+    const exp=monthEntries(rm).filter(e=>e.type==='expense'),inc=monthEntries(rm).filter(e=>e.type==='income');
+    const wantList=exp.filter(e=>e.nw==='want').slice().sort((a,b)=>b.amount-a.amount);
+    const needList=exp.filter(e=>e.nw==='need').slice().sort((a,b)=>b.amount-a.amount);
+    const wantSum=h2.wantSum,needSum=h2.expSum-wantSum;
+    const prevWant=hPrev.wantSum,prevNeed=hPrev.expSum-prevWant;
+    const wk=[0,0,0,0,0];
+    for(const e of exp)if(e.nw==='want')wk[Math.min(4,Math.floor((+e.date.slice(8)-1)/7))]+=e.amount;
+    const wkMax=Math.max(...wk,1);
+    const earliest=state.entries.map(e=>e.date.slice(0,7)).sort()[0]||M;
+    const canPrev=prevMonth(rm)>=earliest,canNext=rm<M;
+    const mLabel=rm.slice(0,4)+'年'+(+rm.slice(5))+'月';
+    const tips=[];
+    if(!h2.expSum){tips.push('这个月还没有支出记录，先去记几笔，报告才有内容哦。');}
+    else{
+      if(wantList[0])tips.push('最大一笔想要支出：「'+(wantList[0].note||wantList[0].cat)+'」'+money(wantList[0].amount)+'。下次超过 ¥10 的想要之物，先等 3 天，还想要再买。');
+      if(h2.wantRatio>0.6)tips.push('想要占比 '+Math.round(h2.wantRatio*100)+'% 偏高。下月挑战：把想要清单里最贵的一项先存进攒钱罐，下个月再决定买不买。');
+      else if(h2.wantRatio>0.4)tips.push('想要占比 '+Math.round(h2.wantRatio*100)+'%，略高于 40% 的健康线，控制得再稳一点。');
+      for(const c of CATS){const used=exp.filter(e=>e.cat===c.name).reduce((a,e)=>a+e.amount,0);if(used>state.budgets[c.name])tips.push('「'+c.name+'」超预算 '+money(used-state.budgets[c.name])+'：下月要么把预算调到 '+money(used)+'，要么试试砍一半。');}
+      if(h2.incSum&&h2.saveRate<0.3)tips.push('攒钱率 '+Math.round(h2.saveRate*100)+'%：收到零花钱当天先存一半进攒钱罐，剩下的再花。');
+      if(!tips.length)tips.push('各项都控制得很好！下月挑战：把攒钱率再提高 10 个百分点。');
+    }
+    const dArrow=(cur,prv,upGood,fmt)=>{
+      if(cur===prv)return'<span class="muted">持平</span>';
+      const d=cur-prv,good=upGood?d>0:d<0;
+      return'<span style="color:'+(good?'#5D8A3C':'#B23A3A')+';font-weight:700">'+(d>0?'↑ ':'↓ ')+fmt(Math.abs(d))+'</span>';
+    };
+    html+=`
+    <section class="card">
+      <div class="month-nav"><button id="rm-prev" ${canPrev?'':'disabled'}>◀</button><b>${mLabel} 报告</b><button id="rm-next" ${canNext?'':'disabled'}>▶</button></div>
+      <div class="score-ring">
+        <svg width="112" height="112"><circle cx="56" cy="56" r="48" fill="none" stroke="#F0EBDD" stroke-width="11"/><circle cx="56" cy="56" r="48" fill="none" stroke="${h2.total>=80?'#5D8A3C':h2.total>=55?'#E09E3A':'#B23A3A'}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${Math.min(100,h2.total)/100*301.6} 301.6"/></svg>
+        <div class="val"><b class="display">${h2.total}</b><span>综合分</span></div>
+      </div>
+      <div class="share-row">
+        <div class="cell"><b>${h2.sWant}/30</b><span>需要vs想要</span></div>
+        <div class="cell"><b>${h2.sBudget}/25</b><span>预算执行</span></div>
+        <div class="cell"><b>${h2.sSave}/25</b><span>攒钱率</span></div>
+        <div class="cell"><b>${h2.sLog}/20</b><span>记账坚持</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="eyebrow">想要支出 · 周报（${mLabel}）</div>
+      <div class="wk-bars">${wk.map((v,i)=>`<div class="wk-col"><b>${v?money(v):'—'}</b><div class="bar-v ${v?'':'zero'}" style="height:${Math.max(4,v/wkMax*52)}px"></div><span>第${i+1}周</span></div>`).join('')}</div>
+      <div class="hint-box">本月最大单笔想要：${wantList[0]?'「'+esc(wantList[0].note||wantList[0].cat)+'」'+money(wantList[0].amount):'没有，很自律！'}</div>
+    </section>
+    <section class="card">
+      <div class="eyebrow">想要清单 · ${wantList.length} 笔 · 共 ${money(wantSum)}</div>
+      ${wantList.length?wantList.map(entryRow).join(''):'<div class="muted" style="padding:10px 0">这个月没有想要支出，太自律了！</div>'}
+    </section>
+    <section class="card">
+      <div class="eyebrow">需要清单 · ${needList.length} 笔 · 共 ${money(needSum)}</div>
+      ${needList.length?needList.map(entryRow).join(''):'<div class="muted" style="padding:10px 0">还没有需要类支出。</div>'}
+    </section>
+    <section class="card">
+      <div class="eyebrow">下次可以更好的地方</div>
+      ${tips.map((t,i)=>`<div class="tip"><span class="n">${i+1}</span><div>${esc(t)}</div></div>`).join('')}
+    </section>
+    <section class="card">
+      <div class="eyebrow">和上个月比</div>
+      <div class="cmp-row"><span>总支出</span><span><b>${money(h2.expSum)}</b> ${dArrow(h2.expSum,hPrev.expSum,false,money)}</span></div>
+      <div class="cmp-row"><span>想要金额（占比）</span><span><b>${money(wantSum)}（${Math.round(h2.wantRatio*100)}%）</b> ${dArrow(wantSum,prevWant,false,money)}</span></div>
+      <div class="cmp-row"><span>需要金额</span><span><b>${money(needSum)}</b> ${dArrow(needSum,prevNeed,false,money)}</span></div>
+      <div class="cmp-row"><span>攒钱率</span><span><b>${Math.round(h2.saveRate*100)}%</b> ${dArrow(h2.saveRate,hPrev.saveRate,true,v=>Math.round(v*100)+'%')}</span></div>
+      <div class="cmp-row"><span>财务体检分</span><span><b>${h2.total}</b> ${dArrow(h2.total,hPrev.total,true,v=>Math.round(v)+' 分')}</span></div>
+    </section>
+    <section class="card">
+      <div class="eyebrow">我的收入结构（${mLabel}）</div>
+      ${SRC.map(s=>({s:s.name,u:inc.filter(e=>e.src===s.name).reduce((a,e)=>a+e.amount,0)})).filter(r=>r.u).map(r=>`<div class="budget-item"><div class="row"><b>${r.s}</b><span class="muted amount">${money(r.u)} · ${Math.round(r.u/(h2.incSum||1)*100)}%</span></div></div>`).join('')||'<div class="muted" style="padding:10px 0">这个月还没有收入记录。</div>'}
+      ${h2.incSum?`<div class="hint-box">本月收入 ${money(h2.incSum)}，其中 ${money(h2.saved)} 存进了攒钱罐和增长罐（攒钱率 ${Math.round(h2.saveRate*100)}%）。</div>`:''}
+    </section>
+    <section class="card">
+      <div class="eyebrow">工具</div>
+      <button class="btn primary" style="margin-top:10px" id="share-btn">生成分享卡片</button>
+      <button class="btn ghost" id="export-btn" style="margin-top:8px">导出账本备份（JSON）</button>
+      <button class="btn ghost" id="reset-btn" style="margin-top:8px;color:var(--red)">恢复演示数据</button>
+    </section>`;
+  }
+  $('#views').innerHTML=html;
+  $('#tabbar').innerHTML=VIEWS.map(v=>`<button class="${view===v.id?'on':''}" data-view="${v.id}" aria-label="${v.name}">${I[v.ico]}<span>${v.name}</span></button>`).join('');
+  bind();
+}
+function entryRow(e){
+  const isIn=e.type==='income';
+  const ico=isIn?I[(SRC.find(s=>s.name===e.src)||{}).ico||'spark']:I[(CATS.find(c=>c.name===e.cat)||{}).ico||'basket'];
+  const sub=isIn?e.date+' · 存入'+JARS[e.jar]:e.date+' · '+e.cat;
+  const tag=!isIn?`<span class="tag ${e.nw}">${e.nw==='need'?'需要':'想要'}</span>`:'';
+  return `<div class="entry"><div class="ico">${ico}</div>
+    <div class="info"><b>${esc(e.note||'（无备注）')}${tag}</b><span>${esc(sub)}</span></div>
+    <div class="amt ${isIn?'in':'out'}">${isIn?'+':'−'}${money(e.amount)}</div></div>`;
+}
+/* ============ 记账弹层 ============ */
+let sheetCtx=null;
+function openSheet(html){$('#sheet').innerHTML='<div class="handle"></div><button class="close" id="sheet-close" aria-label="关闭">✕</button>'+html;$('#sheet').classList.add('show');$('#mask').classList.add('show');$('#sheet-close').onclick=closeSheet;$('#mask').onclick=closeSheet;}
+function closeSheet(){$('#sheet').classList.remove('show');$('#mask').classList.remove('show');sheetCtx=null;}
+function toast(t){const el=$('#toast');el.textContent=t;el.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.display='none',2600);}
+function openExpense(cat){
+  sheetCtx={type:'expense',cat,nw:'want'};
+  openSheet(`<h3>记一笔支出</h3>
+    <div class="seg seg-nw"><button class="want on" id="nw-want">想要的</button><button id="nw-need">需要的</button></div>
+    <div class="amount-input"><span class="yen">¥</span><input id="amt" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" autofocus aria-label="金额"></div>
+    <div class="hint-box">${I[(CATS.find(c=>c.name===cat)||{}).ico]} ${cat} · 从花钱罐支出</div>
+    <div class="hint-box" id="oc-hint">输入金额后，我会帮你换算这笔钱值几周零花钱。</div>
+    <label class="field">备注（选填）<input id="note" maxlength="40" placeholder="例如：买了一包薯片"></label>
+    <label class="field">日期<input id="date" type="date" value="${todayStr()}" max="${todayStr()}"></label>
+    <button class="btn primary" style="margin-top:16px" id="confirm-entry">保存</button>`);
+  $('#nw-want').onclick=()=>{setNW('want')};
+  $('#nw-need').onclick=()=>{setNW('need')};
+  $('#amt').oninput=()=>{
+    const v=parseFloat($('#amt').value);
+    if(v>0&&state.weekly){const w=(v*100/state.weekly);$('#oc-hint').innerHTML='机会成本：'+money(Math.round(v*100))+' ≈ 你 <b>'+(w<1?Math.round(w*7)+' 天':(w.toFixed(1)+' 周'))+'</b>的零花钱。确定要花吗？';}
+  };
+  $('#confirm-entry').onclick=()=>{
+    const amt=Math.round(parseFloat($('#amt').value||0)*100);
+    if(!amt||amt<1)return toast('请输入有效金额');
+    if($('#date').value>todayStr())return toast('日期不能晚于今天');
+    state.entries.push({id:uid(),type:'expense',amount:amt,cat,nw:sheetCtx.nw,note:$('#note').value.trim(),date:$('#date').value});
+    save();closeSheet();render();toast('已记下这笔支出，预算和月报已同步更新');
+  };
+  function setNW(nw){sheetCtx.nw=nw;$('#nw-want').classList.toggle('on',nw==='want');$('#nw-need').classList.toggle('on',nw==='need');$('#nw-want').classList.toggle('want',nw==='want');$('#nw-need').classList.toggle('need',nw==='need');}
+}
+function openIncome(){
+  sheetCtx={type:'income',jar:'save'};
+  openSheet(`<h3>记一笔收入</h3>
+    <div class="seg" id="src-seg">${SRC.map((s,i)=>`<button class="${i===0?'on':''}" data-src="${s.name}">${I[s.ico]}${s.name}</button>`).join('')}</div>
+    <div class="amount-input"><span class="yen">¥</span><input id="amt" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" aria-label="金额"></div>
+    <div class="eyebrow" style="margin-top:10px">这笔钱存进哪只罐子？</div>
+    <div class="jar-pick">
+      <button data-jar="spend">${jarSVG('spend',.35)}花钱罐</button>
+      <button class="on" data-jar="save">${jarSVG('save',.55)}攒钱罐</button>
+      <button data-jar="grow">${jarSVG('grow',.68)}增长罐</button>
+    </div>
+    <label class="field">备注（选填）<input id="note" maxlength="40" placeholder="例如：这周帮妈妈洗碗"></label>
+    <label class="field">日期<input id="date" type="date" value="${todayStr()}" max="${todayStr()}"></label>
+    <button class="btn primary" style="margin-top:16px" id="confirm-entry">保存</button>`);
+  let src=SRC[0].name;
+  $('#src-seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{src=b.dataset.src;$('#src-seg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  $('#sheet').querySelector('.jar-pick button').parentElement.querySelectorAll('button').forEach(b=>b.onclick=()=>{sheetCtx.jar=b.dataset.jar;document.querySelectorAll('.jar-pick button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  $('#confirm-entry').onclick=()=>{
+    const amt=Math.round(parseFloat($('#amt').value||0)*100);
+    if(!amt||amt<1)return toast('请输入有效金额');
+    state.entries.push({id:uid(),type:'income',amount:amt,src,jar:sheetCtx.jar,note:$('#note').value.trim(),date:$('#date').value});
+    save();closeSheet();render();toast('收入已入罐：'+JARS[sheetCtx.jar]);
+  };
+}
+/* ============ 心愿单 · 冷静期 ============ */
+function openWishAdd(){
+  openSheet(`<h3>加一个心愿</h3>
+    <label class="field">想要什么？<input id="w-name" maxlength="20" placeholder="例如：一套漫画书"></label>
+    <label class="field">大概多少钱（元）<input id="w-price" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+    <div class="hint-box">${I.heart} 心愿会先冷静 <b>${COOL_DAYS} 天</b>。${COOL_DAYS} 天后还想要，可以一键变成攒钱目标；不想要了就划掉它——冲动省下的钱也是攒钱。</div>
+    <button class="btn primary" style="margin-top:16px" id="confirm-wish">加入心愿单</button>`);
+  $('#confirm-wish').onclick=()=>{
+    const name=$('#w-name').value.trim(),price=Math.round(parseFloat($('#w-price').value||0)*100);
+    if(!name||!price)return toast('把名字和价格填完整哦');
+    state.wishes.push({id:uid(),name,price,added:todayStr()});
+    save();closeSheet();render();toast('心愿已加入，开始 '+COOL_DAYS+' 天冷静期');
+  };
+}
+function wishDrop(id){
+  const w=state.wishes.find(x=>x.id===id);if(!w)return;
+  state.wishes=state.wishes.filter(x=>x.id!==id);
+  state.cooledSaved+=w.price;
+  save();render();toast('划掉一个心愿，省下 '+money(w.price)+'，冷静！');
+}
+function wishBuy(id){
+  const w=state.wishes.find(x=>x.id===id);if(!w)return;
+  state.wishes=state.wishes.filter(x=>x.id!==id);
+  state.goal={name:w.name,target:w.price,weekly:state.goal.weekly};
+  save();render();toast('已把「'+w.name+'」设为攒钱目标，去罐子页看计划');
+}
+/* ============ 任务板 · 劳动赚钱 ============ */
+function openTaskAdd(){
+  openSheet(`<h3>给任务挂牌</h3>
+    <label class="field">任务内容<input id="t-name" maxlength="20" placeholder="例如：洗完碗并擦桌子"></label>
+    <label class="field">报酬（元）<input id="t-pay" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+    <div class="hint-box">${I.checkI} 完成任务后，报酬会作为「劳动所得」记进账本，月报里能看到靠自己赚了多少。</div>
+    <button class="btn primary" style="margin-top:16px" id="confirm-task">挂牌</button>`);
+  $('#confirm-task').onclick=()=>{
+    const name=$('#t-name').value.trim(),pay=Math.round(parseFloat($('#t-pay').value||0)*100);
+    if(!name||!pay)return toast('把任务和报酬填完整哦');
+    state.tasks.push({id:uid(),name,pay});
+    save();closeSheet();render();toast('任务已挂牌，等小主人来完成');
+  };
+}
+function openTaskDone(t){
+  openSheet(`<h3>完成任务</h3>
+    <p style="font-size:14px;margin-top:6px">「${esc(t.name)}」· 报酬 <b>${money(t.pay)}</b></p>
+    <div class="eyebrow" style="margin-top:10px">报酬存进哪只罐子？</div>
+    <div class="jar-pick">
+      <button data-jar="spend">${jarSVG('spend',.35)}花钱罐</button>
+      <button class="on" data-jar="save">${jarSVG('save',.55)}攒钱罐</button>
+      <button data-jar="grow">${jarSVG('grow',.68)}增长罐</button>
+    </div>
+    <button class="btn primary" style="margin-top:16px" id="confirm-done">确认完成</button>`);
+  let jar='save';
+  document.querySelectorAll('.jar-pick button').forEach(b=>b.onclick=()=>{jar=b.dataset.jar;document.querySelectorAll('.jar-pick button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  $('#confirm-done').onclick=()=>{
+    state.entries.push({id:uid(),type:'income',amount:t.pay,src:'劳动所得',jar,note:'任务：'+t.name,fromTask:true,date:todayStr()});
+    state.tasks=state.tasks.filter(x=>x.id!==t.id);
+    save();closeSheet();render();toast('任务完成！'+money(t.pay)+' 已存进'+JARS[jar]);
+  };
+}
+/* ============ 月报分享卡片 ============ */
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function pawPrint(ctx,x,y,s,rot,alpha){
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=alpha;ctx.fillStyle='#2D3229';
+  ctx.beginPath();ctx.ellipse(0,s*.45,s*.62,s*.5,0,0,7);ctx.fill();
+  [[-s*.62,-s*.25],[-s*.22,-s*.62],[s*.22,-s*.62],[s*.62,-s*.25]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],s*.24,0,7);ctx.fill();});
+  ctx.restore();
+}
+async function buildShareCard(m){
+  const h=health(m),hp=health(prevMonth(m));
+  const logDays=new Set(monthEntries(m).map(e=>e.date)).size;
+  const mood=dogMood(h.total);
+  const W=750,H=1200,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  try{await document.fonts.ready}catch(e){}
+  ctx.fillStyle='#FBF7EF';ctx.fillRect(0,0,W,H);
+  pawPrint(ctx,70,182,16,-.5,.08);pawPrint(ctx,662,244,20,.4,.08);pawPrint(ctx,640,1008,16,-.3,.08);pawPrint(ctx,86,986,14,.6,.08);
+  /* 页眉品牌 */
+  ctx.fillStyle='#2F6B4F';rr(ctx,40,40,64,64,18);ctx.fill();
+  ctx.fillStyle='#FDFBF6';rr(ctx,54,52,36,14,5);ctx.fill();rr(ctx,50,72,44,24,8);ctx.fill();
+  ctx.fillStyle='#2F6B4F';rr(ctx,56,78,32,12,6);ctx.fill();
+  ctx.textAlign='left';ctx.fillStyle='#2D3229';ctx.font='700 40px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText('汪汪小金库',124,78);
+  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('我的第一本理财账本',124,112);
+  ctx.textAlign='right';ctx.fillStyle='#2D3229';ctx.font='600 28px "PingFang SC",sans-serif';ctx.fillText(m.slice(0,4)+'年'+(+m.slice(5))+'月 · 财务月报',710,70);
+  /* 白色卡面 */
+  ctx.fillStyle='#FFFFFF';rr(ctx,36,150,678,970,26);ctx.fill();
+  ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,36,150,678,970,26);ctx.stroke();
+  /* 体检分环形 */
+  const cx=265,cy=390,R=105;
+  ctx.lineWidth=20;ctx.lineCap='round';
+  ctx.strokeStyle='#F0EBDD';ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  const sc=h.total,col=sc>=80?'#5D8A3C':sc>=55?'#E09E3A':'#B23A3A';
+  ctx.strokeStyle=col;ctx.beginPath();ctx.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+Math.min(100,sc)/100*Math.PI*2);ctx.stroke();
+  ctx.textAlign='center';ctx.fillStyle='#2D3229';ctx.font='700 72px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(sc,cx,cy+10);
+  ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('财务体检分',cx,cy+50);
+  ctx.font='22px "PingFang SC",sans-serif';
+  ctx.fillText('想要 '+(h.expSum?Math.round(h.wantRatio*100):0)+'% · 攒钱率 '+Math.round(h.saveRate*100)+'% · 记账 '+logDays+' 天',cx,cy+R+48);
+  /* 小狗 */
+  const dogImg=await new Promise(res=>{const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(dogSVG(mood).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('width="100%"','width="140" height="132"'));});
+  if(dogImg)ctx.drawImage(dogImg,478,268,205,194);
+  /* 三个数据块 */
+  const chips=[[Math.round((h.expSum?h.wantRatio:0)*100)+'%','想要占比',(h.wantRatio<=.4?'#5D8A3C':h.wantRatio<=.6?'#E09E3A':'#B23A3A')],[Math.round(h.saveRate*100)+'%','攒钱率','#2F6B4F'],[logDays+' 天','记账坚持','#2E6E9E']];
+  chips.forEach((c,i)=>{const x=76+i*214;
+    ctx.fillStyle='#FBF7EF';rr(ctx,x,580,196,116,18);ctx.fill();
+    ctx.strokeStyle='#E8E2D4';ctx.lineWidth=2;rr(ctx,x,580,196,116,18);ctx.stroke();
+    ctx.fillStyle=c[2];ctx.font='700 46px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText(c[0],x+98,644);
+    ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText(c[1],x+98,678);});
+  /* 本月最大进步 */
+  const diffs=[['攒钱率',Math.round((h.saveRate-hp.saveRate)*100)],['想要占比',h.expSum&&hp.expSum?-Math.round((h.wantRatio-hp.wantRatio)*100):0],['财务体检分',h.total-hp.total]].sort((a,b)=>b[1]-a[1]);
+  const best=diffs[0];
+  ctx.fillStyle='#E3EFE7';rr(ctx,76,730,598,110,18);ctx.fill();
+  ctx.strokeStyle='#C6DECB';ctx.lineWidth=2;rr(ctx,76,730,598,110,18);ctx.stroke();
+  ctx.fillStyle='#2F6B4F';ctx.font='700 30px "PingFang SC",sans-serif';ctx.fillText(best[1]>0?'比上月进步：'+best[0]+' +'+best[1]:'这个月稳住了，下月继续加油',375,772);
+  ctx.font='23px "PingFang SC",sans-serif';ctx.fillStyle='#4E7A62';
+  ctx.fillText('「'+dogSay(h.total)+'」',375,812);
+  /* 需要 vs 想要 比例条 */
+  const needSum=h.expSum-h.wantSum,bw=598,wantR=h.expSum?h.wantSum/h.expSum:0;
+  ctx.fillStyle='#C24E6B';rr(ctx,76,884,bw,34,17);ctx.fill();
+  const needW=bw*(1-wantR);
+  if(needW>34){ctx.save();ctx.beginPath();ctx.rect(76,884,needW,34);ctx.clip();ctx.fillStyle='#5D8A3C';rr(ctx,76,884,bw,34,17);ctx.fill();ctx.restore();}
+  ctx.textAlign='left';ctx.fillStyle='#5D8A3C';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('需要 '+money(needSum),76,946);
+  ctx.textAlign='right';ctx.fillStyle='#C24E6B';ctx.fillText('想要 '+money(h.wantSum)+'（'+Math.round(wantR*100)+'%）',674,946);
+  /* 汇总行 */
+  ctx.textAlign='center';ctx.fillStyle='#7C8273';ctx.font='24px "PingFang SC",sans-serif';
+  ctx.fillText('本月支出 '+money(h.expSum)+' · 收入 '+money(h.incSum)+' · 存下 '+money(h.saved),375,1006);
+  /* 页脚 */
+  ctx.strokeStyle='#E8E2D4';ctx.setLineDash([2,8]);ctx.beginPath();ctx.moveTo(76,1046);ctx.lineTo(674,1046);ctx.stroke();ctx.setLineDash([]);
+  pawPrint(ctx,375,1084,12,0,.5);
+  ctx.fillStyle='#7C8273';ctx.font='22px "PingFang SC",sans-serif';ctx.fillText('汪汪小金库 · 记录每一笔，长大不慌张',375,1136);
+  return cv;
+}
+async function openShareCard(m){
+  toast('正在生成卡片…');
+  const cv=await buildShareCard(m);
+  const url=cv.toDataURL('image/png');
+  openSheet(`<h3>月报分享卡片</h3>
+    <img id="share-img" src="${url}" alt="${m} 月报分享卡片">
+    <p class="muted" style="font-size:12px;text-align:center">保存后就能发到家长群、朋友圈或小红书啦</p>
+    <button class="btn primary" style="margin-top:8px" id="dl-share">保存图片（PNG）</button>`);
+  $('#dl-share').onclick=()=>{const a=document.createElement('a');a.href=url;a.download='汪汪小金库月报-'+m+'.png';a.click();};
+}
+/* ============ 事件绑定 ============ */
+function bind(){
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render();window.scrollTo(0,0);});
+  document.querySelectorAll('#quick-cats .cat-btn').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;c==='__income'?openIncome():openExpense(c);});
+  const aw=$('#add-wish');if(aw)aw.onclick=openWishAdd;
+  const atk=$('#add-task');if(atk)atk.onclick=openTaskAdd;
+  document.querySelectorAll('[data-wish-x]').forEach(b=>b.onclick=()=>wishDrop(b.dataset.wishX));
+  document.querySelectorAll('[data-wish-buy]').forEach(b=>b.onclick=()=>wishBuy(b.dataset.wishBuy));
+  document.querySelectorAll('[data-task-do]').forEach(b=>b.onclick=()=>{const t=state.tasks.find(x=>x.id===b.dataset.taskDo);if(t)openTaskDone(t);});
+  document.querySelectorAll('[data-task-x]').forEach(b=>b.onclick=()=>{state.tasks=state.tasks.filter(x=>x.id!==b.dataset.taskX);save();render();toast('任务已取消');});
+  const shb=$('#share-btn');if(shb)shb.onclick=()=>openShareCard(reportMonth);
+  const rmp=$('#rm-prev');if(rmp)rmp.onclick=()=>{reportMonth=prevMonth(reportMonth);render();window.scrollTo(0,0);};
+  const rmn=$('#rm-next');if(rmn)rmn.onclick=()=>{reportMonth=nextMonth(reportMonth);render();window.scrollTo(0,0);};
+  const sg=$('#save-goal');
+  if(sg)sg.onclick=()=>{
+    const t=Math.round(parseFloat($('#g-target').value||0)*100),w=Math.round(parseFloat($('#g-weekly').value||0)*100);
+    const name=$('#g-name').value.trim();
+    if(!name||!t||!w)return toast('请把目标和金额填完整');
+    state.goal={name,target:t,weekly:w};save();render();toast('储蓄计划已更新');
+  };
+  const sb=$('#save-budget');
+  if(sb)sb.onclick=()=>{
+    CATS.forEach((c,i)=>{state.budgets[c.name]=Math.max(0,Math.round(parseFloat($('#bud-'+i).value||0)*100));});
+    save();render();toast('预算已保存');
+  };
+  const ex=$('#export-btn');
+  if(ex)ex.onclick=()=>{
+    const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='小金库备份-'+todayStr()+'.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  const rs=$('#reset-btn');
+  if(rs)rs.onclick=()=>{if(confirm('恢复到演示数据？当前记录会被替换（建议先导出备份）。')){state=demoState();save();render();toast('已恢复演示数据');}};
+}
+render();
+</script>
+</body>
+</html>
