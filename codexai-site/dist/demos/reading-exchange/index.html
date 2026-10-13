@@ -207,11 +207,13 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
   <button class="big-btn ghost" id="s-cancel" style="margin:0">取消</button>
 </div></div>
 
-<div class="modal" id="m-report"><div class="sheet">
-  <h3>🎴 我的阅读报告卡</h3>
-  <div id="report-area"></div>
-  <button class="big-btn" id="r-download">下载图片</button>
-  <button class="big-btn ghost" id="r-close" style="margin:0">关闭</button>
+<div class="modal" id="m-report"><div class="sheet" style="display:flex;flex-direction:column">
+  <h3 style="flex-shrink:0">🎴 我的阅读报告卡</h3>
+  <div id="report-area" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  <div style="flex-shrink:0;padding-top:12px">
+    <button class="big-btn" id="r-download" style="margin-bottom:9px">⬇️ 下载图片</button>
+    <button class="big-btn ghost" id="r-close" style="margin:0">返回</button>
+  </div>
 </div></div>
 
 <script>
@@ -519,52 +521,99 @@ $('#btn-ai-rec').addEventListener('click',async()=>{
 /* ===== 报告卡 ===== */
 let reportURL=null;
 $('#btn-report').addEventListener('click',()=>{
-  const c=document.createElement('canvas');c.width=750;c.height=1200;
+  const c=document.createElement('canvas');c.width=750;c.height=1330;
   const x=c.getContext('2d');
-  x.fillStyle='#F7F3EA';x.fillRect(0,0,750,1200);
-  x.fillStyle='#8A5A2B';x.fillRect(0,0,750,190);
-  x.fillStyle='#fff';x.font='700 46px sans-serif';x.textAlign='center';
-  x.fillText('我的阅读报告卡',375,88);
-  x.font='300 24px sans-serif';
   const nm=state.name?state.name:'小书虫';
-  x.fillText(nm+' 的书房 · '+today(),375,140);
-  x.fillStyle='#3E3A33';x.font='700 90px sans-serif';x.fillText(String(doneBooks().length),375,350);
-  x.font='400 26px sans-serif';x.fillText('读过的好书（本）',375,400);
-  const cnt={};doneBooks().forEach(b=>cnt[b.cat]=(cnt[b.cat]||0)+1);
-  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  // 背景
+  x.fillStyle='#F7F3EA';x.fillRect(0,0,750,1330);
+  // 顶部头图
+  x.fillStyle='#8A5A2B';x.fillRect(0,0,750,225);
+  x.fillStyle='rgba(255,255,255,.08)';x.fillRect(0,150,750,75);
+  x.fillStyle='#FFFFFF';x.textAlign='center';
+  x.font='300 22px sans-serif';x.fillText('📖 '+today().replace(/-/g,'.')+' 生成',375,52);
+  x.font='700 48px sans-serif';x.fillText('我的阅读报告卡',375,112);
+  x.font='300 26px sans-serif';x.fillText(nm+' 的书房',375,162);
+  // 大数字徽章
+  x.fillStyle='#FFFFFF';x.beginPath();x.arc(375,310,88,0,Math.PI*2);x.fill();
+  x.lineWidth=6;x.strokeStyle='#B5793B';x.stroke();
+  x.fillStyle='#3E3A33';x.font='700 64px sans-serif';x.fillText(String(doneBooks().length),375,328);
+  x.font='400 20px sans-serif';x.fillStyle='#8A8272';x.fillText('读过的好书（本）',375,414);
+  // 2×2 数据格
   const p=paceText();
+  const st=streaks();
+  const cnt={};doneBooks().forEach(b=>cnt[b.cat]=(cnt[b.cat]||0)+1);
   const items=[
     ['🔁','重读次数',rereadTimes()+' 次'],
     ['📅','本月读完',monthDone()+' 本'],
     ['⚡','平均节奏',p?p.v+' '+p.unit:'—'],
-    ['🔥','连续打卡',streaks().cur+' 天'],
-    ['❤️','最爱类型',top?top[0]:'—'],
+    ['🔥','连续打卡',st.cur+' 天'],
   ];
-  let y=500;
-  items.forEach(([e,lb,v])=>{
-    x.fillStyle='#fff';if(y%2===0){}
-    x.fillStyle='#FFFFFF';x.fillRect(85,y-52,580,104);
-    x.strokeStyle='#E8E1D2';x.lineWidth=2;x.strokeRect(85,y-52,580,104);
-    x.fillStyle='#3E3A33';x.font='400 42px sans-serif';x.textAlign='left';x.fillText(e,120,y+14);
-    x.font='400 26px sans-serif';x.fillStyle='#8A8272';x.fillText(lb,190,y+2);
-    x.font='700 38px sans-serif';x.fillStyle='#B5793B';x.textAlign='right';x.fillText(v,630,y+16);
+  const bw=300,bh=110,gx=44,gy=450;
+  items.forEach((it,i)=>{
+    const bx=gx+(i%2)*(bw+62),by=gy+Math.floor(i/2)*(bh+22);
+    x.fillStyle='#FFFFFF';rr(x,bx,by,bw,bh,18);x.fill();
+    x.strokeStyle='#E8E1D2';x.lineWidth=2;rr(x,bx,by,bw,bh,18);x.stroke();
     x.textAlign='left';
-    y+=140;
+    x.font='400 40px sans-serif';x.fillStyle='#3E3A33';x.fillText(it[0],bx+24,by+70);
+    x.font='400 22px sans-serif';x.fillStyle='#8A8272';x.fillText(it[1],bx+84,by+46);
+    x.font='700 36px sans-serif';x.fillStyle='#B5793B';x.fillText(it[2],bx+84,by+86);
   });
-  x.textAlign='center';x.fillStyle='#8A8272';x.font='300 22px sans-serif';
-  x.fillText('每一本读过的书，都是成长的一级台阶',375,1120);
-  x.fillText('我的阅读书房',375,1160);
+  // 口味分布条
+  const ty=gy+2*bh+62;
+  x.textAlign='left';
+  x.fillStyle='#3E3A33';x.font='700 30px sans-serif';x.fillText('❤️ 我的阅读口味',60,ty);
+  const total=Object.values(cnt).reduce((s,n)=>s+n,0);
+  let by2=ty+42;
+  if(total>0){
+    const bars=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    bars.forEach(([cat,n])=>{
+      x.font='400 24px sans-serif';x.fillStyle='#3E3A33';x.fillText(cat,60,by2+20);
+      x.fillStyle='#EFE9DA';rr(x,170,by2+2,400,26,13);x.fill();
+      x.fillStyle=CAT_COLORS[cat]||'#888';rr(x,170,by2+2,Math.max(52,400*n/total),26,13);x.fill();
+      x.fillStyle='#8A8272';x.font='400 22px sans-serif';x.fillText(n+' 本 · '+Math.round(n/total*100)+'%',590,by2+22);
+      by2+=52;
+    });
+    const second=bars[1]?`，也常读「${bars[1][0]}」`:'';
+    x.fillStyle='#8A8272';x.font='300 24px sans-serif';
+    x.fillText(`最爱的类型是「${bars[0][0]}」${second}`,60,by2+16);
+    by2+=46;
+  }else{
+    x.fillStyle='#8A8272';x.font='300 24px sans-serif';x.fillText('读完第一本书后这里会更精彩',60,by2+16);
+    by2+=40;
+  }
+  // 重读榜
+  const rr2=state.books.filter(b=>b.records.length>1).sort((a,b)=>b.records.length-a.records.length).slice(0,3);
+  if(rr2.length){
+    x.fillStyle='#3E3A33';x.font='700 30px sans-serif';x.fillText('⭐ 最爱的书（重读榜）',60,by2+16);
+    let yy=by2+56;
+    rr2.forEach((b,i)=>{
+      x.font='400 26px sans-serif';x.fillStyle='#3E3A33';
+      x.fillText((['🥇','🥈','🥉'][i]||'⭐')+'  '+b.title,60,yy);
+      x.textAlign='right';x.fillStyle='#B5793B';x.font='700 26px sans-serif';
+      x.fillText(b.records.length+' 遍',690,yy);x.textAlign='left';
+      yy+=44;
+    });
+  }
+  // 页脚
+  x.textAlign='center';
+  x.fillStyle='#B9B19F';x.fillRect(60,1236,630,1);
+  x.fillStyle='#8A8272';x.font='300 24px sans-serif';
+  x.fillText('每一本读过的书，都是成长的一级台阶',375,1276);
+  x.fillStyle='#B5793B';x.font='500 26px sans-serif';
+  x.fillText('我的阅读书房',375,1312);
   reportURL=c.toDataURL('image/png');
   $('#report-area').innerHTML='';
   const img=new Image();img.src=reportURL;img.className='share';img.id='report-img';
   $('#report-area').appendChild(img);
   openModal('#m-report');
 });
+function rr(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()}
 $('#r-download').addEventListener('click',()=>{
   const img=$('#report-img');if(!img){toast('报告卡还没生成');return}
   const a=document.createElement('a');a.href=reportURL;a.download='阅读报告卡.png';a.click();
 });
 $('#r-close').addEventListener('click',()=>closeModal('#m-report'));
+$('#m-report').addEventListener('click',e=>{if(e.target.id==='m-report')closeModal('#m-report')});
 
 /* ===== 调试钩子（只读，测试用） ===== */
 window.__state=()=>state;
