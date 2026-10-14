@@ -25,6 +25,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from xml.sax.saxutils import escape as xml_escape
 
 BASE = Path(__file__).resolve().parent
+sys.path.insert(0, str(BASE))
+import story_director_ai
 DATA = Path(os.environ.get('CODEXAI_DATA_DIR', '/var/lib/codexai-uploader'))
 WORKS = Path(os.environ.get('CODEXAI_WORKS_DIR', '/srv/codexai-students'))
 ADMIN_TOKEN = os.environ.get('CODEXAI_ADMIN_TOKEN', '')
@@ -494,6 +496,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(200, {'ok': True})
             except sqlite3.DatabaseError:
                 self.error(503,'数据库暂时不可用')
+        elif path == '/api/story-director/status':
+            self.send_bytes(200, {'aiAvailable': story_director_ai.configured()})
         elif path == '/api/public/courses':
             self.public_courses()
         elif path == '/api/public/site-content':
@@ -981,7 +985,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = urlsplit(self.path).path
         try:
-            if path == '/api/public/consultations':
+            if path == '/api/story-director/generate':
+                if self.headers.get('Origin') not in (None, 'https://codexai.site'):
+                    return self.error(403, '请求来源不正确')
+                ip = self.headers.get('X-Forwarded-For', '').split(',')[0].strip() or self.client_address[0]
+                try:
+                    result = story_director_ai.generate(self.read_json(limit=4096), ip)
+                except story_director_ai.StoryError as exc:
+                    return self.error(exc.status, str(exc))
+                self.send_bytes(200, result)
+            elif path == '/api/public/consultations':
                 self.create_consultation()
             elif path == '/api/admin/login':
                 body = self.read_json()

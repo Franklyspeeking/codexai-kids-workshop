@@ -8,7 +8,7 @@ const demoPaths={
   '健康习惯挑战板':'/demos/habit-board/',
   '垃圾分类挑战赛':'/demos/sorting-challenge/',
   '家庭阅读交换站':'/demos/reading-exchange/',
-  'AI 互动故事导演':'/demos/story-director/'
+  'AI 互动故事导演':'/story-director/'
 };
 fetch('/api/public/courses').then(async response=>{
   if(!response.ok)throw Error('课程列表暂时无法更新');

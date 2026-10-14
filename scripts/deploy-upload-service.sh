@@ -15,8 +15,8 @@ fi
 release="$(date -u +%Y%m%dT%H%M%SZ)"
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
-cp "$root/scripts/upload-service.py" "$root/scripts/unpack-student-zip.py" "$root/scripts/package-student.py" "$root/scripts/prepare-web-zip.py" "$scratch/"
-tar -czf "$scratch/service.tar.gz" -C "$scratch" upload-service.py unpack-student-zip.py package-student.py prepare-web-zip.py
+cp "$root/scripts/upload-service.py" "$root/scripts/story_director_ai.py" "$root/scripts/unpack-student-zip.py" "$root/scripts/package-student.py" "$root/scripts/prepare-web-zip.py" "$scratch/"
+tar -czf "$scratch/service.tar.gz" -C "$scratch" upload-service.py story_director_ai.py unpack-student-zip.py package-student.py prepare-web-zip.py
 ssh_args=(-i "$key_path" -o IdentitiesOnly=yes -o ConnectTimeout=12)
 retry() {
   local n
@@ -39,7 +39,11 @@ sudo -n tar -xzf /tmp/codexai-uploader-service.tar.gz -C /opt/codexai-uploader/r
 sudo -n chown -R root:root /opt/codexai-uploader/releases/"$release"
 sudo -n install -d -o codexai -g codexai -m 700 /var/lib/codexai-uploader
 sudo -n chown -R codexai:codexai /srv/codexai-students
-sudo -n sh -c 'printf "CODEXAI_ADMIN_TOKEN=%s\n" "$(cat /tmp/codexai-uploader-token)" > /etc/codexai-uploader.env'
+if sudo -n test -s /etc/codexai-uploader.env; then
+  printf 'Preserved existing uploader environment\n'
+else
+  sudo -n sh -c 'printf "CODEXAI_ADMIN_TOKEN=%s\n" "$(cat /tmp/codexai-uploader-token)" > /etc/codexai-uploader.env'
+fi
 sudo -n chmod 600 /etc/codexai-uploader.env
 sudo -n rm -f /tmp/codexai-uploader-token
 sudo -n install -m 644 /tmp/codexai-uploader.service /etc/systemd/system/codexai-uploader.service

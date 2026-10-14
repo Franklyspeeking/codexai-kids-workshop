@@ -7,6 +7,7 @@ import sqlite3
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from zipfile import ZipFile
 from concurrent.futures import ThreadPoolExecutor
 from http.server import ThreadingHTTPServer
@@ -66,6 +67,14 @@ class UploadFlow(unittest.TestCase):
         self.assertIn('0–40 分钟｜找到问题，画出自己的工具', money_page)
         self.assertIn('180–210 分钟｜发布作品，交到家长手机里', money_page)
         self.assertEqual(money_page.count('class="step-card"'), 6)
+
+    def test_story_director_defaults_to_demo_mode(self):
+        with patch.dict(os.environ, {'CODEXAI_STORY_AI_KEY': ''}):
+            self.assertEqual(self.call('/api/story-director/status'), {'aiAvailable': False})
+            payload = json.dumps({'theme': 'adventure'}).encode()
+            result = self.call('/api/story-director/generate', 'POST', payload,
+                               {'Content-Type': 'application/json'}, 503)
+            self.assertIn('演示模式', result['error'])
 
     def test_teacher_login_uses_http_only_session_cookie(self):
         wrong = json.dumps({'username': 'admin', 'password': 'wrong'}).encode()

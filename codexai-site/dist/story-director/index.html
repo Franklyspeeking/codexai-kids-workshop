@@ -143,15 +143,15 @@ input{font-family:inherit}
     <div class="theme-grid" id="theme-grid"></div>
 
     <div class="eyebrow">② 主角是谁</div>
-    <label class="field"><span>主角名字</span>
+    <label class="field"><span>主角名字（请用虚构名字）</span>
       <input id="inp-hero" maxlength="8" placeholder="给主角起个名字，比如：小雨"></label>
     <div class="field"><span>主角性格</span>
       <div class="chips" id="persona-chips"></div></div>
-    <label class="field"><span>伙伴名字（选填，可以陪你冒险）</span>
+    <label class="field"><span>伙伴名字（选填，也请用虚构名字）</span>
       <input id="inp-buddy" maxlength="8" placeholder="比如：圆圆"></label>
 
     <div class="eyebrow">③ 导演署名</div>
-    <label class="field"><span>谢幕时怎么称呼你</span>
+    <label class="field"><span>谢幕署名（建议使用昵称）</span>
       <input id="inp-director" maxlength="10" placeholder="不填就和主角同名"></label>
 
     <button class="btn primary" id="btn-start">🎬 开机！</button>
@@ -198,17 +198,12 @@ input{font-family:inherit}
 <div class="modal-mask" id="modal-mask">
   <div class="modal">
     <h3>⚙️ 后台设置</h3>
-    <p class="sub">演示模式：使用内置剧本，离线可玩。AI 模式：接入大模型接口，实时续写剧情（兼容 OpenAI 格式：DeepSeek / 智谱 / Kimi / 通义等）。</p>
+    <p class="sub">演示模式使用内置剧本，离线可玩。AI 续写由本站服务端提供，开放后会把虚构角色和故事选择发送给模型；请在老师陪同下使用，不要填写真实姓名或隐私。</p>
     <div class="seg" id="mode-seg">
       <button data-mode="demo" class="on">演示模式</button>
-      <button data-mode="ai">AI 模式</button>
+      <button data-mode="ai" disabled>AI 续写</button>
     </div>
-    <label class="field"><span>接口地址（如 https://api.deepseek.com/v1/chat/completions）</span>
-      <input id="inp-api" placeholder="https://api.deepseek.com/v1/chat/completions"></label>
-    <label class="field"><span>API Key</span>
-      <input id="inp-key" type="password" placeholder="sk-…"></label>
-    <label class="field"><span>模型名（如 deepseek-chat）</span>
-      <input id="inp-model" placeholder="deepseek-chat"></label>
+    <p class="sub" id="ai-status" role="status">正在检查 AI 续写是否开放…</p>
     <button class="btn primary" id="btn-save-cfg" style="margin-top:16px">保存设置</button>
     <button class="btn ghost" id="btn-close-cfg">关闭</button>
   </div>
@@ -371,13 +366,20 @@ fairy:{
 };
 
 /* ============ 全局状态 ============ */
-const LS_KEY='story-director:v1', LS_CFG='story-director:cfg:v1';
+const LS_KEY='story-director:v1';
 let state=null;
-let cfg={mode:'demo',api:'',key:'',model:''};
+let cfg={mode:'demo',aiAvailable:false};
 function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
 function loadSave(){try{return JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}}
-function saveCfg(){try{localStorage.setItem(LS_CFG,JSON.stringify(cfg));}catch(e){}}
-function loadCfg(){try{return JSON.parse(localStorage.getItem(LS_CFG));}catch(e){return null;}}
+try{localStorage.removeItem('story-director:cfg:v1');}catch(e){}
+async function checkAiAvailability(){
+  try{
+    const response=await fetch('/api/story-director/status',{cache:'no-store'});
+    cfg.aiAvailable=response.ok&&Boolean((await response.json()).aiAvailable);
+  }catch(e){cfg.aiAvailable=false;}
+  $('#mode-seg [data-mode="ai"]').disabled=!cfg.aiAvailable;
+  $('#ai-status').textContent=cfg.aiAvailable?'AI 续写已开放；请在老师陪同下体验。':'AI 续写暂未开放，演示模式仍可完整体验。';
+}
 
 /* ============ 开机设置 ============ */
 let setup={theme:'',persona:'',savedGame:false};
@@ -398,7 +400,7 @@ function initSetup(){
   if(saved&&saved.act!==undefined&&saved.act>=0&&saved.act<5){
     setup.savedGame=true;
     const btn=$('#btn-continue');btn.classList.remove('hide');
-    btn.onclick=()=>{state=saved;enterStage(false);};
+    btn.onclick=()=>{state=saved;cfg.mode=cfg.aiAvailable&&saved.mode==='ai'?'ai':'demo';enterStage(false);};
   }
   $('#btn-start').onclick=()=>{
     if(!setup.theme)return toast('先选一个题材吧');
@@ -415,6 +417,7 @@ function initSetup(){
 /* ============ 舞台 ============ */
 const TOTAL=5;
 let busy=false;
+let currentActData=null;
 function enterStage(fresh){
   $('#scr-setup').classList.add('hide');
   $('#scr-stage').classList.remove('hide');
@@ -432,17 +435,20 @@ async function renderAct(i,skip){
   $('#reaction').classList.remove('show');
   const zone=$('#choice-zone');zone.classList.add('hide');
   let data=getActData(i);
-  const aiReady=cfg.mode==='ai'&&state.mode==='ai'&&cfg.api&&cfg.key&&cfg.model;
+  const aiReady=cfg.mode==='ai'&&state.mode==='ai'&&cfg.aiAvailable;
   if(aiReady){
     $('#act-head').textContent='AI 编剧构思中…';
     await type($('#story-box'),'🎬 AI 编剧正在写这一幕，请稍候……');
     try{
-      const r=await aiGenerate();
+      const r=skip&&state.currentAiAct?.act===i?state.currentAiAct:await aiGenerate();
       data={title:r.title,text:safePass(r.text),
         choices:r.choices?r.choices.map(l=>({label:l,react:null,flag:''})):null};
-    }catch(e){toast('AI 接口没接通，先用演示剧本继续');
+      state.currentAiAct={act:i,title:data.title,text:data.text,
+        choices:data.choices?data.choices.map(choice=>choice.label):null};
+    }catch(e){state.currentAiAct=null;toast('AI 续写暂不可用，先用演示剧本继续');
       console.warn('[AI]',e.message);}
   }
+  currentActData=data;
   $('#act-head').textContent=data.title;
   $('#curtain-label').textContent=`第 ${i+1} 幕 / 共 ${TOTAL} 幕`;
   $('#stage-foot').textContent=i===TOTAL-1?'✦ 最后一幕 · 请欣赏 ✦':'✦ 幕布拉开 · 灯光就位 ✦';
@@ -470,6 +476,7 @@ function getActData(i){
 function applyChoice(choice,freeText){
   if(busy)return;busy=true;
   $('#choice-zone').classList.add('hide');
+  const nextAct=state.act+1;
   const h={hero:state.hero,buddy:state.buddy,persona:state.persona};
   let react;
   if(freeText!==undefined){
@@ -480,13 +487,14 @@ function applyChoice(choice,freeText){
     if(choice.flag&&!state.flags.includes(choice.flag))state.flags.push(choice.flag);
     state.history.push({act:state.act,choice:choice.label});
   }
+  state.act=nextAct;
   save();
   const rb=$('#reaction');rb.classList.add('show');
   type(rb,react).then(()=>clearCaret(rb)).then(()=>sleep(GAP))
-    .then(()=>{renderAct(state.act+1);});
+    .then(()=>{renderAct(nextAct);});
 }
-$('#ch-A').onclick=()=>{const d=getActData(state.act);applyChoice(d.choices[0]);};
-$('#ch-B').onclick=()=>{const d=getActData(state.act);applyChoice(d.choices[1]);};
+$('#ch-A').onclick=()=>{if(currentActData?.choices)applyChoice(currentActData.choices[0]);};
+$('#ch-B').onclick=()=>{if(currentActData?.choices)applyChoice(currentActData.choices[1]);};
 $('#btn-free').onclick=()=>{
   const v=$('#inp-free').value.trim();
   if(!v)return toast('先输入你的导演指令');
@@ -563,36 +571,26 @@ $('#btn-card').onclick=()=>{
   toast('谢幕卡已生成，请查收下载');
 };
 
-/* ============ AI 模式（可插拔） ============ */
-function buildMessages(actNo,freeText){
-  const th=THEMES[state.theme];
-  const sys=`你是儿童互动剧场的编剧，观众是9-14岁的孩子。铁律：1.每次只写一幕，150-220字；2.剧情积极安全，禁止恐怖、暴力、阴暗、死亡、危险行为模仿情节；3.用词生动适龄；4.必须执行"导演"（玩家）的选择或自由指令，让剧情明显朝该方向发展。只输出JSON，格式：{"title":"第${actNo+1}幕 · 小标题","text":"正文","choices":["选项A","选项B"]}${actNo===4?'（第5幕是大结局，输出 {"title":..,"text":..} 不带 choices）':''}`;
-  const story=[`题材：${th.name}（${th.desc}）。主角：${state.hero}，性格${state.persona}。${state.buddy?'伙伴：'+state.buddy+'。':''}已发生剧情：`];
-  state.history.forEach((x,i)=>story.push(`第${x.act+1}幕玩家选择：${x.choice}`));
-  if(freeText)story.push(`本幕导演自由指令：${freeText}`);
-  return [{role:'system',content:sys},{role:'user',content:story.join('\n')}];
-}
-async function aiGenerate(freeText){
-  const data=await fetch(cfg.api,{method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},
-    body:JSON.stringify({model:cfg.model,messages:buildMessages(state.act,freeText),
-      temperature:0.9,max_tokens:800})});
-  if(!data.ok)throw new Error('HTTP '+data.status);
-  const j=await data.json();
-  let txt=j.choices&&j.choices[0]&&j.choices[0].message?j.choices[0].message.content:'';
-  txt=txt.replace(/```json|```/g,'').trim();
-  const m=txt.match(/\{[\s\S]*\}/);
-  if(!m)throw new Error('bad json');
-  const o=JSON.parse(m[0]);
-  if(!o.text)throw new Error('no text');
-  const choices=(state.act<4&&Array.isArray(o.choices)&&o.choices.length>=2)?o.choices.slice(0,2):null;
-  return {title:o.title||('第 '+(state.act+1)+' 幕'),text:o.text,choices,
-    aiFlag:choices?'':'',react:null};
+/* ============ 服务端 AI 续写 ============ */
+async function aiGenerate(){
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),20000);
+  try{
+    const response=await fetch('/api/story-director/generate',{method:'POST',
+      headers:{'Content-Type':'application/json'},signal:controller.signal,
+      body:JSON.stringify({theme:state.theme,hero:state.hero,buddy:state.buddy,
+        director:state.director,persona:state.persona,act:state.act,history:state.history})});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const result=await response.json();
+    if(typeof result.title!=='string'||typeof result.text!=='string'||
+      (state.act<4&&(!Array.isArray(result.choices)||result.choices.length!==2)))
+      throw new Error('bad story');
+    return result;
+  }finally{clearTimeout(timeout);}
 }
 
 /* ============ 设置弹层 ============ */
 function openCfg(){
-  $('#inp-api').value=cfg.api;$('#inp-key').value=cfg.key;$('#inp-model').value=cfg.model;
   $('#mode-seg').querySelectorAll('button').forEach(b=>
     b.classList.toggle('on',b.dataset.mode===cfg.mode));
   $('#modal-mask').classList.add('show');
@@ -603,18 +601,15 @@ $('#mode-seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   $('#mode-seg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');});
 $('#btn-save-cfg').onclick=()=>{
-  cfg.mode=$('#mode-seg').querySelector('button.on').dataset.mode;
-  cfg.api=$('#inp-api').value.trim();cfg.key=$('#inp-key').value.trim();cfg.model=$('#inp-model').value.trim();
-  if(cfg.mode==='ai'&&(!cfg.api||!cfg.key||!cfg.model))toast('已保存。注意：AI 模式还缺配置，开局会自动回退演示剧情');
-  else toast('设置已保存');
-  saveCfg();
+  cfg.mode=cfg.aiAvailable?$('#mode-seg').querySelector('button.on').dataset.mode:'demo';
+  toast(cfg.mode==='ai'?'已开启 AI 续写':'已开启演示模式');
   if(state)state.mode=cfg.mode;
   $('#modal-mask').classList.remove('show');
 };
 
 /* ============ 初始化 ============ */
-const savedCfg=loadCfg();if(savedCfg)cfg=Object.assign(cfg,savedCfg);
 initSetup();
+checkAiAvailability();
 </script>
 </body>
 </html>
