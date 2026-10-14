@@ -178,9 +178,8 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
   </div>
   <div class="card">
     <h3>推荐新书单</h3>
-    <div class="ai-note" id="taste-ai-note">当前为内置书单推荐。在 ⚙️ 设置里填入 AI 接口后，可升级为个性化 AI 推荐。</div>
+    <div class="ai-note" id="taste-ai-note">当前使用内置书单推荐。</div>
     <div id="rec-list"></div>
-    <button class="big-btn ghost" id="btn-ai-rec">✨ AI 帮我推荐（需配置接口）</button>
   </div>
 </section>
 
@@ -201,7 +200,7 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
   </div>
 </section>
 
-<footer>我的阅读书房 · 数据只保存在本机浏览器 · ⚙️ 可配置 AI</footer>
+<footer>我的阅读书房 · 数据只保存在本机浏览器</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -209,7 +208,7 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
 <div class="modal" id="m-add"><div class="sheet">
   <h3>📷 登记一本书</h3>
   <div class="fld">
-    <label>拍书的封面（可选，配好 AI 后可自动识别书名）</label>
+    <label>拍书的封面（可选，书名请手动输入）</label>
     <div class="photo-zone" id="photo-zone">📷 点击拍照或选择照片<br><span style="font-size:11px">手机可直接调起摄像头</span></div>
     <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden">
   </div>
@@ -239,10 +238,6 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
       <div class="fld"><label>每本可借天数</label><input id="s-borrowdays" type="number" min="1" max="365" value="14"></div>
     </div>
   </div>
-  <div class="ai-note">AI 能力为可选增强：配置后可自动识别封面书名、生成个性化推荐。不配置也完全可用。</div>
-  <div class="fld"><label>AI 接口地址（OpenAI 兼容，如 https://api.deepseek.com）</label><input id="s-endpoint" placeholder="https://..."></div>
-  <div class="fld"><label>API Key</label><input id="s-key" placeholder="sk-..." type="password"></div>
-  <div class="fld"><label>模型名（需支持视觉才能拍照识书，如 qwen-vl-plus / glm-4v）</label><input id="s-model" placeholder="模型名"></div>
   <button class="big-btn" id="s-save">保存设置</button>
   <button class="big-btn ghost" id="s-cancel" style="margin:0">取消</button>
 </div></div>
@@ -293,7 +288,7 @@ function seed(){
     {id:uid(),title:'夏洛的网',cat:'童话',status:'done',records:[daysAgo(21),daysAgo(4)],photo:null,lendable:false},
     {id:uid(),title:'神奇校车·恐龙探秘',cat:'科普',status:'done',records:[daysAgo(12)],photo:null,lendable:false},
     {id:uid(),title:'汤姆·索亚历险记',cat:'冒险',status:'reading',records:[],photo:null,lendable:false}
-  ],recs:[],ai:{endpoint:'',key:'',model:''},createdAt:today(),
+  ],recs:[],createdAt:today(),
   accounts:[],rules:{maxBorrow:2,borrowDays:14},loans:[]};
 }
 function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -314,6 +309,7 @@ function load(){
     try{const old=JSON.parse(localStorage.getItem('reading-study:v1'));if(old&&old.books)s=old}catch(e){}
   }
   if(s&&s.books){
+    delete s.ai;
     if(!s.accounts)s.accounts=[];
     if(!s.rules)s.rules={maxBorrow:2,borrowDays:14};
     if(!s.loans)s.loans=[];
@@ -551,10 +547,6 @@ $('#photo-input').addEventListener('change',e=>{
     photoData=c.toDataURL('image/jpeg',0.7);
     const z=$('#photo-zone');z.classList.add('has');z.innerHTML='';
     const pv=document.createElement('img');pv.src=photoData;z.appendChild(pv);
-    if(aiReady()){
-      const btn=document.createElement('button');btn.className='mini primary';btn.style.margin='8px';btn.textContent='🤖 AI 识别书名';
-      btn.onclick=()=>aiRecognize();z.appendChild(btn);
-    }
   };
   img.src=URL.createObjectURL(f);
 });
@@ -621,9 +613,6 @@ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()
 /* ===== 设置 ===== */
 $('#btn-settings').addEventListener('click',()=>{
   $('#s-name').value=state.name||'';
-  $('#s-endpoint').value=state.ai.endpoint||'';
-  $('#s-key').value=state.ai.key||'';
-  $('#s-model').value=state.ai.model||'';
   $('#s-maxborrow').value=state.rules.maxBorrow;
   $('#s-borrowdays').value=state.rules.borrowDays;
   openModal('#m-settings');
@@ -633,9 +622,6 @@ $('#s-save').addEventListener('click',()=>{
   state.name=$('#s-name').value.trim();
   const oa=state.accounts.find(a=>a.role==='owner');
   if(oa)oa.name=state.name||'馆长';
-  state.ai.endpoint=$('#s-endpoint').value.trim();
-  state.ai.key=$('#s-key').value.trim();
-  state.ai.model=$('#s-model').value.trim();
   const mb=parseInt($('#s-maxborrow').value,10),bd=parseInt($('#s-borrowdays').value,10);
   if(mb>=1&&mb<=20)state.rules.maxBorrow=mb;
   if(bd>=1&&bd<=365)state.rules.borrowDays=bd;
@@ -658,48 +644,6 @@ $('#a-save').addEventListener('click',()=>{
   save();closeModal('#m-acct');
   toast('👤 账号已创建，现在以 '+name+' 的身份借书');
   render();
-});
-
-/* ===== AI ===== */
-function aiReady(){return !!(state.ai.endpoint&&state.ai.key)}
-async function aiChat(messages){
-  const url=state.ai.endpoint.replace(/\/+$/,'')+'/chat/completions';
-  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.ai.key},
-    body:JSON.stringify({model:state.ai.model||'gpt-3.5-turbo',messages,temperature:0.8})});
-  if(!res.ok)throw new Error('AI接口返回 '+res.status);
-  const d=await res.json();
-  return d.choices[0].message.content;
-}
-async function aiRecognize(){
-  if(!photoData){toast('请先选择照片');return}
-  toast('🤖 AI 正在识别封面…');
-  try{
-    const out=await aiChat([{role:'user',content:[
-      {type:'text',text:'这是书的封面照片。请只回答JSON：{"title":"书名","cat":"分类"}，分类从这些里选：'+CATS.join('、')+'。'},
-      {type:'image_url',image_url:{url:photoData}}
-    ]}]);
-    const m=out.match(/\{[\s\S]*\}/);
-    if(!m)throw new Error('无法解析');
-    const j=JSON.parse(m[0]);
-    if(j.title){$('#f-title').value=j.title;if(j.cat&&CATS.includes(j.cat))$('#f-cat').value=j.cat;toast('✅ 识别成功，请确认后点上架')}
-    else toast('没认出来，请手动输入书名');
-  }catch(err){toast('识别失败：'+err.message+'（可手动输入书名）')}
-}
-$('#btn-ai-rec').addEventListener('click',async()=>{
-  if(!aiReady()){toast('请先在 ⚙️ 设置里配置 AI 接口');openModal('#m-settings');return}
-  if(doneBooks().length===0){toast('先记录读完的书，AI 才能了解你的口味');return}
-  toast('🤖 AI 正在分析你的书架…');
-  try{
-    const list=doneBooks().map(b=>b.title+'（'+b.cat+'，读了'+b.records.length+'遍）').join('、');
-    const out=await aiChat([{role:'system',content:'你是儿童阅读顾问，面向9-14岁孩子。输出必须是纯JSON数组，不要多余文字：[{"title":"书名","cat":"分类","reason":"30字内推荐理由，结合孩子已读的书"}]，推荐3-5本孩子书架上没有的书。分类从这些里选：'+CATS.join('、')},
-      {role:'user',content:'我读过的书：'+list+'。请推荐新书。'}]);
-    const m=out.match(/\[[\s\S]*\]/);
-    if(!m)throw new Error('无法解析');
-    const arr=JSON.parse(m[0]);
-    if(!Array.isArray(arr)||!arr.length)throw new Error('结果为空');
-    state.recs=arr.map(r=>({title:String(r.title||''),cat:CATS.includes(r.cat)?r.cat:'其他',reason:String(r.reason||''),from:'AI'})).filter(r=>r.title);
-    save();renderTaste();confetti();toast('✨ AI 推荐已生成');
-  }catch(err){toast('AI 推荐失败：'+err.message+'，已保留内置书单')}
 });
 
 /* ===== 报告卡 ===== */
@@ -805,9 +749,9 @@ window.__toast=toast;
 
 /* ===== 初始化 ===== */
 state=load()||seed();
-if(!state.ai)state.ai={endpoint:'',key:'',model:''};
 if(!state.recs)state.recs=[];
 save();
+try{localStorage.removeItem('reading-study:v1')}catch(e){}
 render();
 </script>
 </body>
