@@ -1,5 +1,5 @@
 /* Offline shell for the new money demo at the original URL. Legacy data remains in localStorage. */
-const CACHE = 'codexai-money-offline-v4:' + self.registration.scope;
+const CACHE = 'codexai-money-offline-v5:' + self.registration.scope;
 const ASSETS = [
   './', './index.html', '../assets/code-x-ai-logo.png'
 ].map(path => new URL(path, self.registration.scope).href);
