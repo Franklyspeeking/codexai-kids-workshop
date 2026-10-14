@@ -94,6 +94,19 @@ canvas.share,img.share{width:100%;display:block;border-radius:12px}
 footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
 .confetti{position:fixed;top:-12px;font-size:20px;z-index:60;pointer-events:none;animation:fall 2.4s linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(360deg);opacity:.2}}
+.tag.loan{background:#FBEAF0;color:#993556}
+.tag.lendable{background:#E1F5EE;color:#0F6E56}
+.acct-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.acct{display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:var(--bg);border-radius:18px;padding:6px 14px;font-size:14px;cursor:pointer}
+.acct.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:700}
+.acct .role-tag{font-size:10px;background:var(--accent);color:#fff;border-radius:7px;padding:1px 6px}
+.loan{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:11px;padding:10px 12px;margin-bottom:8px}
+.loan .who{width:38px;height:38px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.loan-main{flex:1;min-width:0}
+.loan-title{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loan-meta{font-size:12px;color:var(--sub);margin-top:1px}
+.overdue{color:var(--red);font-weight:700}
+.rules-box{background:var(--blue-bg);color:var(--blue);border-radius:12px;padding:10px 13px;font-size:13px;line-height:1.8;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -117,7 +130,8 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
 <nav>
   <button class="on" data-tab="shelf">📖 书架</button>
   <button data-tab="stats">📊 统计</button>
-  <button data-tab="taste">🧭 口味与推荐</button>
+  <button data-tab="taste">🧭 口味推荐</button>
+  <button data-tab="lend">🤝 借书</button>
 </nav>
 
 <section id="tab-shelf" class="on">
@@ -170,6 +184,23 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
   </div>
 </section>
 
+<section id="tab-lend">
+  <div class="card">
+    <h3>🤝 家庭共享借书</h3>
+    <div class="rules-box" id="rules-box"></div>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:11px">当前身份：<b id="cur-acct-name">—</b></p>
+    <div class="acct-row" id="acct-row"></div>
+  </div>
+  <div class="card">
+    <h3 id="lend-my-title">📖 可以借的书</h3>
+    <div id="lend-available"></div>
+  </div>
+  <div class="card">
+    <h3 id="lend-loans-title">📋 借阅记录</h3>
+    <div id="lend-loans"></div>
+  </div>
+</section>
+
 <footer>我的阅读书房 · 数据只保存在本机浏览器 · ⚙️ 可配置 AI</footer>
 </div>
 
@@ -192,19 +223,40 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
     </select></div>
   </div>
   <div class="fld" id="f-date-wrap"><label>读完日期</label><input id="f-date" type="date"></div>
+  <div class="fld"><label>📖 这本书可以借给同学吗？（馆长功能）</label>
+    <div class="chips"><button type="button" class="chip" id="f-lendable-no">⛔ 不外借</button><button type="button" class="chip on" id="f-lendable-yes">✅ 可外借</button></div>
+  </div>
   <button class="big-btn" id="f-save">放上书架</button>
   <button class="big-btn ghost" id="f-cancel" style="margin:0">取消</button>
 </div></div>
 
 <div class="modal" id="m-settings"><div class="sheet">
   <h3>⚙️ 设置</h3>
-  <div class="fld"><label>书房主人名字</label><input id="s-name" placeholder="比如：小明"></div>
+  <div class="fld"><label>书房主人名字（馆长）</label><input id="s-name" placeholder="比如：小明"></div>
+  <div class="fld"><label>📚 借书规则（所有人都能看到，大家都按规则来）</label>
+    <div class="row">
+      <div class="fld"><label>每人最多同时借</label><input id="s-maxborrow" type="number" min="1" max="20" value="2"></div>
+      <div class="fld"><label>每本可借天数</label><input id="s-borrowdays" type="number" min="1" max="365" value="14"></div>
+    </div>
+  </div>
   <div class="ai-note">AI 能力为可选增强：配置后可自动识别封面书名、生成个性化推荐。不配置也完全可用。</div>
   <div class="fld"><label>AI 接口地址（OpenAI 兼容，如 https://api.deepseek.com）</label><input id="s-endpoint" placeholder="https://..."></div>
   <div class="fld"><label>API Key</label><input id="s-key" placeholder="sk-..." type="password"></div>
   <div class="fld"><label>模型名（需支持视觉才能拍照识书，如 qwen-vl-plus / glm-4v）</label><input id="s-model" placeholder="模型名"></div>
   <button class="big-btn" id="s-save">保存设置</button>
   <button class="big-btn ghost" id="s-cancel" style="margin:0">取消</button>
+</div></div>
+
+<div class="modal" id="m-acct"><div class="sheet">
+  <h3>👤 新建借书账号</h3>
+  <div class="fld"><label>名字（比如：同学小华、表妹朵朵）</label><input id="a-name" placeholder="怎么称呼这位借书人？"></div>
+  <div class="fld"><label>选一个头像</label>
+    <div class="chips" id="a-emojis">
+      <button type="button" class="chip on">😊</button><button type="button" class="chip">🐯</button><button type="button" class="chip">🐰</button><button type="button" class="chip">🦊</button><button type="button" class="chip">🐼</button><button type="button" class="chip">🐨</button><button type="button" class="chip">🦁</button><button type="button" class="chip">🐧</button><button type="button" class="chip">🐙</button><button type="button" class="chip">🦄</button>
+    </div>
+  </div>
+  <button class="big-btn" id="a-save">创建账号</button>
+  <button class="big-btn ghost" id="a-cancel" style="margin:0">取消</button>
 </div></div>
 
 <div class="modal" id="m-report"><div class="sheet" style="display:flex;flex-direction:column">
@@ -219,7 +271,7 @@ footer{text-align:center;font-size:11px;color:#B9B19F;padding:16px 0 6px}
 <script>
 "use strict";
 /* ===== 数据 ===== */
-const KEY='reading-study:v1';
+const KEY='reading-study:v2';
 const CATS=['童话','科普','冒险','侦探','漫画','历史','科学','诗歌','其他'];
 const CAT_COLORS={'童话':'#D4537E','科普':'#185FA5','冒险':'#B5793B','侦探':'#534AB7','漫画':'#D85A30','历史':'#993C1D','科学':'#0F6E56','诗歌':'#7F77DD','其他':'#888780'};
 const PRESET_RECS={
@@ -238,16 +290,37 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 function seed(){
   return {name:'',books:[
-    {id:uid(),title:'夏洛的网',cat:'童话',status:'done',records:[daysAgo(21),daysAgo(4)],photo:null},
-    {id:uid(),title:'神奇校车·恐龙探秘',cat:'科普',status:'done',records:[daysAgo(12)],photo:null},
-    {id:uid(),title:'汤姆·索亚历险记',cat:'冒险',status:'reading',records:[],photo:null}
-  ],recs:[],ai:{endpoint:'',key:'',model:''},createdAt:today()};
+    {id:uid(),title:'夏洛的网',cat:'童话',status:'done',records:[daysAgo(21),daysAgo(4)],photo:null,lendable:false},
+    {id:uid(),title:'神奇校车·恐龙探秘',cat:'科普',status:'done',records:[daysAgo(12)],photo:null,lendable:false},
+    {id:uid(),title:'汤姆·索亚历险记',cat:'冒险',status:'reading',records:[],photo:null,lendable:false}
+  ],recs:[],ai:{endpoint:'',key:'',model:''},createdAt:today(),
+  accounts:[],rules:{maxBorrow:2,borrowDays:14},loans:[]};
 }
 function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(ds,n){const d=new Date(ds);d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 let state;
+let curAcctId=null;
+function ownerAcct(){
+  let o=state.accounts.find(a=>a.role==='owner');
+  if(!o){o={id:uid(),name:state.name||'馆长',emoji:'👑',role:'owner'};state.accounts.unshift(o)}
+  return o;
+}
+function curAcct(){return state.accounts.find(a=>a.id===curAcctId)||ownerAcct()}
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.books)return s}catch(e){}
+  let s=null;
+  try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!s){
+    try{const old=JSON.parse(localStorage.getItem('reading-study:v1'));if(old&&old.books)s=old}catch(e){}
+  }
+  if(s&&s.books){
+    if(!s.accounts)s.accounts=[];
+    if(!s.rules)s.rules={maxBorrow:2,borrowDays:14};
+    if(!s.loans)s.loans=[];
+    s.books.forEach(b=>{if(b.lendable===undefined)b.lendable=false});
+    if(!s.accounts.find(a=>a.role==='owner'))s.accounts.unshift({id:uid(),name:s.name||'馆长',emoji:'👑',role:'owner'});
+    return s;
+  }
   return seed();
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
@@ -303,7 +376,7 @@ function render(){
   $('#hs-reread').textContent=rereadTimes();
   $('#hs-pace').textContent=p?p.v:'—';
   $('#hs-pace-lb').textContent=p?p.unit:'阅读节奏';
-  renderShelf();renderStats();renderTaste();
+  renderShelf();renderStats();renderTaste();renderLend();
 }
 function renderShelf(){
   const list=state.books.filter(b=>filter==='all'||b.status===(filter==='done'?'done':filter));
@@ -311,20 +384,86 @@ function renderShelf(){
   if(list.length===0){box.innerHTML='<div class="empty"><span class="em">📭</span>还没有书，点上面的按钮登记第一本吧</div>';return}
   box.innerHTML=list.map(b=>{
     const rc=b.records.length;
+    const loan=activeLoanOf(b.id);
     const tag=b.status==='done'?`<span class="tag done">读完${rc>1?'×'+rc:''}</span>`:b.status==='reading'?'<span class="tag reading">在读</span>':'<span class="tag want">想读</span>';
+    const loanTag=loan?`<span class="tag loan">借出中</span>`:b.lendable?`<span class="tag lendable">可借</span>`:'';
     const date=b.status==='done'&&rc?'最后读完：'+b.records[rc-1]:'';
     const acts=b.status==='done'
       ?`<button class="mini primary" data-act="again" data-id="${b.id}">又读完了！</button>`
       :`<button class="mini primary" data-act="finish" data-id="${b.id}">今天读完了</button>`;
+    const lendToggle=`<button class="mini" data-act="togglelend" data-id="${b.id}">${b.lendable?'⛔ 停止外借':'🤝 可外借'}</button>`;
     return `<div class="book">
       <div class="spine" style="background:${CAT_COLORS[b.cat]||'#888'}"></div>
-      <div class="b-main"><div class="b-title">${esc(b.title)}</div><div class="b-meta"><span class="tag cat">${b.cat}</span></div>${date?`<div class="b-meta">${date}</div>`:''}</div>
+      <div class="b-main"><div class="b-title">${esc(b.title)}</div><div class="b-meta"><span class="tag cat">${b.cat}</span> ${loanTag}</div>${date?`<div class="b-meta">${date}</div>`:''}</div>
       ${tag}
-      <div class="b-acts">${acts}<button class="mini danger" data-act="del" data-id="${b.id}">删除</button></div>
+      <div class="b-acts">${acts}${lendToggle}<button class="mini danger" data-act="del" data-id="${b.id}">删除</button></div>
     </div>`;
   }).join('');
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ===== 借书 ===== */
+function activeLoanOf(bookId){return state.loans.find(l=>l.bookId===bookId&&!l.returned)}
+function myActiveLoans(acctId){return state.loans.filter(l=>l.by===acctId&&!l.returned)}
+function borrowBook(bookId){
+  const me=curAcct();
+  const b=state.books.find(x=>x.id===bookId);if(!b)return;
+  if(activeLoanOf(bookId)){toast('这本书已经借出去啦');return}
+  if(!b.lendable){toast('馆长设置了这本书不外借');return}
+  if(me.role!=='owner'&&myActiveLoans(me.id).length>=state.rules.maxBorrow){
+    toast('已达上限：每人最多同时借 '+state.rules.maxBorrow+' 本');return}
+  state.loans.push({id:uid(),bookId,by:me.id,date:today(),due:addDays(today(),state.rules.borrowDays),returned:null});
+  save();confetti();
+  toast('📕 借书成功：《'+b.title+'》应还 '+state.rules.borrowDays+' 天内');
+  render();
+}
+function returnBook(loanId){
+  const l=state.loans.find(x=>x.id===loanId);if(!l||l.returned)return;
+  const me=curAcct();
+  if(me.role!=='owner'&&l.by!==me.id){toast('只能归还自己借的书');return}
+  l.returned=today();save();
+  const b=state.books.find(x=>x.id===l.bookId);
+  toast('📖 已归还：《'+(b?b.title:'')+'》');render();
+}
+function renderLend(){
+  const me=curAcct();
+  const isOwner=me.role==='owner';
+  $('#rules-box').innerHTML=`📖 借书规则：每人最多同时借 <b>${state.rules.maxBorrow}</b> 本，每本可借 <b>${state.rules.borrowDays}</b> 天${isOwner?'（馆长可在 ⚙️ 设置里修改）':''}。大家一起遵守，看书更开心！`;
+  $('#cur-acct-name').textContent=me.emoji+' '+me.name+(isOwner?'（馆长）':'');
+  // 账号行
+  $('#acct-row').innerHTML=state.accounts.map(a=>
+    `<button class="acct${a.id===me.id?' on':''}" data-act="switchacct" data-id="${a.id}">${a.emoji} ${esc(a.name)}${a.role==='owner'?'<span class="role-tag">馆长</span>':''}</button>`
+  ).join('')+'<button class="acct" data-act="newacct">➕ 新账号</button>';
+  // 可借的书（馆长也可见，用于总览）
+  const available=state.books.filter(b=>b.lendable&&!activeLoanOf(b.id));
+  $('#lend-my-title').textContent=isOwner?'📖 可外借且在架的书':'📖 可以借的书（挑一本吧）';
+  $('#lend-available').innerHTML=available.length?available.map(b=>{
+    const borrowed=state.loans.some(l=>l.bookId===b.id&&l.returned);
+    return `<div class="loan">
+      <div class="who" style="background:var(--gray-bg);color:var(--gray)">📚</div>
+      <div class="loan-main"><div class="loan-title">${esc(b.title)}</div><div class="loan-meta">${b.cat} · 借过 ${state.loans.filter(l=>l.bookId===b.id&&l.returned).length} 次</div></div>
+      ${isOwner?'<span style="font-size:12px;color:var(--sub)">在架</span>':`<button class="mini primary" data-act="borrow" data-id="${b.id}">借这本书</button>`}
+    </div>`;
+  }).join(''):'<div class="empty" style="padding:14px"><span class="em">🤷</span>'+(isOwner?'书架上还没有标记「可外借」的书——去书架页给书点上 🤝 可外借吧':'馆长还没有开放可借的书，可以提醒馆长设置一下')+'</div>';
+  // 借阅记录
+  const loans=(isOwner?state.loans:state.loans.filter(l=>l.by===me.id)).slice().reverse();
+  const active=loans.filter(l=>!l.returned);
+  const hist=loans.filter(l=>l.returned).slice(0,5);
+  $('#lend-loans-title').textContent=isOwner?'📋 借阅总览（馆长视角）':'📋 我借的书';
+  const row=l=>{
+    const acct=state.accounts.find(a=>a.id===l.by)||{emoji:'❓',name:'已删除'};
+    const b=state.books.find(x=>x.id===l.bookId);
+    const overdue=!l.returned&&l.due<today();
+    return `<div class="loan">
+      <div class="who">${acct.emoji}</div>
+      <div class="loan-main"><div class="loan-title">${esc(b?b.title:'（已删除的书）')}</div>
+      <div class="loan-meta">${esc(acct.name)} · ${l.returned?'已归还（'+l.returned+'）':'应还 '+l.due}${overdue?' <span class="overdue">已超期！</span>':''}</div></div>
+      ${l.returned?'<span class="tag done">已还</span>':`<button class="mini primary" data-act="return" data-id="${l.id}">还书</button>`}
+    </div>`;
+  };
+  $('#lend-loans').innerHTML=(active.length?active.map(row).join(''):'<div class="empty" style="padding:10px">当前没有在借的书</div>')
+    +(hist.length?'<p style="font-size:12px;color:var(--sub);margin:8px 0 4px">归还历史</p>'+hist.map(row).join(''):'');
+}
 
 function renderStats(){
   $('#st-done').innerHTML=doneBooks().length+' <small>本</small>';
@@ -395,8 +534,12 @@ let photoData=null;
 $('#btn-add').addEventListener('click',()=>{
   photoData=null;const z=$('#photo-zone');z.classList.remove('has');z.innerHTML='📷 点击拍照或选择照片<br><span style="font-size:11px">手机可直接调起摄像头</span>';
   $('#f-title').value='';$('#f-cat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
-  $('#f-date').value=today();openModal('#m-add');
+  $('#f-date').value=today();
+  $('#f-lendable-yes').classList.remove('on');$('#f-lendable-no').classList.add('on');
+  openModal('#m-add');
 });
+$('#f-lendable-yes').addEventListener('click',()=>{$('#f-lendable-yes').classList.add('on');$('#f-lendable-no').classList.remove('on')});
+$('#f-lendable-no').addEventListener('click',()=>{$('#f-lendable-no').classList.add('on');$('#f-lendable-yes').classList.remove('on')});
 $('#photo-zone').addEventListener('click',()=>$('#photo-input').click());
 $('#photo-input').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
@@ -421,7 +564,7 @@ $('#f-save').addEventListener('click',()=>{
   const title=$('#f-title').value.trim();
   if(!title){toast('书名不能为空');return}
   const status=$('#f-status').value;
-  const b={id:uid(),title,cat:$('#f-cat').value,status,records:[],photo:photoData};
+  const b={id:uid(),title,cat:$('#f-cat').value,status,records:[],photo:photoData,lendable:$('#f-lendable-yes').classList.contains('on')};
   if(status==='done')b.records=[$('#f-date').value||today()];
   state.books.unshift(b);save();closeModal('#m-add');
   if(status==='done'){toast('📖 已上架：《'+title+'》');confetti()}else toast('已上架');
@@ -438,11 +581,27 @@ document.addEventListener('click',e=>{
     toast(first?'🎉 读完一本：《'+b.title+'》':'🔁 又读完一遍：《'+b.title+'》');confetti();render();
   }else if(act==='del'){
     if(!confirm('确定删除这本书的记录吗？'))return;
+    if(activeLoanOf(id)){toast('这本书正借在外面，先等它还回来吧');return}
     state.books=state.books.filter(x=>x.id!==id);save();toast('已删除');render();
+  }else if(act==='togglelend'){
+    const b=state.books.find(x=>x.id===id);if(!b)return;
+    if(b.lendable&&activeLoanOf(id)){toast('书正借在外面，不能停止外借');return}
+    b.lendable=!b.lendable;save();
+    toast(b.lendable?'🤝《'+b.title+'》已开放外借':'《'+b.title+'》已停止外借');render();
+  }else if(act==='borrow'){
+    borrowBook(id);
+  }else if(act==='return'){
+    returnBook(id);
+  }else if(act==='switchacct'){
+    curAcctId=id;save();render();
+  }else if(act==='newacct'){
+    $('#a-name').value='';
+    $$('#a-emojis .chip').forEach((c,i)=>c.classList.toggle('on',i===0));
+    openModal('#m-acct');
   }else if(act==='wantrec'){
     const t=btn.dataset.title,c=btn.dataset.cat;
     if(state.books.find(b=>b.title===t)){toast('书架上已经有啦');return}
-    state.books.push({id:uid(),title:t,cat:c,status:'want',records:[],photo:null});
+    state.books.push({id:uid(),title:t,cat:c,status:'want',records:[],photo:null,lendable:false});
     state.recs.push({title:t,cat:c,reason:'已加入想读',from:'AI'});save();toast('已加入想读清单');render();
   }
 });
@@ -465,15 +624,40 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#s-endpoint').value=state.ai.endpoint||'';
   $('#s-key').value=state.ai.key||'';
   $('#s-model').value=state.ai.model||'';
+  $('#s-maxborrow').value=state.rules.maxBorrow;
+  $('#s-borrowdays').value=state.rules.borrowDays;
   openModal('#m-settings');
 });
 $('#s-cancel').addEventListener('click',()=>closeModal('#m-settings'));
 $('#s-save').addEventListener('click',()=>{
   state.name=$('#s-name').value.trim();
+  const oa=state.accounts.find(a=>a.role==='owner');
+  if(oa)oa.name=state.name||'馆长';
   state.ai.endpoint=$('#s-endpoint').value.trim();
   state.ai.key=$('#s-key').value.trim();
   state.ai.model=$('#s-model').value.trim();
+  const mb=parseInt($('#s-maxborrow').value,10),bd=parseInt($('#s-borrowdays').value,10);
+  if(mb>=1&&mb<=20)state.rules.maxBorrow=mb;
+  if(bd>=1&&bd<=365)state.rules.borrowDays=bd;
   save();closeModal('#m-settings');toast('设置已保存');render();
+});
+
+/* ===== 账号弹层 ===== */
+$('#a-emojis').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  $$('#a-emojis .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+});
+$('#a-cancel').addEventListener('click',()=>closeModal('#m-acct'));
+$('#a-save').addEventListener('click',()=>{
+  const name=$('#a-name').value.trim();
+  if(!name){toast('给借书人起个名字吧');return}
+  const emoji=($('#a-emojis .chip.on')||{}).textContent||'😊';
+  const acct={id:uid(),name,emoji,role:'member'};
+  state.accounts.push(acct);
+  curAcctId=acct.id;
+  save();closeModal('#m-acct');
+  toast('👤 账号已创建，现在以 '+name+' 的身份借书');
+  render();
 });
 
 /* ===== AI ===== */
