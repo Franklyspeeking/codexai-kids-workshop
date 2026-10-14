@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>小小导演 · AI 剧场</title>
+<style>
+:root{
+  --red:#7B2E2E; --red-deep:#5E1F1F; --gold:#F5E6C8; --gold-deep:#C9A45C;
+  --paper:#FFFDF7; --stage:#FBF4E2; --ink:#3C342A; --muted:#8A7A55; --line:#E3DCCB;
+  --ok:#4E7A62; --warn:#B23A3A;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#F3ECDB}
+body{font-family:"Yuanti SC","YouYuan","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);
+  min-height:100vh;display:flex;justify-content:center;padding:14px 12px 40px}
+#app{width:100%;max-width:520px}
+h1{font-size:24px;letter-spacing:1px}
+h2{font-size:17px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:15px}
+input{font-family:inherit}
+
+/* ===== 幕布头 ===== */
+.curtain{background:linear-gradient(180deg,var(--red-deep),var(--red));border-radius:16px 16px 0 0;
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:relative}
+.curtain::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;
+  background:radial-gradient(circle at 8px -4px,transparent 8px,var(--gold) 8.5px);background-size:16px 8px}
+.curtain .brand{color:var(--gold);font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px}
+.curtain .brand .masks{font-size:19px}
+.curtain .right{display:flex;align-items:center;gap:10px}
+.act-label{color:var(--gold);font-size:12px;opacity:.85}
+.gear{color:var(--gold);font-size:19px;padding:4px 8px;border-radius:9px}
+.gear:active{background:rgba(255,255,255,.15)}
+
+/* ===== 通用卡 ===== */
+.panel{background:var(--paper);border:1px solid var(--line);border-top:none;border-radius:0 0 16px 16px;
+  padding:18px 16px 22px;box-shadow:0 2px 0 rgba(120,100,60,.06)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ===== 开机设置 ===== */
+.tag-line{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px}
+.eyebrow{font-size:12px;color:var(--muted);letter-spacing:2px;margin:18px 0 10px;font-weight:700}
+.eyebrow:first-child{margin-top:0}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.theme-card{background:var(--stage);border:2px solid transparent;border-radius:13px;padding:12px 10px;
+  text-align:center;transition:transform .12s}
+.theme-card:active{transform:scale(.96)}
+.theme-card.on{border-color:var(--gold-deep);background:#FFF6DF}
+.theme-card .t-ico{font-size:26px}
+.theme-card .t-name{font-weight:700;font-size:15px;margin:4px 0 2px}
+.theme-card .t-desc{font-size:11.5px;color:var(--muted)}
+.field{display:block;margin-top:10px}
+.field span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;
+  background:#fff;font-size:15px;color:var(--ink)}
+.field input:focus{outline:none;border-color:var(--gold-deep)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 14px;border-radius:999px;background:var(--stage);border:1.5px solid var(--line);font-size:13.5px}
+.chip.on{background:#F3E3BC;border-color:var(--gold-deep);font-weight:700}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;font-size:16px;font-weight:700;text-align:center}
+.btn.primary{background:var(--red);color:var(--gold);margin-top:22px;letter-spacing:2px}
+.btn.primary:active{background:var(--red-deep)}
+.btn.ghost{background:#fff;color:var(--muted);border:1.5px solid var(--line);margin-top:10px;font-weight:500;font-size:14px}
+
+/* ===== 舞台 ===== */
+.dots{display:flex;justify-content:center;gap:8px;margin-bottom:14px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#E4DBc2}
+.dots i.on{background:var(--red);transform:scale(1.25)}
+.dots i.done{background:var(--gold-deep)}
+.act-head{text-align:center;font-size:13px;color:var(--muted);margin-bottom:10px;letter-spacing:1px}
+.story-box{background:#fff;border:1.5px solid #EDE4CE;border-radius:13px;padding:15px 16px;
+  font-size:15.5px;line-height:1.85;min-height:130px;white-space:pre-wrap}
+.story-box .caret{display:inline-block;width:2px;height:1em;background:var(--red);vertical-align:-2px;
+  animation:blink .7s infinite}
+@keyframes blink{50%{opacity:0}}
+.reaction{margin-top:12px;background:#FFF6DF;border-left:3px dashed var(--gold-deep);border-radius:0 11px 11px 0;
+  padding:11px 13px;font-size:14px;line-height:1.75;color:#6B5A32;display:none}
+.reaction.show{display:block}
+.dir-head{font-size:12px;color:var(--muted);letter-spacing:2px;margin:18px 0 10px;font-weight:700;text-align:center}
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{background:var(--stage);border:1.5px solid var(--gold-deep);border-radius:12px;padding:12px 14px;
+  text-align:left;font-size:15px;color:#5A4A22;display:flex;gap:10px;align-items:baseline}
+.choice:active{background:#F3E3BC}
+.choice b{color:var(--red);font-size:16px}
+.free-wrap{margin-top:14px;background:#fff;border:1.5px dashed #C9BB8F;border-radius:12px;padding:12px}
+.free-head{font-size:13.5px;color:#8A7A55;font-weight:700}
+.free-row{display:flex;gap:8px;margin-top:8px}
+.free-row input{flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px}
+.free-row input:focus{outline:none;border-color:var(--gold-deep)}
+.free-row button{background:var(--red);color:var(--gold);border-radius:10px;padding:0 16px;font-weight:700;font-size:14px}
+.ex-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.ex-chip{font-size:12px;color:#8A7A55;background:var(--stage);border:1px solid var(--line);
+  border-radius:999px;padding:5px 11px}
+.ex-chip:active{background:#F3E3BC}
+.stage-foot{text-align:center;margin-top:16px;font-size:12px;color:var(--muted)}
+
+/* ===== 谢幕 ===== */
+.finale-box{background:#fff;border:1.5px solid #EDE4CE;border-radius:13px;padding:16px;
+  font-size:15.5px;line-height:1.9;white-space:pre-wrap}
+.credit{text-align:center;margin:18px 0 6px}
+.credit .role{font-size:12px;color:var(--muted);letter-spacing:3px}
+.credit .name{font-size:22px;font-weight:800;color:var(--red);margin-top:3px}
+.btn.gold{background:#F3E3BC;color:#6B5222;border:1.5px solid var(--gold-deep)}
+.btn.gold:active{background:#EAD9A8}
+
+/* ===== 设置弹层 ===== */
+.modal-mask{position:fixed;inset:0;background:rgba(40,30,15,.42);display:none;
+  align-items:flex-end;justify-content:center;z-index:50}
+.modal-mask.show{display:flex}
+.modal{background:var(--paper);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:20px 16px 26px}
+.modal h3{font-size:16px;margin-bottom:4px}
+.modal .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:6px}
+.seg button{flex:1;padding:10px;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--red);color:var(--gold);font-weight:700}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);background:#3C342A;
+  color:#F5E6C8;padding:10px 18px;border-radius:999px;font-size:13.5px;opacity:0;
+  transition:.25s;pointer-events:none;z-index:99;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="curtain">
+    <div class="brand"><span class="masks">🎭</span>小小导演 · AI 剧场</div>
+    <div class="right">
+      <span class="act-label" id="curtain-label">幕布未开</span>
+      <button class="gear" id="btn-settings" aria-label="AI 接口设置">⚙️</button>
+    </div>
+  </div>
+
+  <!-- 开机设置 -->
+  <div class="panel" id="scr-setup">
+    <p class="tag-line">你来当导演，AI 负责演戏 ✦ 5 幕大戏，由你决定剧情走向</p>
+
+    <button class="btn gold hide" id="btn-continue" style="margin:0 0 18px">▶ 继续上次的拍摄</button>
+
+    <div class="eyebrow">① 选一个题材</div>
+    <div class="theme-grid" id="theme-grid"></div>
+
+    <div class="eyebrow">② 主角是谁</div>
+    <label class="field"><span>主角名字</span>
+      <input id="inp-hero" maxlength="8" placeholder="给主角起个名字，比如：小雨"></label>
+    <div class="field"><span>主角性格</span>
+      <div class="chips" id="persona-chips"></div></div>
+    <label class="field"><span>伙伴名字（选填，可以陪你冒险）</span>
+      <input id="inp-buddy" maxlength="8" placeholder="比如：圆圆"></label>
+
+    <div class="eyebrow">③ 导演署名</div>
+    <label class="field"><span>谢幕时怎么称呼你</span>
+      <input id="inp-director" maxlength="10" placeholder="不填就和主角同名"></label>
+
+    <button class="btn primary" id="btn-start">🎬 开机！</button>
+  </div>
+
+  <!-- 舞台 -->
+  <div class="panel hide" id="scr-stage">
+    <div class="dots" id="dots"></div>
+    <div class="act-head" id="act-head">第 1 幕</div>
+    <div class="story-box" id="story-box" aria-live="polite"></div>
+    <div class="reaction" id="reaction"></div>
+    <div id="choice-zone">
+      <div class="dir-head">🎬 导 演 抉 择 时 刻</div>
+      <div class="choices">
+        <button class="choice" id="ch-A"><b>A</b><span id="ch-A-label"></span></button>
+        <button class="choice" id="ch-B"><b>B</b><span id="ch-B-label"></span></button>
+      </div>
+      <div class="free-wrap">
+        <div class="free-head">✏️ 不满意？自己导演一段！</div>
+        <div class="free-row">
+          <input id="inp-free" maxlength="50" placeholder="输入你的导演指令…">
+          <button id="btn-free">开拍</button>
+        </div>
+        <div class="ex-chips" id="ex-chips"></div>
+      </div>
+    </div>
+    <div class="stage-foot" id="stage-foot">✦ 幕布拉开 · 灯光就位 ✦</div>
+  </div>
+
+  <!-- 谢幕 -->
+  <div class="panel hide" id="scr-finale">
+    <div class="act-head" id="finale-head">大结局</div>
+    <div class="finale-box" id="finale-box"></div>
+    <div class="credit">
+      <div class="role">本剧总导演</div>
+      <div class="name" id="credit-name">——</div>
+    </div>
+    <button class="btn gold" id="btn-card">🎴 生成谢幕卡（可分享）</button>
+    <button class="btn ghost" id="btn-again">🔄 再导一部新戏</button>
+  </div>
+</div>
+
+<!-- 设置弹层 -->
+<div class="modal-mask" id="modal-mask">
+  <div class="modal">
+    <h3>⚙️ 后台设置</h3>
+    <p class="sub">演示模式：使用内置剧本，离线可玩。AI 模式：接入大模型接口，实时续写剧情（兼容 OpenAI 格式：DeepSeek / 智谱 / Kimi / 通义等）。</p>
+    <div class="seg" id="mode-seg">
+      <button data-mode="demo" class="on">演示模式</button>
+      <button data-mode="ai">AI 模式</button>
+    </div>
+    <label class="field"><span>接口地址（如 https://api.deepseek.com/v1/chat/completions）</span>
+      <input id="inp-api" placeholder="https://api.deepseek.com/v1/chat/completions"></label>
+    <label class="field"><span>API Key</span>
+      <input id="inp-key" type="password" placeholder="sk-…"></label>
+    <label class="field"><span>模型名（如 deepseek-chat）</span>
+      <input id="inp-model" placeholder="deepseek-chat"></label>
+    <button class="btn primary" id="btn-save-cfg" style="margin-top:16px">保存设置</button>
+    <button class="btn ghost" id="btn-close-cfg">关闭</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============ 工具 ============ */
+const $=s=>document.querySelector(s);
+const FAST=new URLSearchParams(location.search).has('fast');
+const DELAY=FAST?0:34, GAP=FAST?30:650;
+let toastTimer=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function type(el,text){return new Promise(res=>{
+  if(DELAY===0){el.innerHTML=esc(text)+'<span class="caret"></span>';res();return;}
+  el.textContent='';const caret=document.createElement('span');caret.className='caret';el.appendChild(caret);
+  let i=0;const timer=setInterval(()=>{
+    if(i>=text.length){clearInterval(timer);res();return;}
+    el.insertBefore(document.createTextNode(text[i]),caret);i++;
+  },DELAY);});}
+function clearCaret(el){const c=el.querySelector('.caret');if(c)c.remove();}
+
+/* ============ 内容安全：敏感词兜底 ============ */
+const SENSITIVE=['杀','血','尸体','毒品','自杀','色情','赌博','刀砍'];
+function safePass(t){
+  let hit=false;
+  SENSITIVE.forEach(w=>{if(t.includes(w)){hit=true;}});
+  if(hit){toast('已自动过滤不适合小朋友的内容');}
+  return t.replace(new RegExp('('+SENSITIVE.join('|')+')','g'),'＊');
+}
+
+/* ============ 演示剧本库 ============ */
+const PERSONAS={brave:'勇敢',smart:'机灵',curious:'好奇',calm:'沉着'};
+const THEMES={
+adventure:{
+  name:'冒险',icon:'🗺️',desc:'迷雾森林 · 不亮的灯塔',
+  examples:['让主角大声呼喊守塔人','让主角先看看四周有没有危险','让主角和伙伴分头行动'],
+  acts:[
+   {title:'第 1 幕 · 不会亮的灯塔',
+    text:(h,f)=>`${h.hero}是个特别${h.persona}的孩子。这天傍晚，${h.buddy?h.buddy+'陪着':''}${h.hero}来到森林深处的老灯塔脚下——今晚灯塔竟然没有亮，回家的小动物们还在路上！地上还放着一张发黄的地图和一把旧钥匙。`,
+    choices:[
+     {label:'带上地图，去找守塔人',flag:'map',react:h=>`你选择了地图。${h.hero}把地图仔细折好揣进怀里，朝着蘑菇小屋的方向出发——据说守塔人爷爷就住在那里。`},
+     {label:'用钥匙进灯塔看看',flag:'key',react:h=>`你选择了钥匙。"咔哒"一声，锁开了。${h.hero}推开吱呀作响的大门，一股旧木头的味道扑面而来。`}]},
+   {title:'第 2 幕 · 蘑菇小屋的爷爷',
+    text:(h,f)=>f.includes('map')
+      ?`蘑菇小屋的烟囱冒着烟，守塔人爷爷正在门口的摇椅上打盹，猫头鹰信箱一开一合地打着呵欠。看到手里的地图，爷爷的眼睛一下子睁开了："孩子，灯塔的灯……又不亮了吗？"`
+      :`灯塔里面，旋转楼梯一层层盘向塔顶。墙上挂着老照片，楼梯上有一串小小的湿脚印，一直通向上方。塔顶传来"扑棱扑棱"的声音，好像有谁在上面。`,
+    choices:[
+     {label:'把地图给爷爷看，问清楚情况',flag:'',react:h=>`爷爷接过地图，眉头皱成了小山："灯芯用的萤石黯掉了，得去萤火谷重新借光啊。"`},
+     {label:'悄悄上楼，看看塔顶有什么',flag:'up',react:h=>`${h.hero}踮着脚顺着楼梯往上走，每一步楼梯都在轻轻地"吱呀"唱歌。`}]},
+   {title:'第 3 幕 · 萤石黯了',
+    text:(h,f)=>`真相大白：灯塔的心脏是一块会发光的萤石，可它最近黯掉了。${f.includes('map')||f.includes('up')?'守塔人爷爷':'墙上的老照片仿佛在说'}：要去森林最深处的萤火谷，才能重新借到光。${h.buddy?'伙伴'+h.buddy+'深吸一口气，也点了点头。':'夜风吹过，森林深处传来点点微光。'}`,
+    choices:[
+     {label:'现在就出发，连夜赶路',flag:'night',react:h=>`夜色里，${h.hero}提着小灯笼踏进了森林。萤火虫在头顶排成一条淡淡的光路。`},
+     {label:'回村请动物朋友们一起照路',flag:'friends',react:h=>`好主意！猫头鹰、小鹿和萤火虫都来了，一支亮晶晶的队伍浩浩荡荡出发了。`}]},
+   {title:'第 4 幕 · 萤火谷的考验',
+    text:(h,f)=>`萤火谷到了！谷中央的巨石上，一块萤石亮得像小太阳。守谷的小狐狸拦住了去路："借光可以，但要用真心来换——浆果或者一个好故事，你带了哪样？"`,
+    choices:[
+     {label:'把路上采的浆果送给小狐狸',flag:'berry',react:h=>`小狐狸抱住浆果罐，眼睛弯成了月牙："成交！你挑一块最亮的吧。"`},
+     {label:'给小狐狸讲一个故事',flag:'story',react:h=>`${h.hero}讲了一个灯塔和小动物们的故事，小狐狸听得尾巴都忘了摇："这是我听过最好的故事，拿去吧！"`}]},
+   {title:'第 5 幕 · 灯又亮了（大结局）',
+    text:(h,f)=>`萤石被轻轻放回塔顶，"嗡——"灯塔睁开了眼睛，金色的光洒满整片森林！小动物们顺着光找到了回家的路，守塔人爷爷把一枚"荣誉守塔人"徽章别在${h.hero}胸前${f.includes('berry')?'，小狐狸的爪印还留在徽章上微微发烫':''}${f.includes('friends')?'，朋友们的欢呼声在塔下久久回荡':''}。这一晚，${h.hero}导演的故事，照亮了整个森林。`,
+    choices:null},
+  ]},
+detective:{
+  name:'侦探',icon:'🔍',desc:'教室奇案 · 消失的蛋糕',
+  examples:['让主角用放大镜看细节','让主角假装睡着引诱嫌疑人','让主角检查天花板'],
+  acts:[
+   {title:'第 1 幕 · 案发现场',
+    text:(h,f)=>`烘焙大赛前夜，教室里那块冠军蛋糕——不见了！${h.hero}赶到现场时，只剩下空空的蛋糕座、三枚小小的梅花脚印，和一点没舔干净的奶油。${h.persona==='好奇'?'这可太有意思了！':''}`,
+    choices:[
+     {label:'蹲下来研究脚印',flag:'foot',react:h=>`${h.hero}掏出放大镜，对着脚印一寸一寸地看——脚印很浅，方向朝着图书馆。`},
+     {label:'去问值夜的仓鼠保安',flag:'ham',react:h=>`仓鼠保安正抱着瓜子打瞌睡："影子？好像……有个影子抱着大盒子往图书馆那边跑了。"`}]},
+   {title:'第 2 幕 · 图书馆的线索',
+    text:(h,f)=>f.includes('foot')
+      ?`脚印穿过走廊，在图书馆门口的花坛边消失了。图书馆的门虚掩着，里面静悄悄的，只有一本图画书摊开在地上——像是有人慌慌张张翻过。`
+      :`图书馆门口的垃圾桶里，露出一个空蛋糕盒的一角！${h.hero}戴好"侦探手套"，小心地把它抽了出来。盒盖上，粘着几根黑色的羽毛。`,
+    choices:[
+     {label:'进图书馆仔细搜查',flag:'',react:h=>`书架之间，${h.hero}发现一扇小窗户开着，窗台上有更多黑色羽毛。`},
+     {label:'先看看那本摊开的图画书',flag:'book',react:h=>`图画书正好停在《乌鸦兄弟》那一页，书页上还有一个油腻的小爪印。`}]},
+   {title:'第 3 幕 · 嫌疑人阿黑',
+    text:(h,f)=>`所有线索都指向一个名字——住在操场老槐树上的乌鸦阿黑。可是阿黑平时最热心了，昨天还帮小刺猬捡过帽子。直接去问，还是……？`,
+    choices:[
+     {label:'找阿黑当面对质',flag:'face',react:h=>`${h.hero}站到老槐树下，抬头喊道："阿黑，请你下来一下，我们有话想问你。"`},
+     {label:'悄悄跟着羽毛找到它的窝',flag:'follow',react:h=>`${h.hero}躲在大石头后面观察，看见阿黑的窝里传出一阵小小的咳嗽声。`}]},
+   {title:'第 4 幕 · 眼泪与真相',
+    text:(h,f)=>`阿黑低着头，眼圈红红的："蛋糕……是我拿的。我妹妹生病了，今天是她生日，我想让她吃一口甜的……"窝里，小乌鸦裹着叶子被子，咳得缩成一团。`,
+    choices:[
+     {label:'先帮小乌鸦治咳嗽，再说蛋糕的事',flag:'help',react:h=>`${h.hero}跑回教室请来了校医猫头鹰，又倒来温水。小乌鸦的咳嗽慢慢轻了。`},
+     {label:'把阿黑带回教室，向大家解释',flag:'explain',react:h=>`${h.hero}牵着阿黑的翅膀走进教室："大家先别生气，听我讲完整个故事。"`}]},
+   {title:'第 5 幕 · 最甜的结局（大结局）',
+    text:(h,f)=>`真相大白，全班同学不但没有责怪阿黑，还一起动手又烤了一个更大的蛋糕，上面用糖霜写了两个大字——"分享"。${f.includes('help')?'小乌鸦病好那天':''}${f.includes('explain')?'解释大会变成了烘焙大会':''}，${h.hero}被大家评为"最佳侦探"，阿黑则在旁边大声补充："还是最佳爱心侦探！"这一案，${h.hero}导演的结局比蛋糕还甜。`,
+    choices:null},
+  ]},
+scifi:{
+  name:'科幻',icon:'🚀',desc:'月球基地 · 蓝色西瓜',
+  examples:['让主角用扫描仪分析','让主角呼叫基地机器人','让主角做个小实验'],
+  acts:[
+   {title:'第 1 幕 · 变蓝的西瓜',
+    text:(h,f)=>`2077年，月球基地"桂树1号"。${h.hero}是种植舱里年纪最小的管理员。今天早上一睁眼——舱里三十个西瓜，一夜之间全都变成了亮闪闪的蓝色！${h.buddy?h.buddy+'通过通讯器喊道："快来看快来看！"':''}`,
+    choices:[
+     {label:'化验蓝色西瓜的汁液',flag:'lab',react:h=>`检验仪"嘀嘀"响了起来，屏幕上跳出一行字：检测到未知发光微生物。`},
+     {label:'调出昨晚的监控录像',flag:'cam',react:h=>`凌晨3点17分，一个小小的蓝色影子在瓜田里蹦来蹦去，尾巴一闪一闪的。`}]},
+   {title:'第 2 幕 · 瓜田里的小影子',
+    text:(h,f)=>f.includes('lab')
+      ?`显微镜下，汁液里挤满了蓝色的小点点，像一群迷你萤火虫在开运动会。它们排列的方向，全都指向舱底夹层的通风口。`
+      :`录像里的小影子最后消失在舱底夹层。${h.hero}带上手电筒，拧开通风口的螺丝——里面蓝光一闪，"嗖"地缩了回去。`,
+    choices:[
+     {label:'在瓜田蹲守一整晚',flag:'wait',react:h=>`${h.hero}裹着保温毯守到半夜，蓝色影子果然又蹦出来了，还好奇地凑近看了看。`},
+     {label:'顺着蓝色痕迹进舱底夹层',flag:'down',react:h=>`夹层里挂满了淡蓝色的光点，像藏了一小片星空。`}]},
+   {title:'第 3 幕 · 星星一样的蓝蓝',
+    text:(h,f)=>`谜底揭开了！那是一只微型外星生物，只有拳头那么大，靠吸色素发光，圆脑袋上顶着两根小触角。${h.hero}给它取名"蓝蓝"。蓝蓝的飞船三天前在月球背面走散了，它一直在发没人听懂的求救信号。`,
+    choices:[
+     {label:'帮蓝蓝修好信号发射器',flag:'signal',react:h=>`${h.hero}拆了旧收音机的零件，蓝蓝用触角碰了碰电路板——信号灯"叮"地亮了！`},
+     {label:'先带蓝蓝去做个体检',flag:'check',react:h=>`体检报告：健康，就是有点饿。蓝蓝摸着圆肚子，不好意思地发光。`}]},
+   {title:'第 4 幕 · 三天的口粮',
+    text:(h,f)=>`信号发出去了！但救援船要三天后才能到，蓝蓝的口粮——色素——不够了。种植舱的西瓜就是最好的色素，可是分给蓝蓝，实验数据就要泡汤……`,
+    choices:[
+     {label:'把种植舱的西瓜分给蓝蓝',flag:'share',react:h=>`${h.hero}拍板："西瓜没了可以再种，朋友饿肚子可不行！"蓝蓝抱住西瓜啃了一大口，尾巴亮成了小灯泡。`},
+     {label:'教蓝蓝吃月壤里的蓝藻',flag:'algae',react:h=>`蓝蓝尝了一小口月壤蓝藻，触角开心地转圈圈："咻噜咻噜！"——听不懂，但应该很好吃。`}]},
+   {title:'第 5 幕 · 星光种子（大结局）',
+    text:(h,f)=>`救援船到的那天，蓝蓝围着种植舱飞了三圈才肯走。临走前，它把一小包亮晶晶的"星光种子"塞进${h.hero}手心。三个月后，种植舱结出了会发光的蓝西瓜，成了月球上最受欢迎的新品种，名字就叫——"蓝蓝号"。${h.hero}导演的这段月球友谊，也在星星之间传来传去。`,
+    choices:null},
+  ]},
+fairy:{
+  name:'童话',icon:'🏰',desc:'阁楼里 · 会说话的画笔',
+  examples:['让主角画一座桥','让主角听听画笔说什么','让主角画一扇小窗户'],
+  acts:[
+   {title:'第 1 幕 · 木箱里的画笔',
+    text:(h,f)=>`阁楼大扫除，${h.hero}在旧木箱底翻出一支落满灰尘的画笔。笔杆上刻着一行小字："画什么，成什么——但每幅画只能活一天。"窗外夕阳正好，${h.persona==='好奇'?'这也太让人手痒了！':''}`,
+    choices:[
+     {label:'试着画一扇门',flag:'door',react:h=>`颜料还没干，门"吱呀"一声自己开了！门后是一条飘着彩虹的走廊。`},
+     {label:'画一只会飞的小龙',flag:'dragon',react:h=>`一条圆滚滚的墨色小龙从纸上跳了出来，抖抖翅膀，绕着${h.hero}的头顶转圈。`} ]},
+   {title:'第 2 幕 · 彩虹走廊的尽头',
+    text:(h,f)=>f.includes('door')
+      ?`走廊两侧挂满了会动的画：画里的鱼在吐泡泡，画里的风车在慢慢转。走廊尽头透出一股凉凉的白雾，隐约能看见一座小镇的轮廓。`
+      :`小龙"墨墨"驮着${h.hero}飞出天窗，穿过一层云，云上面居然藏着一座小镇！可越往近飞，越觉得哪里不对劲——小镇的颜色，淡得像被水洗过一样。`,
+    choices:[
+     {label:'大胆地往前走',flag:'',react:h=>`${h.hero}深吸一口气，迈出了第一步。地板软软的，像走在画纸上。`},
+     {label:'先给画笔蘸满颜料，留个记号',flag:'paint',react:h=>`${h.hero}沿路画了一串小太阳，万一迷路，就跟着亮光回来。`}]},
+   {title:'第 3 幕 · 褪色的小镇',
+    text:(h,f)=>`小镇里的颜色像细沙一样往下掉！房子变灰了，花朵变灰了，连居民的笑容都快要变灰了。白胡子的老镇长叹着气："镇的'心色'被一朵坏脾气的乌云偷走了，没有心色，我们全都会变成灰色的画。'"`,
+    choices:[
+     {label:'去找那朵偷心色的乌云',flag:'cloud',react:h=>`镇口的鸽子指了指山顶："乌云就赖在那儿，谁劝都不听，轰隆隆地生着闷气。"`},
+     {label:'先用画笔给小镇补色',flag:'fix',react:h=>`画笔一挥，灰房子重新变红了，灰花坛重新变黄了！可镇长摇头："补得了一时，心色不回来，还是会褪。"`}]},
+   {title:'第 4 幕 · 乌云的心事',
+    text:(h,f)=>`山顶的乌云其实一点也不坏——它的身体里存着小镇三百年的笑声，可它自己从来没有被谁笑过、被谁抱过，心里越来越冷，就顺手把心色裹起来取暖。"抱抱我……可以吗？"它小声问。`,
+    choices:[
+     {label:'先给乌云一个大大的拥抱',flag:'hug',react:h=>`${h.hero}张开手臂抱住软软的乌云，乌云"轰"地红了脸，一场暖洋洋的小雨落了下来——雨滴全是颜色！`},
+     {label:'邀请全镇居民轮流来讲笑话',flag:'joke',react:h=>`居民们排着队上山讲笑话，乌云笑得直打雷，笑出来的雨滴五颜六色，把小镇浇成了彩虹色。`}]},
+   {title:'第 5 幕 · 心色回家了（大结局）',
+    text:(h,f)=>`彩色的雨下了整整一夜，心色回到了小镇的每一扇窗户里。作为谢礼，镇长让画笔的魔法为${h.hero}延长一天——${h.hero}为家人画的全家福，笑容永远都是暖的。日落时画笔的魔法到期了，但小镇送的那颗小星星，一直亮在阁楼的窗前。这出戏，${h.hero}既是导演，也是主角。`,
+    choices:null},
+  ]},
+};
+
+/* ============ 全局状态 ============ */
+const LS_KEY='story-director:v1', LS_CFG='story-director:cfg:v1';
+let state=null;
+let cfg={mode:'demo',api:'',key:'',model:''};
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
+function loadSave(){try{return JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}}
+function saveCfg(){try{localStorage.setItem(LS_CFG,JSON.stringify(cfg));}catch(e){}}
+function loadCfg(){try{return JSON.parse(localStorage.getItem(LS_CFG));}catch(e){return null;}}
+
+/* ============ 开机设置 ============ */
+let setup={theme:'',persona:'',savedGame:false};
+function initSetup(){
+  const grid=$('#theme-grid');
+  grid.innerHTML=Object.entries(THEMES).map(([k,t])=>
+    `<button class="theme-card" data-theme="${k}"><div class="t-ico">${t.icon}</div>
+     <div class="t-name">${t.name}</div><div class="t-desc">${t.desc}</div></button>`).join('');
+  grid.querySelectorAll('.theme-card').forEach(b=>b.onclick=()=>{
+    grid.querySelectorAll('.theme-card').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');setup.theme=b.dataset.theme;});
+  const pcs=$('#persona-chips');
+  pcs.innerHTML=Object.entries(PERSONAS).map(([k,v])=>`<button class="chip" data-p="${k}">${v}</button>`).join('');
+  pcs.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+    pcs.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');setup.persona=b.dataset.p;});
+  const saved=loadSave();
+  if(saved&&saved.act!==undefined&&saved.act>=0&&saved.act<5){
+    setup.savedGame=true;
+    const btn=$('#btn-continue');btn.classList.remove('hide');
+    btn.onclick=()=>{state=saved;enterStage(false);};
+  }
+  $('#btn-start').onclick=()=>{
+    if(!setup.theme)return toast('先选一个题材吧');
+    const hero=$('#inp-hero').value.trim();
+    if(!hero)return toast('给主角起个名字');
+    if(!setup.persona)return toast('选一个主角性格');
+    state={theme:setup.theme,hero,persona:PERSONAS[setup.persona],
+      buddy:$('#inp-buddy').value.trim(),director:$('#inp-director').value.trim()||hero,
+      act:0,flags:[],history:[],mode:cfg.mode};
+    save();enterStage(true);
+  };
+}
+
+/* ============ 舞台 ============ */
+const TOTAL=5;
+let busy=false;
+function enterStage(fresh){
+  $('#scr-setup').classList.add('hide');
+  $('#scr-stage').classList.remove('hide');
+  $('#scr-finale').classList.add('hide');
+  $('#curtain-label').textContent='拍摄中';
+  if(fresh)renderAct(0);else{renderAct(state.act,true);}
+}
+function renderDots(){
+  const d=$('#dots');d.innerHTML='';
+  for(let i=0;i<TOTAL;i++){const dot=document.createElement('i');
+    if(i<state.act)dot.classList.add('done');if(i===state.act)dot.classList.add('on');d.appendChild(dot);}
+}
+async function renderAct(i,skip){
+  busy=true;state.act=i;renderDots();
+  $('#reaction').classList.remove('show');
+  const zone=$('#choice-zone');zone.classList.add('hide');
+  let data=getActData(i);
+  const aiReady=cfg.mode==='ai'&&state.mode==='ai'&&cfg.api&&cfg.key&&cfg.model;
+  if(aiReady){
+    $('#act-head').textContent='AI 编剧构思中…';
+    await type($('#story-box'),'🎬 AI 编剧正在写这一幕，请稍候……');
+    try{
+      const r=await aiGenerate();
+      data={title:r.title,text:safePass(r.text),
+        choices:r.choices?r.choices.map(l=>({label:l,react:null,flag:''})):null};
+    }catch(e){toast('AI 接口没接通，先用演示剧本继续');
+      console.warn('[AI]',e.message);}
+  }
+  $('#act-head').textContent=data.title;
+  $('#curtain-label').textContent=`第 ${i+1} 幕 / 共 ${TOTAL} 幕`;
+  $('#stage-foot').textContent=i===TOTAL-1?'✦ 最后一幕 · 请欣赏 ✦':'✦ 幕布拉开 · 灯光就位 ✦';
+  save();
+  type($('#story-box'),safePass(data.text)).then(()=>{
+    clearCaret($('#story-box'));
+    if(data.choices&&data.choices.length){
+      $('#ch-A-label').textContent=data.choices[0].label;
+      $('#ch-B-label').textContent=data.choices[1].label;
+      zone.classList.remove('hide');
+      const th=THEMES[state.theme];
+      $('#ex-chips').innerHTML=(th.examples||[]).map(x=>`<button class="ex-chip">${esc(x)}</button>`).join('');
+      $('#ex-chips').querySelectorAll('.ex-chip').forEach(b=>b.onclick=()=>{$('#inp-free').value=b.textContent;});
+      busy=false;
+    }else{finaleArrive(data);}
+  });
+}
+function getActData(i){
+  const th=THEMES[state.theme];
+  const h={hero:state.hero,buddy:state.buddy,persona:state.persona};
+  const node=th.acts[i];
+  return {title:node.title,text:node.text(h,state.flags),
+    choices:node.choices?node.choices.map(c=>({label:c.label,react:c.react,flag:c.flag})):null};
+}
+function applyChoice(choice,freeText){
+  if(busy)return;busy=true;
+  $('#choice-zone').classList.add('hide');
+  const h={hero:state.hero,buddy:state.buddy,persona:state.persona};
+  let react;
+  if(freeText!==undefined){
+    react=`导演喊了一声"开拍！"——就按你的想法来：${freeText}。主角心领神会，故事朝着你设计的方向展开了……`;
+    state.history.push({act:state.act,choice:'自由发挥：'+freeText});
+  }else{
+    react=choice.react?choice.react(h):('你选择了：'+choice.label+'。导演一挥手，镜头切换——');
+    if(choice.flag&&!state.flags.includes(choice.flag))state.flags.push(choice.flag);
+    state.history.push({act:state.act,choice:choice.label});
+  }
+  save();
+  const rb=$('#reaction');rb.classList.add('show');
+  type(rb,react).then(()=>clearCaret(rb)).then(()=>sleep(GAP))
+    .then(()=>{renderAct(state.act+1);});
+}
+$('#ch-A').onclick=()=>{const d=getActData(state.act);applyChoice(d.choices[0]);};
+$('#ch-B').onclick=()=>{const d=getActData(state.act);applyChoice(d.choices[1]);};
+$('#btn-free').onclick=()=>{
+  const v=$('#inp-free').value.trim();
+  if(!v)return toast('先输入你的导演指令');
+  $('#inp-free').value='';
+  applyChoice(null,v);
+};
+
+/* ============ 谢幕 ============ */
+let finaleText='';
+function finaleArrive(data){
+  finaleText=data.text;
+  $('#curtain-label').textContent='剧终';
+  save();
+  sleep(GAP).then(()=>{
+    $('#scr-stage').classList.add('hide');
+    $('#scr-finale').classList.remove('hide');
+    $('#finale-head').textContent=data.title.replace(/（大结局）/,'');
+    type($('#finale-box'),data.text).then(()=>clearCaret($('#finale-box')));
+    $('#credit-name').textContent=state.director;
+  });
+}
+$('#btn-again').onclick=()=>{
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+  location.reload();
+};
+
+/* ============ 谢幕卡 ============ */
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function mask(ctx,x,y,s){ctx.beginPath();ctx.arc(x-s*.4,y,s*.28,0,7);ctx.arc(x+s*.4,y,s*.28,0,7);
+  ctx.moveTo(x-s*.62,y+s*.55);ctx.quadraticCurveTo(x,y+s*1.15,x+s*.62,y+s*.55);ctx.closePath();ctx.fill();}
+function drawCard(){
+  const W=750,H=1400,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#FFF9EE';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#5E1F1F';ctx.fillRect(0,0,W,150);
+  ctx.fillStyle='#F5E6C8';mask(ctx,90,60,52);
+  ctx.save();ctx.translate(W-90,60);ctx.scale(-1,1);mask(ctx,0,0,52);ctx.restore();
+  ctx.textAlign='center';ctx.fillStyle='#F5E6C8';
+  ctx.font='700 40px "Yuanti SC","PingFang SC",sans-serif';ctx.fillText('小小导演 · AI 剧场',W/2,132);
+  ctx.fillStyle='#7B2E2E';ctx.font='600 30px "PingFang SC",sans-serif';
+  ctx.fillText('谢 幕 卡',W/2,205);
+  const th=THEMES[state.theme];
+  ctx.fillStyle='#3C342A';ctx.font='26px "PingFang SC",sans-serif';
+  ctx.fillText(th.icon+' '+th.name+'剧场 · 《'+th.desc+'》',W/2,250);
+  ctx.fillStyle='#FBF4E2';rr(ctx,55,290,640,180,24);ctx.fill();
+  ctx.strokeStyle='#C9A45C';ctx.lineWidth=2;rr(ctx,55,290,640,180,24);ctx.stroke();
+  ctx.fillStyle='#8A7A55';ctx.font='24px "PingFang SC",sans-serif';ctx.fillText('本 剧 总 导 演',W/2,350);
+  ctx.fillStyle='#7B2E2E';ctx.font='800 58px "Yuanti SC","PingFang SC",sans-serif';
+  ctx.fillText(state.director,W/2,428);
+  ctx.textAlign='left';ctx.fillStyle='#3C342A';ctx.font='600 27px "PingFang SC",sans-serif';
+  let y=530;th.acts.forEach((a,i)=>{
+    ctx.fillText((i+1)+'. '+a.title.replace(/^第 \d+ 幕 · /,''),90,y);y+=46;});
+  ctx.textAlign='center';
+  const quote=finaleText.length>60?finaleText.slice(0,58)+'…':finaleText;
+  ctx.fillStyle='#EFE4CC';rr(ctx,55,y+20,640,150,20);ctx.fill();
+  ctx.fillStyle='#6B5A32';ctx.font='italic 25px "PingFang SC",sans-serif';
+  wrapText(ctx,'「'+quote+'」',W/2,y+65,580,38);
+  ctx.strokeStyle='#C9A45C';ctx.setLineDash([2,8]);ctx.beginPath();
+  ctx.moveTo(90,H-110);ctx.lineTo(W-90,H-110);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#8A7A55';ctx.font='23px "PingFang SC",sans-serif';
+  ctx.fillText('小小导演 · AI 剧场 —— 每个孩子都值得一部自己的大戏',W/2,H-60);
+  return cv;
+}
+function wrapText(ctx,text,x,y,maxW,lh){
+  let line='',lines=[];
+  for(const ch of text){if(ctx.measureText(line+ch).width>maxW){lines.push(line);line=ch;}else line+=ch;}
+  lines.push(line);lines.slice(0,3).forEach((l,i)=>ctx.fillText(l,x,y+i*lh));
+}
+$('#btn-card').onclick=()=>{
+  const cv=drawCard();
+  const a=document.createElement('a');a.download=`谢幕卡-${state.director}.png`;
+  a.href=cv.toDataURL('image/png');a.click();
+  toast('谢幕卡已生成，请查收下载');
+};
+
+/* ============ AI 模式（可插拔） ============ */
+function buildMessages(actNo,freeText){
+  const th=THEMES[state.theme];
+  const sys=`你是儿童互动剧场的编剧，观众是9-14岁的孩子。铁律：1.每次只写一幕，150-220字；2.剧情积极安全，禁止恐怖、暴力、阴暗、死亡、危险行为模仿情节；3.用词生动适龄；4.必须执行"导演"（玩家）的选择或自由指令，让剧情明显朝该方向发展。只输出JSON，格式：{"title":"第${actNo+1}幕 · 小标题","text":"正文","choices":["选项A","选项B"]}${actNo===4?'（第5幕是大结局，输出 {"title":..,"text":..} 不带 choices）':''}`;
+  const story=[`题材：${th.name}（${th.desc}）。主角：${state.hero}，性格${state.persona}。${state.buddy?'伙伴：'+state.buddy+'。':''}已发生剧情：`];
+  state.history.forEach((x,i)=>story.push(`第${x.act+1}幕玩家选择：${x.choice}`));
+  if(freeText)story.push(`本幕导演自由指令：${freeText}`);
+  return [{role:'system',content:sys},{role:'user',content:story.join('\n')}];
+}
+async function aiGenerate(freeText){
+  const data=await fetch(cfg.api,{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},
+    body:JSON.stringify({model:cfg.model,messages:buildMessages(state.act,freeText),
+      temperature:0.9,max_tokens:800})});
+  if(!data.ok)throw new Error('HTTP '+data.status);
+  const j=await data.json();
+  let txt=j.choices&&j.choices[0]&&j.choices[0].message?j.choices[0].message.content:'';
+  txt=txt.replace(/```json|```/g,'').trim();
+  const m=txt.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('bad json');
+  const o=JSON.parse(m[0]);
+  if(!o.text)throw new Error('no text');
+  const choices=(state.act<4&&Array.isArray(o.choices)&&o.choices.length>=2)?o.choices.slice(0,2):null;
+  return {title:o.title||('第 '+(state.act+1)+' 幕'),text:o.text,choices,
+    aiFlag:choices?'':'',react:null};
+}
+
+/* ============ 设置弹层 ============ */
+function openCfg(){
+  $('#inp-api').value=cfg.api;$('#inp-key').value=cfg.key;$('#inp-model').value=cfg.model;
+  $('#mode-seg').querySelectorAll('button').forEach(b=>
+    b.classList.toggle('on',b.dataset.mode===cfg.mode));
+  $('#modal-mask').classList.add('show');
+}
+$('#btn-settings').onclick=openCfg;
+$('#btn-close-cfg').onclick=()=>$('#modal-mask').classList.remove('show');
+$('#mode-seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('#mode-seg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');});
+$('#btn-save-cfg').onclick=()=>{
+  cfg.mode=$('#mode-seg').querySelector('button.on').dataset.mode;
+  cfg.api=$('#inp-api').value.trim();cfg.key=$('#inp-key').value.trim();cfg.model=$('#inp-model').value.trim();
+  if(cfg.mode==='ai'&&(!cfg.api||!cfg.key||!cfg.model))toast('已保存。注意：AI 模式还缺配置，开局会自动回退演示剧情');
+  else toast('设置已保存');
+  saveCfg();
+  if(state)state.mode=cfg.mode;
+  $('#modal-mask').classList.remove('show');
+};
+
+/* ============ 初始化 ============ */
+const savedCfg=loadCfg();if(savedCfg)cfg=Object.assign(cfg,savedCfg);
+initSetup();
+</script>
+</body>
+</html>
