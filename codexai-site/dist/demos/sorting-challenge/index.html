@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>循环星球 · 垃圾分类挑战赛</title>
+<style>
+  :root{--bg:#f1f6ee;--leaf:#c2e5bd;--ink:#2d493a;--ink2:#4a6b5a;--card:#fff;--line:#d4e6d6;--blue:#487fa2;--red:#ae5446;--green:#6e8f5a;--gray:#6e7475;--shadow:0 6px 18px rgba(45,73,58,.08)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:88px}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#e8f3e6 0%,var(--bg) 100%);padding:18px 16px 8px;text-align:center}
+  h1{margin:0;font-size:20px;letter-spacing:1px} .subtitle{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px}
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:16px;margin-top:14px}
+  .card h2,.card h3{margin:0 0 10px;font-size:17px}
+  .btn{border:none;border-radius:12px;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;background:var(--leaf);color:var(--ink);transition:opacity .15s}
+  .btn:active{transform:scale(.97)}
+  .btn.block{width:100%}
+  .btn.primary{background:#4a8a6a;color:#fff}
+  .btn.outline{background:transparent;box-shadow:inset 0 0 0 2px var(--leaf)}
+  .btn.danger{background:#ffe7e7;color:#c44}
+  .center{text-align:center}
+  .hero{padding:24px 16px;text-align:center}
+  .hero b{font-size:18px;display:block;margin-bottom:6px}
+  .hero p{margin:0;font-size:13px;color:var(--ink2)}
+  .eyebrow{font-size:13px;color:var(--ink2);font-weight:600}
+  .pill{display:inline-block;background:var(--leaf);color:var(--ink);font-size:12px;font-weight:700;padding:5px 10px;border-radius:20px}
+  .progress{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0}
+  .progress>i{display:block;height:100%;background:var(--leaf);border-radius:4px;transition:width .4s ease}
+  .quiz-icon{font-size:64px;text-align:center;margin:10px 0}
+  .quiz-q{font-size:18px;text-align:center;font-weight:700;margin:8px 0}
+  .bin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .bin-btn{padding:16px 10px;border-radius:14px;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;min-height:70px}
+  .bin-btn:disabled{opacity:.6;cursor:default}
+  .bin-btn[data-bin="可回收物"]{background:var(--blue)}
+  .bin-btn[data-bin="有害垃圾"]{background:var(--red)}
+  .bin-btn[data-bin="厨余垃圾"]{background:var(--green)}
+  .bin-btn[data-bin="其他垃圾"]{background:var(--gray)}
+  .feedback{border-radius:14px;padding:14px;margin-top:10px;font-size:14px;line-height:1.6}
+  .feedback.ok{background:#e6f6ed;color:#2d493a}
+  .feedback.no{background:#fff0ec;color:#6d3c3c}
+  .tip{background:#fffbe8;border-left:4px solid #ffd36e;padding:12px;border-radius:10px;font-size:14px;margin:14px 0}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .list-item{display:flex;align-items:center;gap:12px;padding:14px;background:#f8faf7;border-radius:14px}
+  .list-icon{font-size:28px}
+  .list-text{flex:1}
+  .list-text strong{display:block;font-size:15px}
+  .list-text small{font-size:12px;color:var(--ink2)}
+  .nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 22px;z-index:20}
+  .nav button{flex:1;background:transparent;border:none;color:var(--ink2);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+  .nav button.on{color:var(--ink);font-weight:700}
+  .nav .dot{width:26px;height:26px;border-radius:50%;background:#e4efe6;display:grid;place-items:center;font-size:14px}
+  .nav button.on .dot{background:var(--leaf)}
+  .empty{text-align:center;color:var(--ink2);padding:30px 10px;font-size:14px}
+  .modal{position:fixed;inset:0;background:rgba(45,73,58,.45);display:none;align-items:flex-end;z-index:30}
+  .modal.on{display:flex}
+  .sheet{background:#fff;border-radius:24px 24px 0 0;padding:18px 18px 28px;width:100%;max-width:520px;margin:0 auto;animation:up .25s ease}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet h3{margin:0 0 14px;font-size:18px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:14px;margin-bottom:6px;color:var(--ink2)}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;color:var(--ink);background:#fff;font-family:inherit}
+  .field textarea{min-height:70px;resize:vertical}
+  .form-actions{display:flex;gap:10px;margin-top:18px}
+  .form-actions .btn{flex:1}
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120%);background:rgba(45,73,58,.92);color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;z-index:40;transition:transform .3s}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>循环星球</h1><p class="subtitle">让每一件物品，找到合适的下一站</p></div></header>
+<div id="app" class="wrap"></div>
+
+<nav class="nav" id="nav">
+  <button data-tab="home" class="on"><span class="dot">♻</span>挑战</button>
+  <button data-tab="wrong"><span class="dot">🔍</span>发现</button>
+  <button data-tab="diy"><span class="dot">✏</span>出题</button>
+  <button data-tab="board"><span class="dot">🏆</span>榜单</button>
+</nav>
+
+<div id="modal" class="modal"><div id="sheet" class="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const KEY='sorting-challenge:v1';
+  const BINS=['可回收物','有害垃圾','厨余垃圾','其他垃圾'];
+  const ICONS=['🧴','🍎','💡','🧻','📦','🍌','🔋','🥫','🥡','🍾','🧃','🥛','🥚','🦴','🧂','🚬'];
+  const TIPS=['分类前先看：它是什么材料？','干净 vs 沾污，可能改变分类。','有害物品要单独投放。','不确定时，查查当地要求。','大件垃圾不属于这四分类。'];
+  const $=s=>document.querySelector(s);
+  const $$=s=>[...document.querySelectorAll(s)];
+  const today=()=>new Date().toISOString().slice(0,10);
+  const uid=()=>Math.random().toString(36).slice(2,10);
+  const params=new URLSearchParams(location.search);
+  const shotPhase=params.get('shot');
+  let tab='home', round=null, selectedIcon='🧴';
+  if(['home','wrong','diy','board'].includes(shotPhase)) tab=shotPhase;
+
+  function defState(){
+    return {
+      player:'玩家 A',
+      questions:[
+        {id:uid(),name:'清空的塑料饮料瓶',icon:'🧴',bin:'可回收物',reason:'干净的塑料瓶可作为回收材料。'},
+        {id:uid(),name:'剩下的苹果核',icon:'🍎',bin:'厨余垃圾',reason:'果核是易腐的食物残余。'},
+        {id:uid(),name:'废荧光灯管',icon:'💡',bin:'有害垃圾',reason:'此类灯管需按有害垃圾要求单独投放。'},
+        {id:uid(),name:'用过的纸巾',icon:'🧻',bin:'其他垃圾',reason:'使用过的纸巾不按可回收纸张处理。'},
+        {id:uid(),name:'干净的快递纸箱',icon:'📦',bin:'可回收物',reason:'清理并压平后，按当地回收要求投放。'},
+        {id:uid(),name:'沾满油污的纸盒',icon:'📦',bin:'其他垃圾',reason:'油污纸盒不符合可回收纸的洁净要求。'},
+        {id:uid(),name:'香蕉皮',icon:'🍌',bin:'厨余垃圾',reason:'果皮属于易腐垃圾。'},
+        {id:uid(),name:'废旧电池',icon:'🔋',bin:'有害垃圾',reason:'电池含有害物质，需单独投放。'}
+      ],
+      custom:[],
+      wrong:[],
+      board:[]
+    };
+  }
+  function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s){if(!Array.isArray(s.questions))s.questions=[];if(!Array.isArray(s.custom))s.custom=[];if(!Array.isArray(s.wrong))s.wrong=[];if(!Array.isArray(s.board))s.board=[];return s;}}catch(e){}return defState();}
+  let state=load();
+  function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+  function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+  function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function startRound(useWrong=false){
+    const source=useWrong?[...state.wrong]:[...state.questions,...state.custom];
+    if(!source.length){toast('现在没有题目，先去出题吧');return;}
+    round={questions:shuffle(source).slice(0, Math.min(source.length, 10)), index:0, score:0, answer:null, finished:false};
+    render();
+  }
+
+  function answer(bin){
+    if(!round||round.answer!==null||round.finished)return;
+    const q=round.questions[round.index];
+    round.answer=bin;
+    if(bin===q.bin){round.score++;toast('分对啦，看看为什么');}
+    else{
+      toast('没关系，一起看看分类的理由');
+      if(!state.wrong.some(x=>x.name===q.name)){state.wrong.push({...q});}
+    }
+    save();render();
+  }
+  function next(){
+    if(!round)return;
+    if(round.index+1>=round.questions.length){
+      round.finished=true;
+      state.board.unshift({date:today(),score:round.score,total:round.questions.length,player:state.player});
+      save();
+    }else{round.index++;round.answer=null;}
+    render();
+  }
+
+  function render(){
+    $('#nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+    if(round && !round.finished){renderQuiz();}
+    else if(round && round.finished){renderResult();}
+    else if(tab==='home'){renderHome();}
+    else if(tab==='wrong'){renderWrong();}
+    else if(tab==='diy'){renderDiy();}
+    else renderBoard();
+  }
+
+  function renderHome(){
+    const tip=TIPS[(state.board.length+state.questions.length)%TIPS.length];
+    $('#app').innerHTML=`<div class="hero"><b>让物品找到下一站</b><p>观察物品的材料，也留意它现在的状态。</p></div>
+      <div class="card center"><h2>分类小侦探</h2><p style="color:var(--ink2);font-size:14px">共 ${state.questions.length+state.custom.length} 道题。选错也没关系，每道题都会告诉你原因。</p><button class="btn primary block" style="margin-top:14px" id="start">开始挑战</button></div>
+      <div class="tip">💡 ${tip}</div>
+      <p class="center" style="font-size:12px;color:var(--ink2)">使用四分类练习规则；实际投放请按当地要求。</p>`;
+    $('#start').onclick=()=>startRound(false);
+  }
+
+  function renderQuiz(){
+    const q=round.questions[round.index];
+    const pct=round.index/round.questions.length*100;
+    $('#app').innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">第 ${round.index+1} / ${round.questions.length} 题</span><span class="pill">已答对 ${round.score} 题</span></div><div class="progress"><i style="width:${pct}%"></i></div>
+      <div class="quiz-icon">${q.icon}</div><div class="quiz-q">${q.name}</div><p class="center" style="font-size:14px;color:var(--ink2)">它应该去哪个分类箱？</p>
+      <div class="bin-grid">${BINS.map((b,i)=>`<button class="bin-btn" data-bin="${b}" ${round.answer!==null?'disabled':''}>${b}</button>`).join('')}</div>
+      ${round.answer!==null?`<div class="feedback ${round.answer===q.bin?'ok':'no'}"><strong>${round.answer===q.bin?'分对了！':'应该放进「'+q.bin+'」'}</strong><p>${q.reason}</p></div><button class="btn primary block" style="margin-top:10px" id="next">${round.index+1===round.questions.length?'查看本轮结果':'下一件物品'}</button>`:''}
+    </div>`;
+    $$('.bin-btn').forEach(b=>b.onclick=()=>{if(!b.disabled)answer(b.dataset.bin);});
+    if($('#next'))$('#next').onclick=next;
+  }
+
+  function renderResult(){
+    const q=round.questions.length;
+    const s=round.score;
+    $('#app').innerHTML=`<div class="hero"><b>这一轮，探索完成</b><p>${s} / ${q} 题</p></div>
+      <div class="card center"><h2>做得不错，再试一次？</h2><p style="color:var(--ink2);font-size:14px">每一个理解的理由，都比多一分更重要。</p>
+      <button class="btn primary block" style="margin-top:14px" id="again">再挑战一次</button>
+      ${state.wrong.length?'<button class="btn outline block" style="margin-top:10px" id="redo">去重做我的发现</button>':''}
+      </div>`;
+    $('#again').onclick=()=>{round=null;startRound(false);};
+    if($('#redo'))$('#redo').onclick=()=>{round=null;tab='wrong';render();};
+  }
+
+  function renderWrong(){
+    const list=state.wrong.map((q,i)=>`<div class="list-item"><span class="list-icon">${q.icon}</span><div class="list-text"><strong>${q.name}</strong><small>答案：${q.bin} · ${q.reason}</small></div></div>`).join('');
+    $('#app').innerHTML=`<div class="card"><h2>我的发现</h2>${state.wrong.length?`<div class="list">${list}</div><button class="btn primary block" style="margin-top:14px" id="redoWrong">重做错题</button>`:`<div class="empty">还没有错题，太棒了！</div>`}</div>`;
+    if($('#redoWrong'))$('#redoWrong').onclick=()=>{round=null;startRound(true);};
+  }
+
+  function renderDiy(){
+    const list=state.custom.map((q,i)=>`<div class="list-item"><span class="list-icon">${q.icon}</span><div class="list-text"><strong>${q.name}</strong><small>${q.bin}</small></div><button class="btn outline" data-edit="${i}" style="padding:6px 10px;font-size:13px">编辑</button></div>`).join('');
+    $('#app').innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>我的题目</h2><button class="btn" id="addQ">＋ 出题</button></div>${state.custom.length?`<div class="list" style="margin-top:10px">${list}</div>`:`<div class="empty">还没有自己的题目，点击右上角添加。</div>`}</div>
+      <div class="card"><h2>玩家名字</h2><div class="field" style="margin:0"><input id="playerName" value="${state.player}" placeholder="输入名字"></div><button class="btn block" style="margin-top:12px" id="savePlayer">保存</button></div>`;
+    $('#addQ').onclick=()=>openEditor();
+    $$('[data-edit]').forEach(b=>b.onclick=()=>openEditor(+b.dataset.edit));
+    $('#savePlayer').onclick=()=>{state.player=$('#playerName').value.trim()||'玩家 A';save();toast('名字已保存');render();};
+  }
+
+  function renderBoard(){
+    const list=state.board.map(r=>`<div class="list-item"><div class="list-text"><strong>${r.player}</strong><small>${r.date} · ${r.score}/${r.total} 题</small></div></div>`).join('');
+    $('#app').innerHTML=`<div class="card"><h2>积分榜</h2>${state.board.length?`<div class="list">${list}</div>`:`<div class="empty">还没有挑战记录，先去玩一局吧。</div>`}<button class="btn danger block" style="margin-top:14px" id="clearBoard">清空榜单</button></div>`;
+    $('#clearBoard').onclick=()=>{state.board=[];save();toast('榜单已清空');render();};
+  }
+
+  function openEditor(idx){
+    const q=idx>=0?state.custom[idx]:null;
+    selectedIcon=q?q.icon:'🧴';
+    $('#sheet').innerHTML=`<h3>${q?'修改':'出一道'}分类题</h3>
+      <div class="field"><label>物品和它的状态</label><input id="q-name" value="${q?q.name:''}" placeholder="例如：喝完的牛奶盒" maxlength="60"></div>
+      <div class="field"><label>正确分类</label><select id="q-bin">${BINS.map(b=>`<option value="${b}" ${(q?.bin===b)?'selected':''}>${b}</option>`).join('')}</select></div>
+      <div class="field"><label>为什么这样分</label><textarea id="q-reason" placeholder="简单说明理由">${q?q.reason:''}</textarea></div>
+      <div class="field"><label>选一个图标</label><div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px">${ICONS.map(ic=>`<span style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:${ic===selectedIcon?'var(--leaf)':'#f4f8f4'};cursor:pointer;font-size:18px" data-icon="${ic}">${ic}</span>`).join('')}</div></div>
+      <div class="form-actions"><button class="btn outline" id="cancelEdit">取消</button><button class="btn primary" id="saveQ">保存</button>${q?'<button class="btn danger" id="delQ">删除</button>':''}</div>`;
+    $('#modal').classList.add('on');
+    $$('[data-icon]').forEach(el=>el.onclick=()=>{selectedIcon=el.dataset.icon; $$('[data-icon]').forEach(x=>x.style.background=x.dataset.icon===selectedIcon?'var(--leaf)':'#f4f8f4');});
+    $('#cancelEdit').onclick=()=>$('#modal').classList.remove('on');
+    $('#modal').onclick=e=>{if(e.target===$('#modal'))$('#modal').classList.remove('on');};
+    $('#saveQ').onclick=()=>{
+      const name=$('#q-name').value.trim(),bin=$('#q-bin').value,reason=$('#q-reason').value.trim();
+      if(!name||!reason){toast('请填写完整');return;}
+      const obj={id:uid(),name,icon:selectedIcon,bin,reason};
+      if(q){Object.assign(state.custom[idx],obj);toast('题目已修改');}
+      else{state.custom.push(obj);toast('题目已添加');}
+      save();$('#modal').classList.remove('on');render();
+    };
+    if(q)$('#delQ').onclick=()=>{state.custom.splice(idx,1);save();$('#modal').classList.remove('on');toast('已删除');render();};
+  }
+
+  $('#nav').onclick=e=>{const b=e.target.closest('button'); if(b){tab=b.dataset.tab;round=null;render();}};
+  window.__state=()=>({...JSON.parse(JSON.stringify(state)),round:round?JSON.parse(JSON.stringify(round)):null});
+  render();
+})();
+</script>
+</body>
+</html>
