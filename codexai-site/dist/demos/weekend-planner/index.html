@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>周末日程局 · 我的时间我做主</title>
+<style>
+:root{
+  --bg:#F4F6F9;--card:#FFFFFF;--ink:#2B3440;--muted:#7A8694;--line:#DFE5EC;
+  --blue:#2C6EB5;--blue-bg:#E7F0FA;--green:#2E8B57;--green-bg:#E4F3EA;
+  --pink:#C25E8A;--pink-bg:#F9ECF2;--amber:#B8860B;--amber-bg:#FBF3DC;
+  --teal:#1D8A8A;--teal-bg:#E2F2F2;--red:#C0392B;--red-bg:#FCEAE8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--ink);max-width:520px;margin:0 auto;padding:16px 14px 92px;
+  -webkit-tap-highlight-color:transparent;font-size:15px}
+h1,h2,h3{font-size:16px}
+header{position:sticky;top:0;z-index:20;background:var(--bg);padding:4px 0 10px}
+.h-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.h-title{flex:1}
+.h-title .t1{font-size:17px;font-weight:700}
+.h-title .t2{font-size:12px;color:var(--muted)}
+.day-switch{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.day-switch button{border:none;background:none;padding:8px 18px;font-size:14px;cursor:pointer;color:var(--muted);font-weight:600}
+.day-switch button.on{background:var(--blue);color:#fff}
+.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:center}
+.stat .n{font-size:22px;font-weight:800;color:var(--blue)}
+.stat .n.green{color:var(--green)}
+.stat .n.red{color:var(--red)}
+.stat .l{font-size:11px;color:var(--muted);margin-top:2px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;padding:11px 0 9px;font-size:12px;color:var(--muted);cursor:pointer}
+nav button.on{color:var(--blue);font-weight:700}
+nav button .ic{display:block;font-size:20px;margin-bottom:1px}
+section{display:none;animation:fade .25s}
+section.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card h3 .sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:auto}
+.btn{border:none;border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.ghost{background:var(--blue-bg);color:var(--blue)}
+.btn.danger{background:var(--red-bg);color:var(--red)}
+.btn.big{width:100%;padding:13px;font-size:15px;border-radius:24px}
+.btn:disabled{opacity:.4;cursor:default}
+.tl-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:stretch}
+.tl-item:last-child{border-bottom:none}
+.tl-time{width:46px;font-size:13px;font-weight:700;color:var(--muted);padding-top:4px;text-align:right;flex-shrink:0}
+.tl-block{flex:1;border-radius:12px;padding:10px 12px;min-width:0}
+.tl-block .a-t{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.tl-block .a-t .a-emo{font-size:18px}
+.tl-block .a-m{font-size:11px;margin-top:3px;opacity:.75}
+.tl-block .a-acts{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.tl-block .a-acts .btn{padding:5px 11px;font-size:12px}
+.cat-outdoor{background:var(--green-bg);border-left:4px solid var(--green)}
+.cat-study{background:var(--blue-bg);border-left:4px solid var(--blue)}
+.cat-sport{background:var(--pink-bg);border-left:4px solid var(--pink)}
+.cat-play{background:var(--amber-bg);border-left:4px solid var(--amber)}
+.cat-chore{background:var(--teal-bg);border-left:4px solid var(--teal)}
+.done-stamp{font-size:11px;background:#fff;border-radius:8px;padding:2px 8px;font-weight:700;color:var(--green)}
+.now-line{position:relative;height:0;border-top:2px dashed var(--red);margin:4px 0}
+.now-line span{position:absolute;right:0;top:-18px;font-size:10px;color:var(--red);font-weight:700}
+.conflict{background:var(--red-bg);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:10px;line-height:1.6}
+.balance-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.balance-row .b-name{width:78px;font-size:13px;flex-shrink:0}
+.balance-row .b-bar{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.balance-row .b-bar>div{height:10px;border-radius:5px}
+.balance-row .b-val{width:64px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
+.verdict{border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.7;margin-top:8px}
+.verdict.good{background:var(--green-bg);color:var(--green)}
+.verdict.warn{background:var(--amber-bg);color:#8A6A1A}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.legend span{font-size:11px;border-radius:8px;padding:3px 8px;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(33,42,53,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px 26px;max-height:88vh;display:flex;flex-direction:column}
+.sheet h3{margin-bottom:12px}
+.fld{margin-bottom:10px}
+.fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.fld input,.fld select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;background:#fff;color:var(--ink)}
+.fld input[type="time"]{-webkit-appearance:none}
+.emo-row{display:flex;flex-wrap:wrap;gap:6px}
+.emo-row button{width:42px;height:42px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:20px;cursor:pointer}
+.emo-row button.on{background:var(--blue-bg);border-color:var(--blue)}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px}
+.cat-row button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.cat-row button.on{font-weight:700}
+.cat-row button.on[data-v="outdoor"]{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.cat-row button.on[data-v="study"]{background:var(--blue-bg);color:var(--blue);border-color:var(--blue)}
+.cat-row button.on[data-v="sport"]{background:var(--pink-bg);color:var(--pink);border-color:var(--pink)}
+.cat-row button.on[data-v="play"]{background:var(--amber-bg);color:var(--amber);border-color:var(--amber)}
+.cat-row button.on[data-v="chore"]{background:var(--teal-bg);color:var(--teal);border-color:var(--teal)}
+.sheet-actions{display:flex;gap:10px;margin-top:6px}
+.sheet-actions .btn{flex:1}
+.toast{position:fixed;top:18%;left:50%;transform:translateX(-50%);background:rgba(43,52,64,.92);
+  color:#fff;border-radius:12px;padding:10px 18px;font-size:14px;z-index:99;animation:fade .2s;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;line-height:1.8}
+.summary-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.summary-line:last-child{border-bottom:none}
+.summary-line .sl-v{font-weight:700}
+.share-img{width:100%;display:block;border-radius:12px}
+footer{text-align:center;font-size:11px;color:var(--muted);padding:16px 0 0}
+.dl-bar{display:flex;gap:10px;margin-top:12px}
+.dl-bar .btn{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-top">
+    <div class="h-title">
+      <div class="t1">🗓️ 周末日程局</div>
+      <div class="t2">我的时间我做主 · 数据保存在本机</div>
+    </div>
+  </div>
+  <div class="day-switch">
+    <button class="on" data-day="sat">周六</button>
+    <button data-day="sun">周日</button>
+  </div>
+  <div class="h-stats" style="margin-top:8px">
+    <div class="stat"><div class="n" id="hs-count">0</div><div class="l">个活动</div></div>
+    <div class="stat"><div class="n green" id="hs-done">0%</div><div class="l">完成率</div></div>
+    <div class="stat"><div class="n" id="hs-free">0h</div><div class="l">留白时间</div></div>
+  </div>
+</header>
+
+<section id="view-timeline" class="on">
+  <div id="conflict-box"></div>
+  <div class="card">
+    <h3>📋 <span id="tl-title">周六时间轴</span> <span class="sub" id="tl-sub"></span></h3>
+    <div id="tl-list"></div>
+    <button class="btn ghost big" id="btn-add" style="margin-top:10px">＋ 安排活动</button>
+  </div>
+</section>
+
+<section id="view-balance">
+  <div class="card">
+    <h3>⚖️ 劳逸平衡仪 <span class="sub">本周末两天合计</span></h3>
+    <div id="balance-list"></div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+  <div class="card">
+    <h3>🎨 类别图例</h3>
+    <div class="legend" id="legend"></div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.7">好计划不是塞满每一分钟——留白也是计划的一部分，发呆、休息、临时起意都很珍贵。</p>
+  </div>
+</section>
+
+<section id="view-summary">
+  <div class="card">
+    <h3>🏁 周末小结</h3>
+    <div id="sum-body"></div>
+    <button class="btn primary big" id="btn-card" style="margin-top:12px">🎴 生成小结分享卡</button>
+  </div>
+  <div class="card" id="card-box" style="display:none">
+    <div class="dl-bar">
+      <button class="btn primary" id="btn-dl">下载图片</button>
+      <button class="btn ghost" id="btn-closecard">收起</button>
+    </div>
+  </div>
+</section>
+
+<nav>
+  <button class="on" data-tab="timeline"><span class="ic">📅</span>时间轴</button>
+  <button data-tab="balance"><span class="ic">⚖️</span>劳逸平衡</button>
+  <button data-tab="summary"><span class="ic">🏁</span>周末小结</button>
+</nav>
+
+<div class="modal" id="m-add"><div class="sheet">
+  <h3>➕ 安排活动</h3>
+  <div class="fld"><label>活动名称</label><input id="f-title" placeholder="比如：公园观察小昆虫"></div>
+  <div class="fld"><label>日期</label>
+    <div class="cat-row" id="f-day">
+      <button data-v="sat" class="on">周六</button>
+      <button data-v="sun">周日</button>
+    </div>
+  </div>
+  <div class="fld"><label>开始时间</label><input id="f-start" type="time" value="09:00"></div>
+  <div class="fld"><label>时长（分钟）</label>
+    <div class="cat-row" id="f-dur">
+      <button data-v="30">30分</button>
+      <button data-v="45">45分</button>
+      <button data-v="60" class="on">60分</button>
+      <button data-v="90">90分</button>
+      <button data-v="120">120分</button>
+    </div>
+  </div>
+  <div class="fld"><label>类别（决定时间块颜色）</label>
+    <div class="cat-row" id="f-cat">
+      <button data-v="outdoor">🌲 户外</button>
+      <button data-v="study">📚 学习</button>
+      <button data-v="sport">⚽ 运动</button>
+      <button data-v="play">🎮 玩耍</button>
+      <button data-v="chore">🧹 家务</button>
+    </div>
+  </div>
+  <div class="fld"><label>图标</label><div class="emo-row" id="f-emo"></div></div>
+  <div class="sheet-actions">
+    <button class="btn ghost" id="f-cancel">取消</button>
+    <button class="btn primary" id="f-save">安排上！</button>
+  </div>
+</div></div>
+
+<div class="modal" id="m-card"><div class="sheet" style="display:flex;flex-direction:column">
+  <h3>🎴 周末小结卡</h3>
+  <div style="flex:1;min-height:0;overflow-y:auto"><img id="card-img" class="share-img" alt="周末小结卡"></div>
+  <div class="dl-bar">
+    <button class="btn primary" id="c-dl">下载图片</button>
+    <button class="btn ghost" id="c-close">返回</button>
+  </div>
+</div></div>
+
+<div class="modal" id="m-confirm"><div class="sheet">
+  <h3>🗑️ 删除这个活动？</h3>
+  <div id="cf-text" style="font-size:14px;color:var(--muted);line-height:1.7"></div>
+  <div class="sheet-actions">
+    <button class="btn ghost" id="cf-no">再想想</button>
+    <button class="btn danger" id="cf-yes">确定删除</button>
+  </div>
+</div></div>
+
+<footer>周末日程局 · 时间看得见 · 数据只保存在本机浏览器</footer>
+
+<script>
+"use strict";
+const KEY='weekend-planner:v1';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const CATS={
+  outdoor:{name:'户外自然',cls:'cat-outdoor',color:'#2E8B57'},
+  study:{name:'学习充电',cls:'cat-study',color:'#2C6EB5'},
+  sport:{name:'运动活力',cls:'cat-sport',color:'#C25E8A'},
+  play:{name:'自由玩耍',cls:'cat-play',color:'#B8860B'},
+  chore:{name:'家务帮忙',cls:'cat-chore',color:'#1D8A8A'}
+};
+const EMOJIS=['🐛','⚽','📚','🎮','🚲','🎨','🧁','🐦','🪁','🛒','🎬','🏊','🎹','🧩','🏸','📖'];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function t2m(t){const[a,b]=t.split(':').map(Number);return a*60+b}
+function m2t(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
+
+function seed(){
+  return {
+    day:'sat',
+    acts:[
+      {id:uid(),day:'sat',title:'公园观察小昆虫',emo:'🐛',cat:'outdoor',start:'09:00',dur:60,done:true},
+      {id:uid(),day:'sat',title:'和朋友打球',emo:'⚽',cat:'sport',start:'15:00',dur:60,done:false},
+      {id:uid(),day:'sun',title:'写周末作业',emo:'📚',cat:'study',start:'09:30',dur:60,done:false},
+      {id:uid(),day:'sun',title:'去图书馆借书',emo:'📖',cat:'outdoor',start:'14:00',dur:90,done:false}
+    ]
+  };
+}
+let state;
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.acts)return s}catch(e){}return seed()}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+window.__state=()=>state;
+window.__setState=s=>{state=s;save()};
+
+function dayActs(day){return state.acts.filter(a=>a.day===day).sort((a,b)=>t2m(a.start)-t2m(b.start))}
+function doneRate(acts){return acts.length?Math.round(acts.filter(a=>a.done).length/acts.length*100):0}
+function freeHours(){
+  const used=state.acts.reduce((s,a)=>s+a.dur,0);
+  return Math.max(0,Math.round((2*16*60-used)/60));
+}
+function conflicts(day){
+  const acts=dayActs(day);const out=[];
+  for(let i=0;i<acts.length-1;i++){
+    const a=acts[i],b=acts[i+1];
+    if(t2m(a.start)+a.dur>t2m(b.start))out.push([a,b]);
+  }
+  return out;
+}
+function catMinutes(cat){return state.acts.filter(a=>a.cat===cat).reduce((s,a)=>s+a.dur,0)}
+
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1900)}
+function openModal(sel){$(sel).classList.add('on')}
+function closeModal(sel){$(sel).classList.remove('on')}
+$$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m){m.classList.remove('on');if(m.id==='m-confirm')cfCb=null}}));
+
+function render(){
+  $$('.day-switch button').forEach(b=>b.classList.toggle('on',b.dataset.day===state.day));
+  const acts=dayActs(state.day);
+  $('#hs-count').textContent=acts.length;
+  $('#hs-done').textContent=doneRate(acts)+'%';
+  $('#hs-free').textContent=freeHours()+'h';
+  renderTimeline();renderBalance();renderSummary();
+}
+
+function renderTimeline(){
+  const day=state.day;
+  const dayName=day==='sat'?'周六':'周日';
+  $('#tl-title').textContent=dayName+'时间轴';
+  const acts=dayActs(day);
+  $('#tl-sub').textContent=acts.length+' 个活动 · '+acts.reduce((s,a)=>s+a.dur,0)+' 分钟';
+  const cons=conflicts(day);
+  $('#conflict-box').innerHTML=cons.map(([a,b])=>
+    `<div class="conflict">⚠️ 撞车啦：「${esc(a.title)}」（${a.start}，${a.dur}分钟）和「${esc(b.title)}」（${b.start}）时间重叠，留一个就好～</div>`
+  ).join('');
+  if(!acts.length){$('#tl-list').innerHTML='<div class="empty">这个日子还是空白的<br>点下面的按钮，安排第一件事吧 ✨</div>';return}
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  const isToday=(day==='sat'&&now.getDay()===6)||(day==='sun'&&now.getDay()===0);
+  let html='';
+  let nowInserted=false;
+  acts.forEach(a=>{
+    if(isToday&&!nowInserted&&t2m(a.start)>nowMin&&nowMin>=7*60){
+      html+=`<div class="now-line"><span>现在 ${m2t(nowMin)}</span></div>`;nowInserted=true;
+    }
+    const c=CATS[a.cat];
+    html+=`<div class="tl-item">
+      <div class="tl-time">${a.start}</div>
+      <div class="tl-block ${c.cls}">
+        <div class="a-t"><span class="a-emo">${a.emo}</span>${esc(a.title)}${a.done?'<span class="done-stamp">✓ 完成</span>':''}</div>
+        <div class="a-m">${a.start} – ${m2t(t2m(a.start)+a.dur)} · ${a.dur} 分钟 · ${c.name}</div>
+        <div class="a-acts">
+          ${a.done
+            ?`<button class="btn ghost" data-undone="${a.id}">还没做完</button>`
+            :`<button class="btn primary" data-done="${a.id}">做完啦 ✓</button>`}
+          <button class="btn danger" data-del="${a.id}">删除</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  $('#tl-list').innerHTML=html;
+}
+
+function renderBalance(){
+  const total=state.acts.reduce((s,a)=>s+a.dur,0);
+  const rows=Object.entries(CATS).map(([k,c])=>({k,c,min:catMinutes(k)}));
+  const html=rows.map(r=>`
+    <div class="balance-row">
+      <div class="b-name">${r.c.name}</div>
+      <div class="b-bar"><div style="width:${total?Math.round(r.min/total*100):0}%;background:${r.c.color}"></div></div>
+      <div class="b-val">${Math.round(r.min/60*10)/10} 小时</div>
+    </div>`).join('');
+  $('#balance-list').innerHTML=html;
+  const free=freeHours();
+  const outdoorMin=catMinutes('outdoor')+catMinutes('sport');
+  const studyMin=catMinutes('study');
+  let msg,cls;
+  if(!total){msg='先安排几个活动，平衡仪才有得看～';cls='warn'}
+  else if(free>=6){msg=`👍 计划不错！留了 ${free} 小时空白时间，劳逸结合。`;cls='good'}
+  else if(free>=3){msg=`🙂 还留了 ${free} 小时自由时间，不错的平衡！`;cls='good'}
+  else if(free>=1){msg=`🤔 排得有点满哦，只剩 ${free} 小时空白。要不要删掉一个，给意外留点空间？`;cls='warn'}
+  else{msg='😮 哇，两天几乎排满了！计划赶不上变化，建议删掉 1-2 个活动。';cls='warn'}
+  if(total&&outdoorMin>=120&&studyMin<=180)msg+=' 户外和运动时间很充足，眼睛和身体都会谢谢你的安排！';
+  $('#verdict').className='verdict '+cls;
+  $('#verdict').textContent=msg;
+  $('#legend').innerHTML=Object.values(CATS).map(c=>`<span style="background:${c.color}1a;color:${c.color}">${c.name}</span>`).join('');
+}
+
+function renderSummary(){
+  const acts=state.acts;
+  const rate=doneRate(acts);
+  const doneCnt=acts.filter(a=>a.done).length;
+  const totalMin=acts.reduce((s,a)=>s+a.dur,0);
+  const cnt={};acts.forEach(a=>cnt[a.cat]=(cnt[a.cat]||0)+a.dur);
+  const topCat=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  const fav=acts.slice().sort((a,b)=>b.dur-a.dur)[0];
+  const tips=[];
+  if(freeHours()<3)tips.push('下次多留一点空白时间');
+  if(catMinutes('outdoor')<60)tips.push('多安排一些户外活动');
+  if(rate===100&&acts.length)tips.push('全部完成，太棒了！');
+  const lines=[
+    ['完成率',`<span class="sl-v" style="color:var(--green)">${rate}%</span>`],
+    ['完成情况',`${doneCnt} / ${acts.length} 个活动`],
+    ['总时长',Math.round(totalMin/60*10)/10+' 小时'],
+    ['时间大头',topCat?CATS[topCat[0]].name+'（'+Math.round(topCat[1]/60*10)/10+' 小时）':'—'],
+    ['最长的活动',fav?fav.emo+' '+esc(fav.title)+'（'+fav.dur+' 分钟）':'—'],
+    ['下次建议',tips.length?tips.join('；'):'保持现在的节奏就好']
+  ];
+  $('#sum-body').innerHTML=lines.map(l=>`<div class="summary-line"><span>${l[0]}</span><span class="sl-v">${l[1]}</span></div>`).join('');
+}
+
+/* 小结卡 */
+let cardURL=null;
+$('#btn-card').addEventListener('click',()=>{
+  const c=document.createElement('canvas');c.width=750;c.height=1100;
+  const x=c.getContext('2d');
+  x.fillStyle='#F4F6F9';x.fillRect(0,0,750,1100);
+  x.fillStyle='#2C6EB5';x.fillRect(0,0,750,170);
+  x.fillStyle='#fff';x.textAlign='center';
+  x.font='300 24px sans-serif';x.fillText('🗓️ 我的周末小结',375,66);
+  x.font='700 46px sans-serif';x.fillText('周末日程局',375,124);
+  const acts=state.acts;const rate=doneRate(acts);
+  x.fillStyle='#fff';x.beginPath();x.arc(375,300,85,0,Math.PI*2);x.fill();
+  x.lineWidth=6;x.strokeStyle='#2E8B57';x.stroke();
+  x.fillStyle='#2E8B57';x.font='700 58px sans-serif';x.fillText(rate+'%',375,312);
+  x.fillStyle='#7A8694';x.font='400 22px sans-serif';x.fillText('完成率',375,352);
+  const cnt={};acts.forEach(a=>cnt[a.cat]=(cnt[a.cat]||0)+a.dur);
+  let by=430;
+  x.textAlign='left';
+  x.fillStyle='#2B3440';x.font='700 30px sans-serif';x.fillText('⏱ 时间都去哪了',60,by);by+=46;
+  const total=acts.reduce((s,a)=>s+a.dur,0);
+  Object.entries(cnt).sort((a,b)=>b[1]-a[1]).forEach(([cat,min])=>{
+    x.fillStyle='#7A8694';x.font='400 24px sans-serif';x.fillText(CATS[cat].name,60,by+8);
+    x.fillStyle='#E8EDF3';rr(x,200,by-10,380,24,12);x.fill();
+    x.fillStyle=CATS[cat].color;rr(x,200,by-10,Math.max(40,380*min/total),24,12);x.fill();
+    x.fillStyle='#2B3440';x.font='400 22px sans-serif';x.fillText(Math.round(min/60*10)/10+'h',610,by+8);
+    by+=54;
+  });
+  by+=24;
+  x.fillStyle='#2B3440';x.font='700 30px sans-serif';x.fillText('📊 周末数字',60,by);by+=44;
+  const items=[
+    ['完成活动',acts.filter(a=>a.done).length+' / '+acts.length+' 个'],
+    ['留白时间',freeHours()+' 小时'],
+    ['总时长',Math.round(total/60*10)/10+' 小时']
+  ];
+  items.forEach(it=>{
+    x.fillStyle='#fff';rr(x,60,by-30,630,64,14);x.fill();
+    x.strokeStyle='#DFE5EC';x.lineWidth=2;rr(x,60,by-30,630,64,14);x.stroke();
+    x.fillStyle='#7A8694';x.font='400 24px sans-serif';x.fillText(it[0],90,by+10);
+    x.textAlign='right';x.fillStyle='#2C6EB5';x.font='700 30px sans-serif';x.fillText(it[1],660,by+12);
+    x.textAlign='left';by+=80;
+  });
+  x.textAlign='center';x.fillStyle='#7A8694';x.font='300 22px sans-serif';
+  x.fillText('我的时间我做主 · 周末日程局',375,1060);
+  function rr(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()}
+  cardURL=c.toDataURL('image/png');
+  $('#card-img').src=cardURL;
+  openModal('#m-card');
+});
+$('#c-dl').addEventListener('click',()=>{
+  if(!cardURL)return;
+  const a=document.createElement('a');a.href=cardURL;a.download='周末小结卡.png';a.click();
+});
+$('#c-close').addEventListener('click',()=>closeModal('#m-card'));
+$('#m-card').addEventListener('click',e=>{if(e.target.id==='m-card')closeModal('#m-card')});
+
+/* 事件 */
+$$('nav button').forEach(b=>b.addEventListener('click',()=>{
+  $$('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  $$('section').forEach(s=>s.classList.remove('on'));
+  $('#view-'+b.dataset.tab).classList.add('on');
+}));
+$$('.day-switch button').forEach(b=>b.addEventListener('click',()=>{
+  state.day=b.dataset.day;save();render();
+}));
+document.body.addEventListener('click',e=>{
+  const d=e.target.closest('[data-done]');
+  if(d){const a=state.acts.find(x=>x.id===d.dataset.done);if(a){a.done=true;save();toast('完成 ✓ 给你点赞！');render()}return}
+  const u=e.target.closest('[data-undone]');
+  if(u){const a=state.acts.find(x=>x.id===u.dataset.undone);if(a){a.done=false;save();render()}return}
+  const del=e.target.closest('[data-del]');
+  if(del){
+    const a=state.acts.find(x=>x.id===del.dataset.del);
+    if(a)askDelete(a);
+    return;
+  }
+});
+
+/* 删除确认（自绘弹层，不用浏览器原生 confirm） */
+let cfCb=null;
+function askDelete(a){
+  $('#cf-text').innerHTML=`「${esc(a.title)}」（${a.start}，${a.dur} 分钟）<br>删掉之后就找不回来啦，确定吗？`;
+  cfCb=()=>{
+    state.acts=state.acts.filter(x=>x.id!==a.id);
+    save();toast('已删除');render();
+  };
+  openModal('#m-confirm');
+}
+$('#cf-no').addEventListener('click',()=>{cfCb=null;closeModal('#m-confirm')});
+$('#cf-yes').addEventListener('click',()=>{const cb=cfCb;cfCb=null;closeModal('#m-confirm');if(cb)cb()});
+
+/* 添加活动 */
+let fDay='sat',fDur=60,fCat='outdoor',fEmo='🐛';
+$('#btn-add').addEventListener('click',()=>{
+  $('#f-title').value='';$('#f-start').value='09:00';
+  fDay=state.day;fDur=60;fCat='outdoor';fEmo='🐛';
+  $$('#f-day button').forEach(b=>b.classList.toggle('on',b.dataset.v===fDay));
+  $$('#f-dur button').forEach(b=>b.classList.toggle('on',+b.dataset.v===fDur));
+  $$('#f-cat button').forEach(b=>b.classList.toggle('on',b.dataset.v===fCat));
+  renderEmojiRow();
+  openModal('#m-add');
+});
+function renderEmojiRow(){
+  $('#f-emo').innerHTML=EMOJIS.map(e=>`<button data-e="${e}" class="${e===fEmo?'on':''}">${e}</button>`).join('');
+}
+$('#f-day').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  fDay=b.dataset.v;$$('#f-day button').forEach(x=>x.classList.toggle('on',x===b))});
+$('#f-dur').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  fDur=+b.dataset.v;$$('#f-dur button').forEach(x=>x.classList.toggle('on',x===b))});
+$('#f-cat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  fCat=b.dataset.v;$$('#f-cat button').forEach(x=>x.classList.toggle('on',x===b))});
+$('#f-emo').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  fEmo=b.dataset.e;renderEmojiRow()});
+$('#f-cancel').addEventListener('click',()=>closeModal('#m-add'));
+$('#f-save').addEventListener('click',()=>{
+  const title=$('#f-title').value.trim();
+  if(!title){toast('活动名称不能为空');return}
+  const start=$('#f-start').value;
+  if(!start){toast('请选择开始时间');return}
+  state.acts.push({id:uid(),day:fDay,title,emo:fEmo,cat:fCat,start,dur:fDur,done:false});
+  state.day=fDay;save();closeModal('#m-add');
+  const cons=conflicts(fDay);
+  toast(cons.length?'已安排，但注意：有活动撞车了 ⚠️':'已安排上！');
+  render();
+});
+
+/* 初始化 */
+state=load()||seed();save();render();
+</script>
+</body>
+</html>
