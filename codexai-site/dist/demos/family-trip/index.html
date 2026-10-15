@@ -1,2 +1,359 @@
-<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f7f8f5"><title>家庭旅行合伙人</title><meta name="description" content="每个人都说喜欢，一起选出走得成的旅行。"><link rel="icon" href="../../assets/favicon.svg"><link rel="stylesheet" href="../studio.css"><script defer src="data/course.js"></script><script defer src="data/seed.js"></script><script defer src="../studio.js"></script><script defer src="studio-app.js"></script></head><body><div id="page"></div><noscript>启用 JavaScript 后就可以开始使用这个小工具。</noscript></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff5eb">
+<title>家庭出游社 · 家庭旅行合伙人</title>
+<meta name="description" content="每个人都说喜欢，一起选出走得成的旅行。">
+<style>
+:root{
+  --ink:#633e2d;--muted:#8d6e63;--accent:#ffd4b0;--accent2:#ff9e66;
+  --paper:#fff5eb;--card:#fff;--line:#f0d9c6;
+  --green:#43b36d;--green-bg:#e6f6ed;--red:#e05d5d;--red-bg:#fdecec;
+  --blue:#7a8de6;--blue-bg:#eceeff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 110px}
+header{padding:18px 16px 8px;text-align:center}
+header h1{font-size:18px;margin:0 0 4px}
+header p{font-size:12px;color:var(--muted);margin:0}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;padding:10px 16px 26px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;gap:8px;z-index:30}
+nav button{flex:1;border:none;border-radius:14px;padding:10px 6px;font-size:13px;font-weight:700;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+nav button.on{background:var(--accent);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2,.card h3{margin:0 0 10px;font-size:16px}
+.btn{border:none;border-radius:22px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent2);color:#fff}
+.btn.accent{background:var(--accent);color:var(--ink)}
+.btn.ghost{background:var(--blue-bg);color:var(--blue)}
+.btn.danger{background:var(--red-bg);color:var(--red)}
+.btn.big{width:100%;padding:15px;font-size:17px;border-radius:26px}
+.btn.small{padding:7px 12px;font-size:13px;border-radius:16px}
+.row{display:flex;gap:10px;align-items:center}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--muted)}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--ink);background:#fff;font-family:inherit}
+.fld textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;background:var(--accent);color:var(--ink);font-size:12px;font-weight:700;padding:5px 10px;border-radius:20px;margin-bottom:8px}
+.budget-card .big{font:34px Georgia,serif;margin:6px 0 10px}
+.budget-card .edit{color:var(--blue);font-size:13px;font-weight:700;background:transparent;border:none;cursor:pointer}
+.plan-card{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;background:var(--card)}
+.plan-card.chosen{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(255,158,102,.18)}
+.plan-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.plan-card h3{margin:0 0 6px;font-size:17px}
+.plan-card .route{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.plan-card .cost{font:20px Georgia,serif;font-weight:700}
+.plan-card .warn{color:var(--red);font-size:13px;margin:8px 0}
+.plan-card .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.member-card{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.member-card:last-child{border-bottom:none}
+.member-card strong{font-size:15px}
+.member-card p{margin:3px 0 0;font-size:13px;color:var(--muted)}
+.member-list .add{margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:24px 10px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;background:rgba(74,55,43,.93);color:#fff;font-size:14px;border-radius:20px;padding:10px 20px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;max-width:86vw;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px 30px;max-height:88vh;overflow-y:auto}
+.sheet h3{margin:0 0 14px}
+.sheet-actions{display:flex;gap:10px;margin-top:20px}
+.sheet-actions .btn{flex:1}
+.confirm-text{font-size:15px;line-height:1.7;margin-bottom:8px}
+.check-list{list-style:none;margin:0;padding:0}
+.check-list li{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.check-list li:last-child{border-bottom:none}
+.check-list input{width:20px;height:20px;accent-color:var(--accent2);flex-shrink:0;margin-top:2px}
+.check-list span.done{text-decoration:line-through;color:var(--muted)}
+.route-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 0}
+.route-flow .spot{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
+.route-flow .arrow{color:var(--muted);font-size:13px}
+.score-box{background:var(--paper);border-radius:12px;padding:14px;font-size:14px;line-height:1.8}
+.score-box b{color:var(--accent2)}
+@media(min-width:560px){
+  .plans-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>家庭出游社</h1>
+    <p>每个人都说喜欢，一起选出走得成的旅行</p>
+  </header>
+  <main id="app"></main>
+</div>
+
+<nav>
+  <button data-tab="plans" class="on"><span>🗳️</span>方案</button>
+  <button data-tab="trip"><span>🗺️</span>行程</button>
+  <button data-tab="prep"><span>🎒</span>准备</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="m-form"><div class="sheet" id="form-sheet"></div></div>
+<div class="modal" id="m-confirm"><div class="sheet">
+  <h3 id="cf-title">请确认</h3>
+  <div class="confirm-text" id="cf-text"></div>
+  <div class="sheet-actions">
+    <button class="btn ghost" id="cf-no">取消</button>
+    <button class="btn danger" id="cf-yes">确定</button>
+  </div>
+</div></div>
+
+<script>
+"use strict";
+const KEY='family-trip:v1';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const TAGS=['自然','文化','玩乐','美食','运动'];
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',1800);}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function defState(){
+  return {
+    budget:500,
+    members:[
+      {id:uid(),name:'成员 A',pref:'自然',weight:1},
+      {id:uid(),name:'成员 B',pref:'文化',weight:1}
+    ],
+    plans:[
+      {id:'nature',name:'溪边自然日',tag:'自然',cost:280,route:['集合点','自然观察区','野餐区']},
+      {id:'culture',name:'小小文化探索',tag:'文化',cost:420,route:['集合点','城市展馆','手作体验']},
+      {id:'play',name:'家庭游乐日',tag:'玩乐',cost:780,route:['集合点','主题乐园','晚餐']}
+    ],
+    selectedId:null,
+    packing:{
+      nature:[{id:'water',name:'带好水和随身用品',done:false},{id:'weather',name:'核对天气与开放信息',done:false}],
+      culture:[{id:'water',name:'带好水和随身用品',done:false},{id:'id',name:'带好身份证件或预约码',done:false},{id:'weather',name:'核对展馆开放时间与讲解场次',done:false}],
+      play:[{id:'water',name:'带好水和随身用品',done:false},{id:'ticket',name:'确认门票/快速通票',done:false},{id:'weather',name:'核对乐园开放与排队高峰',done:false}]
+    }
+  };
+}
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s){
+      if(!Array.isArray(s.members))s.members=[];
+      if(!Array.isArray(s.plans))s.plans=[];
+      if(Array.isArray(s.packing)){
+        // 旧版数组迁移：按当前选中方案或第一个方案收纳
+        const pid=s.selectedId||s.plans[0]?.id||'nature';
+        const obj={}; obj[pid]=s.packing;
+        s.packing=obj;
+      }
+      if(typeof s.packing!=='object'||s.packing===null)s.packing={};
+      return s;
+    }
+  }catch(e){}
+  return defState();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+let state=load();let view='plans';
+function setView(v){view=v;$$('nav button.on').forEach(b=>b.classList.remove('on'));$(`nav button[data-tab="${v}"]`)?.classList.add('on');render();}
+$$('nav button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.tab)));
+
+/* 投票逻辑 */
+function tagSupport(tag){return state.members.filter(m=>m.pref===tag).reduce((a,m)=>a+m.weight,0);}
+function bonusTags(){
+  const counts=TAGS.map(t=>({t,c:tagSupport(t)}));
+  const min=Math.min(...counts.map(x=>x.c));
+  return new Set(counts.filter(x=>x.c===min).map(x=>x.t));
+}
+function votes(plan){return state.members.filter(m=>m.pref===plan.tag).reduce((a,m)=>a+m.weight,0);}
+function score(plan){const base=votes(plan);const extra=bonusTags().has(plan.tag)?1:0;return {base,extra,total:base+extra};
+}
+
+/* 渲染 */
+function render(){save();if(view==='plans')renderPlans();else if(view==='trip')renderTrip();else renderPrep();}
+
+function renderPlans(){
+  const selected=state.plans.find(p=>p.id===state.selectedId);
+  const planHtml=state.plans.map(p=>{
+    const s=score(p),over=p.cost>state.budget;
+    return `<div class="plan-card ${p.id===state.selectedId?'chosen':''}">
+      <div class="top"><span class="pill">${esc(p.tag)} · ${s.total} 票偏好支持${s.extra?' (+1 照顾分)':''}</span><button class="btn ghost small" data-edit-plan="${p.id}">编辑</button></div>
+      <h3>${esc(p.name)}</h3>
+      <div class="route">${p.route.map(esc).join(' → ')}</div>
+      <div class="meta"><span class="cost">¥${p.cost}</span></div>
+      ${over?`<div class="warn">超出预算 ¥${(p.cost-state.budget).toFixed(2)}，先调整方案或商量预算</div>`:''}
+      <button class="btn ${p.id===state.selectedId?'accent':'primary'} big" data-select="${p.id}" ${over?'disabled':''}>${p.id===state.selectedId?'已选定 · 查看行程':'一起选择这个方案'}</button>
+    </div>`;
+  }).join('');
+  const memberHtml=state.members.map(m=>{
+    const wtxt=m.weight===2?'最想要 · 2 票':'一般喜欢 · 1 票';
+    return `<div class="member-card"><div><strong>${esc(m.name)}</strong><p>喜欢 ${esc(m.pref)} · ${wtxt}</p></div><button class="btn ghost small" data-edit-member="${m.id}">修改</button></div>`;
+  }).join('');
+  $('#app').innerHTML=`<div class="plans-layout">
+    <div>
+      <div class="card budget-card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h3>全家预算</h3><button class="edit" id="btn-edit-budget">修改</button></div>
+        <div class="big">¥${state.budget}</div>
+        <p style="font-size:12px;color:var(--muted);margin:0">示例价格用于练习，真实费用需出发前核对</p>
+      </div>
+      ${planHtml}
+      <button class="btn accent big" id="btn-add-plan">＋ 自己设计一个方案</button>
+    </div>
+    <div>
+      <div class="card">
+        <h3>每个人的小期待</h3>
+        <div class="member-list">${memberHtml}</div>
+        <button class="btn ghost big add" id="btn-add-member">＋ 添加成员</button>
+      </div>
+      <div class="card">
+        <h3>公平小提示</h3>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0">如果某个主题最少人选，支持这个主题的方案会自动获得 +1 票照顾分，确保少数意见也被听到。</p>
+      </div>
+    </div>
+  </div>`;
+  $('#btn-add-plan').addEventListener('click',()=>planEditor());
+  $('#btn-add-member').addEventListener('click',()=>memberEditor());
+  $('#btn-edit-budget').addEventListener('click',()=>budgetEditor());
+  $$('[data-edit-plan]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();planEditor(e.target.dataset.editPlan);}));
+  $$('[data-edit-member]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();memberEditor(e.target.dataset.editMember);}));
+  $$('[data-select]').forEach(b=>b.addEventListener('click',()=>{state.selectedId=b.dataset.select;toast('方案已选定');setView('trip');}));
+}
+
+function renderTrip(){
+  const p=state.plans.find(x=>x.id===state.selectedId);
+  if(!p){
+    $('#app').innerHTML=`<div class="card empty"><div>还没有选定方案</div><p style="margin-top:10px">去「方案」页选一个大家最喜欢、又在预算内的出行计划吧</p><button class="btn primary big" style="margin-top:20px" id="go-plans">去选方案</button></div>`;
+    $('#go-plans').addEventListener('click',()=>setView('plans'));return;
+  }
+  const s=score(p),over=p.cost-state.budget;
+  $('#app').innerHTML=`<div class="card">
+    <span class="pill">${esc(p.tag)} · ${s.total} 票偏好支持${s.extra?' (+1 照顾分)':''}</span>
+    <h2 style="margin-top:10px">${esc(p.name)}</h2>
+    <div class="route-flow">${p.route.map(r=>`<span class="spot">${esc(r)}</span>`).join('<span class="arrow">→</span>')}</div>
+    <div class="cost" style="font:28px Georgia,serif;font-weight:700;margin:8px 0">¥${p.cost}</div>
+    ${over>0?`<div class="warn">超出预算 ¥${over.toFixed(2)}</div>`:`<div style="color:var(--green);font-size:14px">在预算内，还能剩 ¥${(state.budget-p.cost).toFixed(2)}</div>`}
+    <div class="score-box" style="margin-top:14px">
+      <b>为什么选它？</b><br>
+      这个方案得到了 ${s.base} 票基础支持${s.extra?'，加上 1 票照顾分':''}。<br>
+      喜欢「${esc(p.tag)}」的成员有：${state.members.filter(m=>m.pref===p.tag).map(m=>esc(m.name)).join('、')||'暂无'}。<br>
+      ${s.extra?'「'+esc(p.tag)+'」是大家最少选的主题，所以额外 +1 票。':''}
+    </div>
+    <div class="row" style="margin-top:18px;flex-wrap:wrap">
+      <button class="btn ghost" id="btn-repick">重新选择</button>
+      <button class="btn primary" id="btn-toprep">出发准备清单 →</button>
+    </div>
+  </div>`;
+  $('#btn-repick').addEventListener('click',()=>setView('plans'));
+  $('#btn-toprep').addEventListener('click',()=>setView('prep'));
+}
+
+function currentPacking(){
+  const pid=state.selectedId;
+  if(!pid)return [];
+  if(!Array.isArray(state.packing[pid]))state.packing[pid]=[{id:'water',name:'带好水和随身用品',done:false},{id:'weather',name:'核对天气与开放信息',done:false}];
+  return state.packing[pid];
+}
+
+function renderPrep(){
+  const p=state.plans.find(x=>x.id===state.selectedId);
+  const title=p?`为「${esc(p.name)}」做准备`:'出发前准备';
+  const list=currentPacking().map((it,i)=>`<li><input type="checkbox" data-idx="${i}" ${it.done?'checked':''}><span class="${it.done?'done':''}">${esc(it.name)}</span></li>`).join('');
+  $('#app').innerHTML=`<div class="card">
+    <h3>${title}</h3>
+    <ul class="check-list">${list}</ul>
+    <div class="fld" style="margin-top:16px;margin-bottom:0">
+      <input id="new-item" placeholder="添加一件要准备的东西" maxlength="60">
+    </div>
+    <button class="btn accent big" style="margin-top:10px" id="btn-add-item">添加</button>
+  </div>
+  <p class="empty" style="padding:0 10px">真实出发前，记得再核对天气、开放时间和随身证件。</p>`;
+  const pk=currentPacking();
+  $$('.check-list input').forEach(cb=>cb.addEventListener('change',()=>{pk[+cb.dataset.idx].done=cb.checked;save();render();}));
+  $('#btn-add-item').addEventListener('click',()=>{
+    const v=$('#new-item').value.trim();if(!v){toast('请输入准备项');return;}
+    pk.push({id:uid(),name:v,done:false});save();render();toast('已添加');
+  });
+}
+
+/* 编辑弹层 */
+function openForm(title,body,onSave,onDelete){
+  $('#form-sheet').innerHTML=`<h3>${title}</h3><div id="form-body">${body}</div>
+    <div class="sheet-actions">
+      ${onDelete?'<button class="btn danger" id="form-del">删除</button>':''}
+      <button class="btn ghost" id="form-cancel">取消</button>
+      <button class="btn primary" id="form-save">保存</button>
+    </div>`;
+  $('#m-form').classList.add('on');
+  $('#form-cancel').addEventListener('click',()=>$('#m-form').classList.remove('on'));
+  $('#form-save').addEventListener('click',()=>{if(onSave()){$('#m-form').classList.remove('on');render();}});
+  if(onDelete)$('#form-del').addEventListener('click',()=>{onDelete();$('#m-form').classList.remove('on');render();});
+}
+function closeForm(){$('#m-form').classList.remove('on');}
+
+function planEditor(id){
+  const p=id?state.plans.find(x=>x.id===id):null;
+  const tagOpts=TAGS.map(t=>`<option value="${t}" ${(p?.tag===t)?'selected':''}>${t}</option>`).join('');
+  const body=`<div class="fld"><label>方案名称</label><input id="p-name" value="${esc(p?.name||'')}" placeholder="例如：海边露营日" maxlength="60"></div>
+    <div class="fld"><label>主题</label><select id="p-tag">${tagOpts}</select></div>
+    <div class="fld"><label>全家预计花费 / 元</label><input type="number" id="p-cost" value="${p?p.cost:''}" placeholder="0" min="0" step="1"></div>
+    <div class="fld"><label>路线地点（每行一个）</label><textarea id="p-route" placeholder="集合点&#10;第一站&#10;终点">${p?p.route.map(esc).join('\n'):''}</textarea></div>`;
+  openForm(p?'调整出游方案':'设计一个出游方案',body,()=>{
+    const name=$('#p-name').value.trim();const tag=$('#p-tag').value;const cost=+$('#p-cost').value||0;
+    const route=$('#p-route').value.split(/\n/).map(x=>x.trim()).filter(Boolean);
+    if(!name){toast('请填写方案名称');return false;}
+    if(!route.length){toast('至少添加一个地点');return false;}
+    if(p){Object.assign(p,{name,tag,cost,route});toast('方案已保存');}
+    else{state.plans.push({id:uid(),name,tag,cost,route});toast('方案已添加');}
+    save();return true;
+  },p?()=>{
+    if(p.id===state.selectedId){toast('已选定的方案不能删除，请先换一个方案');return;}
+    state.plans=state.plans.filter(x=>x.id!==id);
+    delete state.packing[p.id];
+    toast('方案已删除');save();closeForm();
+  }:null);
+}
+
+function memberEditor(id){
+  const m=id?state.members.find(x=>x.id===id):null;
+  const prefOpts=TAGS.map(t=>`<option value="${t}" ${(m?.pref===t)?'selected':''}>${t}</option>`).join('');
+  const impSel=m?.weight===2?'selected':'';
+  const body=`<div class="fld"><label>成员代号</label><input id="m-name" value="${esc(m?.name||'')}" placeholder="例如：孩子" maxlength="20"></div>
+    <div class="fld"><label>最期待什么</label><select id="m-pref">${prefOpts}</select></div>
+    <div class="fld"><label>有多重要</label><select id="m-weight"><option value="1" ${!impSel?'selected':''}>一般喜欢 · 1 票</option><option value="2" ${impSel}>最想要 · 2 票</option></select></div>`;
+  openForm(m?'听听你的想法':'添加成员',body,()=>{
+    const name=$('#m-name').value.trim();const pref=$('#m-pref').value;const weight=+$('#m-weight').value||1;
+    if(!name){toast('请填写成员代号');return false;}
+    if(m){Object.assign(m,{name,pref,weight});toast('偏好已更新');}
+    else{state.members.push({id:uid(),name,pref,weight});toast('成员已添加');}
+    save();return true;
+  },m?()=>{state.members=state.members.filter(x=>x.id!==id);toast('成员已删除');save();}:null);
+}
+
+function budgetEditor(){
+  openForm('商量一下预算',`<div class="fld"><label>全家总预算 / 元</label><input type="number" id="b-budget" value="${state.budget}" min="0" step="1"></div>`,()=>{
+    const b=+$('#b-budget').value||0;if(b<0){toast('预算不能为负数');return false;}
+    state.budget=b;toast('预算已更新');save();return true;
+  },null);
+}
+
+/* 确认弹层 */
+let cfCb=null;
+function ask(text,onYes,yesText='确定'){
+  $('#cf-title').textContent='请确认';
+  $('#cf-text').textContent=text;
+  $('#cf-yes').textContent=yesText;
+  cfCb=onYes;
+  $('#m-confirm').classList.add('on');
+}
+$('#cf-no').addEventListener('click',()=>{cfCb=null;$('#m-confirm').classList.remove('on');});
+$('#cf-yes').addEventListener('click',()=>{const cb=cfCb;cfCb=null;$('#m-confirm').classList.remove('on');if(cb)cb();});
+$('#m-confirm').addEventListener('click',e=>{if(e.target===$('#m-confirm')){cfCb=null;$('#m-confirm').classList.remove('on');}});
+
+/* 暴露测试 */
+window.__state=()=>state;
+window.__setState=s=>{state=s;save();render();};
+window.__setView=setView;
+
+render();
+</script>
+</body>
+</html>
