@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>习惯生长园 · 健康习惯挑战板</title>
+<style>
+  :root{--bg:#f2f6ed;--leaf:#c4e5b4;--ink:#34523a;--ink2:#5a7a62;--card:#fff;--line:#d9e6da;--danger:#d66;--shadow:0 6px 18px rgba(52,82,58,.08)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:88px}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#eef5e8 0%,var(--bg) 100%);padding:18px 16px 8px;text-align:center}
+  h1{margin:0;font-size:20px;letter-spacing:1px} .subtitle{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px}
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:16px;margin-top:14px}
+  .card h2{margin:0 0 12px;font-size:17px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .btn{border:none;border-radius:12px;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;background:var(--leaf);color:var(--ink)}
+  .btn:active{transform:scale(.97)}
+  .btn.outline{background:transparent;box-shadow:inset 0 0 0 2px var(--leaf)}
+  .btn.danger{background:#ffe7e7;color:var(--danger);box-shadow:none}
+  .btn.block{flex:1}
+  .center{text-align:center}
+  .meter{position:relative;width:160px;height:160px;margin:10px auto}
+  .meter svg{width:160px;height:160px;transform:rotate(-90deg)}
+  .meter .track{fill:none;stroke:var(--line);stroke-width:12}
+  .meter .bar{fill:none;stroke:var(--leaf);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+  .meter .text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .meter .text b{font-size:34px;line-height:1} .meter .text span{font-size:13px;color:var(--ink2);margin-top:4px}
+  .hint{font-size:13px;color:var(--ink2);margin:8px 0 0;text-align:center}
+  .habit-list{display:flex;flex-direction:column;gap:10px}
+  .habit-item{display:flex;align-items:center;gap:12px;padding:14px;background:#f8faf7;border-radius:14px}
+  .habit-icon{width:44px;height:44px;border-radius:50%;background:var(--leaf);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+  .habit-text{flex:1;min-width:0}
+  .habit-text strong{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .habit-text small{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+  .habit-check{width:52px;height:52px;border-radius:50%;border:3px solid var(--line);background:#fff;cursor:pointer;display:grid;place-items:center;font-size:22px;transition:.2s;flex-shrink:0}
+  .habit-check.done{border-color:var(--leaf);background:var(--leaf)}
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+  .day-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 0;background:#f4f8f4;border-radius:10px;font-size:12px}
+  .day-cell b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#e0ece2;color:var(--ink2)}
+  .day-cell.hit b{background:var(--leaf);color:var(--ink)}
+  .day-cell.current{background:var(--leaf)}
+  .day-cell.current b{background:#fff}
+  .date-picker{display:flex;align-items:center;gap:10px;justify-content:center;margin:10px 0 6px}
+  .date-picker input{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;color:var(--ink);background:#fff}
+  .stat-card{margin-top:14px}
+  .stat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .stat-head h3{margin:0;font-size:16px}
+  .progress{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:8px 0}
+  .progress>i{display:block;height:100%;background:var(--leaf);border-radius:5px;transition:width .4s ease}
+  .empty{text-align:center;color:var(--ink2);padding:30px 10px;font-size:14px}
+  .nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 22px;z-index:20}
+  .nav button{flex:1;background:transparent;border:none;color:var(--ink2);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+  .nav button.on{color:var(--ink);font-weight:700}
+  .nav .dot{width:26px;height:26px;border-radius:50%;background:#e4efe6;display:grid;place-items:center;font-size:14px}
+  .nav button.on .dot{background:var(--leaf)}
+  .modal{position:fixed;inset:0;background:rgba(52,82,58,.45);display:none;align-items:flex-end;z-index:30}
+  .modal.on{display:flex}
+  .sheet{background:#fff;border-radius:24px 24px 0 0;padding:18px 18px 28px;width:100%;max-width:520px;margin:0 auto;animation:up .25s ease}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet h3{margin:0 0 14px;font-size:18px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:14px;margin-bottom:6px;color:var(--ink2)}
+  .field input,.field select{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;color:var(--ink)}
+  .form-actions{display:flex;gap:10px;margin-top:18px}
+  .icon-pick{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:8px 0}
+  .icon-pick span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:#f4f8f4;cursor:pointer}
+  .icon-pick span.on{background:var(--leaf)}
+  .confirm-body{background:#fff;border-radius:24px 24px 0 0;padding:22px 18px 28px;width:100%;max-width:520px;margin:0 auto;animation:up .25s ease}
+  .confirm-body p{margin:0 0 18px;font-size:15px;line-height:1.6}
+  .cheer{background:#fffbe8;border-left:4px solid #ffd36e;padding:12px;border-radius:10px;font-size:14px;margin-top:10px}
+  .target-row{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .target-row input{flex:1}
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120%);background:rgba(52,82,58,.92);color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;z-index:40;transition:transform .3s}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>习惯生长园</h1><p class="subtitle">把小行动放进日常，让每一步都被看见</p></div></header>
+<div id="app" class="wrap"></div>
+
+<nav class="nav" id="nav">
+  <button data-tab="0" class="on"><span class="dot">☀</span>今日</button>
+  <button data-tab="1"><span class="dot">📊</span>统计</button>
+  <button data-tab="2"><span class="dot">🌱</span>习惯</button>
+</nav>
+
+<div id="modal" class="modal"><div id="sheet" class="sheet"></div></div>
+<div id="confirm" class="modal"><div id="confirm-sheet" class="confirm-body"></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  const KEY='habit-board:v1';
+  const ICONS=['🌿','🌙','👟','🦷','📚','🧹','💧','🥗','🧘','🎨','🎵','🛌','🧸','⭐','🌻','🍎'];
+  const CHEERS=['小小的一步，也值得庆祝！','你今天又照顾了自己一次，真棒！','慢慢来，习惯就是这样长出来的。','做到一次，就算一次！','坚持不是不累，是累了还愿意做一点点。','你真在长大。'];
+  const $=s=>document.querySelector(s);
+  const $$=s=>[...document.querySelectorAll(s)];
+  const today=()=>new Date().toISOString().slice(0,10);
+  const daysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
+  const uid=()=>Math.random().toString(36).slice(2,10);
+  const params=new URLSearchParams(location.search);
+  const shotPhase=params.get('shot');
+  let tab=0, chosenDate=today(), confirmCb=null, selectedIcon='🌿';
+  if(shotPhase==='stats') tab=1;
+  if(shotPhase==='habits') tab=2;
+
+  function load(){
+    const raw=localStorage.getItem(KEY);
+    if(raw) return JSON.parse(raw);
+    return {
+      habits:[
+        {id:uid(),name:'起身活动一下',reminder:'读完一个章节后',icon:'🌿'},
+        {id:uid(),name:'为睡前做准备',reminder:'晚间收好书包后',icon:'🌙'},
+        {id:uid(),name:'和家人到户外走走',reminder:'晚饭后一起商量',icon:'👟'}
+      ],
+      logs:{},
+      target:4,
+      cheer:0
+    };
+  }
+  let state=load();
+
+  function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+  function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+  function countFor(d){return (state.logs[d]||[]).length;}
+  function isDone(hid,d){return (state.logs[d]||[]).includes(hid);}
+  function weekData(){
+    const arr=[];
+    for(let i=6;i>=0;i--){const d=daysAgo(i); arr.push({d, n:countFor(d), label:['日','一','二','三','四','五','六'][new Date(d+'T12:00:00').getDay()]});}
+    return arr;
+  }
+  function habitCount(hid, days=7){
+    let n=0;
+    for(let i=0;i<days;i++){if(isDone(hid,daysAgo(i)))n++;}
+    return n;
+  }
+
+  function render(){
+    $('#nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.tab===tab));
+    if(tab===0) renderToday();
+    else if(tab===1) renderStats();
+    else renderHabits();
+  }
+
+  function renderToday(){
+    const checked=state.logs[chosenDate]||[];
+    const done=state.habits.filter(h=>checked.includes(h.id)).length;
+    const total=state.habits.length||1;
+    const pct=Math.round(done/total*100);
+    const r=70, c=2*Math.PI*r, off=c*(1-pct/100);
+    const wk=weekData();
+    let html=`<div class="card center">
+      <div class="date-picker"><label>日期</label><input type="date" id="datePick" value="${chosenDate}" max="${today()}"></div>
+      <div class="meter">
+        <svg><circle class="track" cx="80" cy="80" r="${r}"></circle><circle class="bar" cx="80" cy="80" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg>
+        <div class="text"><b>${done}</b><span>/ ${total} 个小行动</span></div>
+      </div>
+      <p class="hint">${done===total&&total>0?'今天的小行动都完成啦，给自己一点鼓励！':'不用一下做很多，选一个现在能做到的。'}</p>
+    </div>`;
+
+    html+=`<div class="card"><h2>照顾好自己</h2>`;
+    if(state.habits.length===0){
+      html+=`<div class="empty">还没有小习惯，先去"习惯"页添加一个吧。</div>`;
+    }else{
+      html+=`<div class="habit-list">${state.habits.map(h=>{
+        const done=checked.includes(h.id);
+        return `<div class="habit-item" data-hid="${h.id}">
+          <div class="habit-icon">${h.icon}</div>
+          <div class="habit-text"><strong>${h.name}</strong><small>${h.reminder}</small></div>
+          <div class="habit-check ${done?'done':''}" data-toggle="${h.id}">${done?'✓':''}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+    html+=`</div>`;
+
+    html+=`<div class="card"><h2>最近 7 天的足迹</h2><div class="week-grid">${wk.map(d=>`<div class="day-cell ${d.n?'hit':''} ${d.d===today()?'current':''}"><span>${d.label}</span><b>${d.n?'✓':d.d.slice(-2)}</b></div>`).join('')}</div><p class="hint">漏一天也没关系，随时可以继续。</p></div>`;
+
+    if(done===total&&total>0){
+      html+=`<div class="card cheer">${CHEERS[state.cheer%CHEERS.length]}</div>`;
+    }
+
+    $('#app').innerHTML=html;
+
+    $('#datePick').onchange=e=>{const v=e.target.value; if(v&&v<=today()){chosenDate=v;render();}};
+    $$('[data-toggle]').forEach(el=>el.onclick=()=>{
+      const id=el.dataset.toggle;
+      let log=state.logs[chosenDate]||[];
+      if(log.includes(id)){log=log.filter(x=>x!==id); toast('已撤销打卡');}
+      else{log.push(id); toast('为这个小行动，给自己一点鼓励');}
+      state.logs[chosenDate]=log; save(); render();
+    });
+  }
+
+  function renderStats(){
+    let html=`<div class="card"><h2>每个小行动，都算数</h2><p class="hint">最近 7 天目标：每个习惯完成 ${state.target} 次。没有断签惩罚。</p></div>`;
+    if(state.habits.length===0){
+      html+=`<div class="card empty">还没有习惯，先去添加吧。</div>`;
+    }else{
+      state.habits.forEach(h=>{
+        const n=habitCount(h.id,7);
+        const pct=Math.min(100,n/state.target*100);
+        html+=`<div class="card stat-card"><div class="stat-head"><h3>${h.icon} ${h.name}</h3><span>${n} / ${state.target}</span></div><div class="progress"><i style="width:${pct}%"></i></div><p class="hint">${n>=state.target?'已达到自己的目标。':`已经积累 ${n} 次行动，慢慢来。`}</p></div>`;
+      });
+    }
+    html+=`<div class="card"><h2>自己的目标</h2><form id="targetForm"><div class="target-row"><label>7 天目标</label><input type="number" name="target" min="1" max="7" value="${state.target}" required></div><button class="btn block" style="margin-top:12px;width:100%">保存目标</button></form></div>`;
+    html+=`<div class="card"><h2>鼓励语</h2><p class="hint">完成当天全部小行动时，会随机显示一句鼓励语。</p><div id="cheerList"></div></div>`;
+    $('#app').innerHTML=html;
+    $('#targetForm').onsubmit=e=>{e.preventDefault(); state.target=Math.min(7,Math.max(1,+e.target.target.value)); save(); toast('目标已保存'); render();};
+    const cl=$('#cheerList');
+    cl.innerHTML=CHEERS.map((c,i)=>`<div class="habit-item"><div class="habit-text"><strong>${c}</strong></div><span style="font-size:13px;color:var(--ink2)">${i===state.cheer%CHEERS.length?'当前':'备选'}</span></div>`).join('');
+  }
+
+  function renderHabits(){
+    let html=`<div class="card"><div class="row"><h2>我的小习惯</h2><button class="btn" id="addHabit">＋ 添加</button></div>`;
+    if(state.habits.length===0){
+      html+=`<div class="empty">还没有小习惯，点击右上角添加。</div>`;
+    }else{
+      html+=`<div class="habit-list" style="margin-top:10px">${state.habits.map(h=>`<div class="habit-item"><div class="habit-icon">${h.icon}</div><div class="habit-text"><strong>${h.name}</strong><small>${h.reminder}</small></div><button class="btn outline" data-edit="${h.id}" style="padding:6px 10px;font-size:13px">编辑</button></div>`).join('')}</div>`;
+    }
+    html+=`</div><div class="card"><h2>数据</h2><button class="btn danger" id="resetData" style="width:100%">清空所有数据</button><p class="hint" style="text-align:left">清空后不可恢复，会恢复为默认的 3 个小习惯。</p></div>`;
+    $('#app').innerHTML=html;
+    $('#addHabit').onclick=()=>openHabitEditor();
+    $$('[data-edit]').forEach(b=>b.onclick=()=>openHabitEditor(b.dataset.edit));
+    $('#resetData').onclick=()=>showConfirm('确定清空所有习惯与打卡记录吗？',()=>{localStorage.removeItem(KEY); state=load(); toast('数据已清空'); render();});
+  }
+
+  function openHabitEditor(id){
+    const h=id?state.habits.find(x=>x.id===id):null;
+    selectedIcon=h?h.icon:'🌿';
+    $('#sheet').innerHTML=`<h3>${h?'调整':'种下'}一个小习惯</h3>
+      <form id="habitForm">
+        <div class="field"><label>一个做得到的小行动</label><input name="name" maxlength="40" value="${h?h.name:''}" placeholder="例如：晚饭后散步十分钟" required></div>
+        <div class="field"><label>什么时候想起它</label><input name="reminder" maxlength="60" value="${h?h.reminder:''}" placeholder="例如：收好餐桌以后" required></div>
+        <div class="field"><label>选一个图标</label><div class="icon-pick">${ICONS.map(ic=>`<span class="${ic===selectedIcon?'on':''}" data-icon="${ic}">${ic}</span>`).join('')}</div></div>
+        <div class="form-actions"><button type="button" class="btn outline" id="cancelHabit">取消</button><button type="submit" class="btn block">${h?'保存':'种下'}</button>${h?'<button type="button" class="btn danger" id="delHabit">移除</button>':''}</div>
+      </form>`;
+    $('#modal').classList.add('on');
+    $$('[data-icon]').forEach(el=>el.onclick=()=>{selectedIcon=el.dataset.icon; $$('[data-icon]').forEach(x=>x.classList.toggle('on',x.dataset.icon===selectedIcon));});
+    $('#cancelHabit').onclick=closeModal;
+    $('#modal').onclick=e=>{if(e.target===$('#modal'))closeModal();};
+    if(h) $('#delHabit').onclick=()=>{showConfirm(`确定移除「${h.name}」吗？历史打卡记录也会一并移除。`,()=>{state.habits=state.habits.filter(x=>x.id!==id); Object.keys(state.logs).forEach(d=>state.logs[d]=state.logs[d].filter(x=>x!==id)); save(); closeModal(); toast('已移除'); render();});};
+    $('#habitForm').onsubmit=e=>{
+      e.preventDefault();
+      const fd=new FormData(e.target);
+      const v={name:fd.get('name').trim(),reminder:fd.get('reminder').trim(),icon:selectedIcon};
+      if(!v.name||!v.reminder)return;
+      if(state.habits.some(x=>x.id!==id&&x.name===v.name)){toast('这个习惯已经有啦'); return;}
+      if(h) Object.assign(h,v); else state.habits.push({...v,id:uid()});
+      save(); closeModal(); toast(h?'习惯已更新':'小习惯已经种下'); render();
+    };
+  }
+
+  function closeModal(){$('#modal').classList.remove('on');}
+  function showConfirm(msg,ok){
+    confirmCb=ok;
+    $('#confirm-sheet').innerHTML=`<p>${msg}</p><div class="form-actions"><button class="btn outline block" id="noConfirm">再想想</button><button class="btn block" id="yesConfirm">确定</button></div>`;
+    $('#confirm').classList.add('on');
+    $('#noConfirm').onclick=()=>{$('#confirm').classList.remove('on'); confirmCb=null;};
+    $('#yesConfirm').onclick=()=>{const cb=confirmCb; $('#confirm').classList.remove('on'); confirmCb=null; if(cb) cb();};
+    $('#confirm').onclick=e=>{if(e.target===$('#confirm')){$('#confirm').classList.remove('on'); confirmCb=null;}};
+  }
+
+  $('#nav').onclick=e=>{const b=e.target.closest('button'); if(b){tab=+b.dataset.tab; render();}};
+  window.__state=()=>JSON.parse(JSON.stringify(state));
+  render();
+})();
+</script>
+</body>
+</html>
