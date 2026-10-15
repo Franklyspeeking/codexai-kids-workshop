@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f0f8">
+<title>屏幕时间协商器</title>
+<meta name="description" content="先听见彼此，再一起约定今天的屏幕时间。">
+<style>
+:root{
+  --ink:#493757;--muted:#7a6b85;--accent:#dfd2f4;--accent2:#bfa7e3;
+  --paper:#f5f0f8;--card:#fff;--line:#e6dfec;
+  --purple:#6c5ce7;--purple-bg:#eeecfd;
+  --pink:#e07fa6;--pink-bg:#fdeaf1;
+  --green:#43b36d;--green-bg:#e6f6ed;
+  --orange:#f5a623;--orange-bg:#fff4e2;
+  --blue:#5fa8d3;--blue-bg:#e6f4fb;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 120px}
+header{padding:22px 16px 14px;text-align:center;position:relative}
+header .logo{font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
+header h1{font-size:22px;margin:0 0 8px}
+header p{font-size:13px;color:var(--muted);margin:0}
+.badge{display:inline-flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--muted);margin-top:10px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;padding:10px 16px 26px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;gap:8px;z-index:30}
+nav button{flex:1;border:none;border-radius:14px;padding:10px 6px;font-size:13px;font-weight:700;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+nav button.on{background:var(--accent);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.card h2,.card h3{margin:0 0 12px;font-size:16px}
+.card h2{font-size:18px}
+.btn{border:none;border-radius:24px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--purple);color:#fff}
+.btn.accent{background:var(--accent);color:var(--ink)}
+.btn.ghost{background:var(--purple-bg);color:var(--purple)}
+.btn.danger{background:var(--pink-bg);color:var(--pink)}
+.btn.big{width:100%;padding:15px;font-size:17px;border-radius:26px}
+.row{display:flex;gap:10px;align-items:center}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--muted)}
+.fld input[type="text"],.fld input[type="number"],.fld textarea,.fld select{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;color:var(--ink);background:#fff;font-family:inherit}
+.fld textarea{min-height:80px;resize:vertical}
+.fld small{color:var(--muted);font-size:12px}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;background:rgba(62,52,69,.93);color:#fff;font-size:14px;border-radius:20px;padding:10px 20px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;max-width:86vw;text-align:center}
+
+/* 今日页 */
+.agreement-card{background:linear-gradient(135deg,var(--purple-bg) 0%,var(--pink-bg) 100%);border-radius:20px;padding:20px;margin-bottom:16px}
+.agreement-card h2{font-size:18px;margin:0 0 8px}
+.agreement-card .item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:14px}
+.agreement-card .item:last-child{border-bottom:none}
+.agreement-card .item b{font-size:16px}
+.agreement-card .status{display:inline-flex;align-items:center;gap:6px;background:var(--card);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700}
+.mood-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.mood-row button{flex:1;min-width:60px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 8px;font-size:20px;cursor:pointer}
+.mood-row button.on{background:var(--accent);border-color:var(--accent2)}
+.expect-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.expect-box .who{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.expect-box .what{font-size:15px}
+.expect-box .what:empty:before{content:'还没有写…';color:var(--muted)}
+
+/* 协商页 */
+.role-select{display:flex;gap:10px;margin-bottom:16px}
+.role-select button{flex:1;border:2px solid var(--line);background:var(--card);border-radius:16px;padding:14px 8px;font-size:15px;font-weight:700;cursor:pointer}
+.role-select button.on{border-color:var(--purple);background:var(--purple-bg);color:var(--purple)}
+.step-tabs{display:flex;gap:6px;margin-bottom:16px}
+.step-tabs span{flex:1;text-align:center;font-size:12px;font-weight:700;padding:8px 4px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--muted)}
+.step-tabs span.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.pillar{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.pillar h4{margin:0 0 8px;font-size:14px;color:var(--muted)}
+.pillar p{margin:0;font-size:15px}
+.pillar p:empty:before{content:'（空）';color:var(--muted)}
+
+/* 复盘页 */
+.check-in{display:flex;gap:10px;margin:12px 0}
+.check-in button{flex:1;border:2px solid var(--line);background:var(--card);border-radius:16px;padding:12px 8px;font-size:14px;font-weight:700;cursor:pointer}
+.check-in button.on{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.check-in button:nth-child(2).on{border-color:var(--orange);background:var(--orange-bg);color:var(--orange)}
+.check-in button:nth-child(3).on{border-color:var(--pink);background:var(--pink-bg);color:var(--pink)}
+.history-list{list-style:none;margin:0;padding:0}
+.history-list li{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.history-list .date{font-size:12px;color:var(--muted);margin-bottom:6px}
+.history-list .tag{display:inline-block;border-radius:10px;padding:3px 10px;font-size:12px;font-weight:700;margin-right:6px}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px 30px}
+.sheet h3{margin:0 0 14px}
+.sheet-actions{display:flex;gap:10px;margin-top:20px}
+.sheet-actions .btn{flex:1}
+.confirm-text{font-size:15px;line-height:1.7;margin-bottom:8px}
+
+@media(min-width:560px){
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">儿童 AI 创作工作坊 · 当堂作品</div>
+    <h1>屏幕时间协商器</h1>
+    <p>先听见彼此，再约定时间</p>
+    <div class="badge"><span>表达期待</span><span>共同约定</span><span>记录复盘</span></div>
+  </header>
+  <main id="app"></main>
+</div>
+
+<nav>
+  <button data-tab="today" class="on"><span>📋</span>今日</button>
+  <button data-tab="talk"><span>🤝</span>协商</button>
+  <button data-tab="review"><span>📝</span>复盘</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="m-confirm"><div class="sheet">
+  <h3 id="cf-title">确认</h3>
+  <div class="confirm-text" id="cf-text"></div>
+  <div class="sheet-actions">
+    <button class="btn ghost" id="cf-no">取消</button>
+    <button class="btn primary" id="cf-yes">确定</button>
+  </div>
+</div></div>
+
+<script>
+"use strict";
+const KEY='screen-agreement:v2';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const today=()=>new Date().toISOString().slice(0,10);
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',1800);
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){return String(s||'').replace(/[&<"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function defAgreement(){
+  return {
+    id:uid(),
+    date:today(),
+    scene:'学习/娱乐/创作',
+    minutes:45,
+    preTask:'先完成约定的作业/家务',
+    pauseSignal:'眼睛酸了或约定时间到了',
+    exception:'特殊情况再商量',
+    note:''
+  };
+}
+function defState(){
+  return {
+    agreement:defAgreement(),
+    childHope:{mood:'',text:''},
+    parentHope:{mood:'',text:''},
+    reviews:{}
+  };
+}
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s){
+      if(!s.agreement)s.agreement=defAgreement();
+      if(!s.childHope)s.childHope={mood:'',text:''};
+      if(!s.parentHope)s.parentHope={mood:'',text:''};
+      if(!s.reviews)s.reviews={};
+      return s;
+    }
+  }catch(e){}
+  return defState();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+let state=load(); let view='today';
+
+function setView(v){view=v;$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===v));render();}
+$$('nav button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.tab)));
+
+function render(){save(); if(view==='today')renderToday(); else if(view==='talk')renderTalk(); else renderReview();}
+
+const MOODS=[{e:'😊',t:'开心'},{e:'😐',t:'还行'},{e:'😣',t:'不满'},{e:'🤔',t:'犹豫'},{e:'😴',t:'累了'}];
+
+function renderToday(){
+  const a=state.agreement;
+  const child=state.childHope,parent=state.parentHope;
+  const isToday=a.date===today();
+  const status=isToday?`<span class="status">✅ 今日已约定</span>`:`<span class="status">⚠️ 还不是今天的约定</span>`;
+  $('#app').innerHTML=`
+  <div class="agreement-card">
+    <h2>我们的屏幕时间约定 ${status}</h2>
+    <div class="item"><span>使用场景</span><b>${esc(a.scene)}</b></div>
+    <div class="item"><span>约定时长</span><b>${a.minutes} 分钟</b></div>
+    <div class="item"><span>开始之前</span><b>${esc(a.preTask)}</b></div>
+    <div class="item"><span>暂停信号</span><b>${esc(a.pauseSignal)}</b></div>
+    <div class="item"><span>例外情况</span><b>${esc(a.exception)}</b></div>
+    ${a.note?`<div class="item"><span>补充约定</span><b>${esc(a.note)}</b></div>`:''}
+  </div>
+  <div class="card">
+    <h3>今天的声音</h3>
+    <div class="expect-box">
+      <div class="who">🧒 孩子想说</div>
+      <div class="mood-row">${MOODS.map(m=>`<button data-role="child" data-m="${m.e}" class="${child.mood===m.e?'on':''}">${m.e}</button>`).join('')}</div>
+      <div class="what">${esc(child.text)}</div>
+    </div>
+    <div class="expect-box">
+      <div class="who">👨‍👩 家长想说</div>
+      <div class="mood-row">${MOODS.map(m=>`<button data-role="parent" data-m="${m.e}" class="${parent.mood===m.e?'on':''}">${m.e}</button>`).join('')}</div>
+      <div class="what">${esc(parent.text)}</div>
+    </div>
+    <button class="btn primary big" id="btn-go-talk">重新协商 / 更新</button>
+  </div>`;
+  $$('[data-role]').forEach(b=>b.addEventListener('click',()=>{
+    const role=b.dataset.role;
+    state[role+'Hope'].mood=b.dataset.m;
+    save(); render();
+  }));
+  $('#btn-go-talk')?.addEventListener('click',()=>setView('talk'));
+}
+
+let talkRole='child',talkStep=0;
+function renderTalk(){
+  const a=state.agreement;
+  const steps=['表达期待','共同约定','预览保存'];
+  $('#app').innerHTML=`
+  <div class="step-tabs">${steps.map((s,i)=>`<span class="${i===talkStep?'on':''}">${i+1}. ${s}</span>`).join('')}</div>
+  <div id="talk-body"></div>`;
+  if(talkStep===0)renderStep0();
+  else if(talkStep===1)renderStep1();
+  else renderStep2();
+}
+function renderStep0(){
+  const child=state.childHope,parent=state.parentHope;
+  $('#talk-body').innerHTML=`
+  <div class="role-select">
+    <button data-role="child" class="${talkRole==='child'?'on':''}">🧒 孩子</button>
+    <button data-role="parent" class="${talkRole==='parent'?'on':''}">👨‍👩 家长</button>
+  </div>
+  <div class="card">
+    <h3>${talkRole==='child'?'孩子':'家长'}，先说说你的想法</h3>
+    <div class="fld">
+      <label>你现在心情如何？</label>
+      <div class="mood-row">${MOODS.map(m=>`<button data-m="${m.e}" class="${(talkRole==='child'?state.childHope.mood:state.parentHope.mood)===m.e?'on':''}">${m.e} ${m.t}</button>`).join('')}</div>
+    </div>
+    <div class="fld">
+      <label>你想说什么？</label>
+      <textarea id="hope-text" placeholder="例如：${talkRole==='child'?'我想周末多玩一会儿，因为平常都没时间':'我希望先把作业做完再玩'}">${esc(talkRole==='child'?state.childHope.text:state.parentHope.text)}</textarea>
+    </div>
+    <button class="btn accent big" id="btn-save-hope">保存${talkRole==='child'?'孩子':'家长'}的想法</button>
+  </div>`;
+  $$('[data-m]').forEach(b=>b.addEventListener('click',()=>{
+    $$('[data-m]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    state[talkRole+'Hope'].mood=b.dataset.m;
+  }));
+  $$('[data-role]').forEach(b=>b.addEventListener('click',()=>{talkRole=b.dataset.role;renderStep0();}));
+  $('#btn-save-hope').addEventListener('click',()=>{
+    state[talkRole+'Hope'].text=$('#hope-text').value.trim();
+    save(); toast(`${talkRole==='child'?'孩子':'家长'}的想法已保存`);
+    if(talkRole==='child'&&state.parentHope.text===''){talkRole='parent';renderStep0();}
+    else if(talkRole==='parent'&&state.childHope.text===''){talkRole='child';renderStep0();}
+    else{talkStep=1;render();}
+  });
+}
+function renderStep1(){
+  const a=state.agreement;
+  $('#talk-body').innerHTML=`
+  <div class="card">
+    <h3>一起约定</h3>
+    <div class="fld">
+      <label>今天什么时候、用什么屏幕？</label>
+      <input type="text" id="a-scene" value="${esc(a.scene)}" maxlength="60" placeholder="例如：晚饭后用平板画画">
+    </div>
+    <div class="fld">
+      <label>约定时长（分钟）</label>
+      <input type="number" id="a-min" value="${a.minutes}" min="1" max="240">
+    </div>
+    <div class="fld">
+      <label>开始之前先完成什么？</label>
+      <input type="text" id="a-pre" value="${esc(a.preTask)}" maxlength="100" placeholder="例如：先完成作业/家务">
+    </div>
+    <div class="fld">
+      <label>什么时候要暂停/休息？</label>
+      <input type="text" id="a-pause" value="${esc(a.pauseSignal)}" maxlength="100" placeholder="例如：眼睛酸了、约定时间到了">
+    </div>
+    <div class="fld">
+      <label>特殊情况怎么处理？</label>
+      <input type="text" id="a-exc" value="${esc(a.exception)}" maxlength="100" placeholder="例如：特殊情况再一起商量">
+    </div>
+    <div class="fld">
+      <label>补充约定（可选）</label>
+      <textarea id="a-note" placeholder="任何双方都想记下来的一句话">${esc(a.note)}</textarea>
+    </div>
+    <div class="row">
+      <button class="btn ghost big" id="btn-back-0">上一步</button>
+      <button class="btn primary big" id="btn-next-2">预览约定卡</button>
+    </div>
+  </div>`;
+  $('#btn-back-0').addEventListener('click',()=>{talkStep=0;render();});
+  $('#btn-next-2').addEventListener('click',()=>{
+    const minutes=+$('#a-min').value||45;
+    state.agreement={
+      id:uid(),date:today(),
+      scene:$('#a-scene').value.trim()||'学习/娱乐/创作',
+      minutes:Math.min(240,Math.max(1,minutes)),
+      preTask:$('#a-pre').value.trim()||'先完成约定的作业/家务',
+      pauseSignal:$('#a-pause').value.trim()||'眼睛酸了或约定时间到了',
+      exception:$('#a-exc').value.trim()||'特殊情况再商量',
+      note:$('#a-note').value.trim()
+    };
+    save(); talkStep=2; render();
+  });
+}
+function renderStep2(){
+  const a=state.agreement;
+  $('#talk-body').innerHTML=`
+  <div class="agreement-card">
+    <h2>📋 约定卡</h2>
+    <div class="item"><span>使用场景</span><b>${esc(a.scene)}</b></div>
+    <div class="item"><span>约定时长</span><b>${a.minutes} 分钟</b></div>
+    <div class="item"><span>开始之前</span><b>${esc(a.preTask)}</b></div>
+    <div class="item"><span>暂停信号</span><b>${esc(a.pauseSignal)}</b></div>
+    <div class="item"><span>例外情况</span><b>${esc(a.exception)}</b></div>
+    ${a.note?`<div class="item"><span>补充约定</span><b>${esc(a.note)}</b></div>`:''}
+  </div>
+  <div class="card">
+    <h3>今天的声音</h3>
+    <div class="pillar"><h4>🧒 孩子说</h4><p>${esc(state.childHope.mood)} ${esc(state.childHope.text)}</p></div>
+    <div class="pillar"><h4>👨‍👩 家长说</h4><p>${esc(state.parentHope.mood)} ${esc(state.parentHope.text)}</p></div>
+    <button class="btn primary big" id="btn-save-agree">双方同意，保存约定</button>
+    <button class="btn ghost big" style="margin-top:10px" id="btn-edit-agree">再改改</button>
+  </div>`;
+  $('#btn-save-agree').addEventListener('click',()=>{
+    save(); toast('约定已保存，去「今日」页查看'); setView('today');
+  });
+  $('#btn-edit-agree').addEventListener('click',()=>{talkStep=1;render();});
+}
+
+function renderReview(){
+  const d=today();
+  const rev=state.reviews[d]||{};
+  const kept=rev.kept||'';
+  $('#app').innerHTML=`
+  <div class="card">
+    <h3>今天守约了吗？</h3>
+    <div class="check-in">
+      <button data-k="yes" class="${kept==='yes'?'on':''}">✅ 守约了</button>
+      <button data-k="partial" class="${kept==='partial'?'on':''}">⚠️ 部分守约</button>
+      <button data-k="no" class="${kept==='no'?'on':''}">❌ 没守约</button>
+    </div>
+    <div class="fld">
+      <label>用屏幕做了什么？</label>
+      <textarea id="r-do" placeholder="例如：看了科普视频、和同学联机">${esc(rev.do||'')}</textarea>
+    </div>
+    <div class="fld">
+      <label>感觉怎么样？</label>
+      <textarea id="r-feel" placeholder="例如：刚刚好 / 还想再玩会儿 / 眼睛有点累">${esc(rev.feel||'')}</textarea>
+    </div>
+    <div class="fld">
+      <label>明天想怎么调整？</label>
+      <textarea id="r-plan" placeholder="例如：明天先完成作业，再玩 30 分钟">${esc(rev.plan||'')}</textarea>
+    </div>
+    <button class="btn primary big" id="btn-save-review">保存今日复盘</button>
+  </div>
+  <div class="card">
+    <h3>历史记录</h3>
+    <ul class="history-list">${Object.entries(state.reviews).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,10).map(([date,r])=>{
+      let cls='',txt='';
+      if(r.kept==='yes'){cls='background:'+getComputedStyle(document.documentElement).getPropertyValue('--green-bg')+';color:'+getComputedStyle(document.documentElement).getPropertyValue('--green');txt='守约';}
+      else if(r.kept==='partial'){cls='background:'+getComputedStyle(document.documentElement).getPropertyValue('--orange-bg')+';color:'+getComputedStyle(document.documentElement).getPropertyValue('--orange');txt='部分守约';}
+      else if(r.kept==='no'){cls='background:'+getComputedStyle(document.documentElement).getPropertyValue('--pink-bg')+';color:'+getComputedStyle(document.documentElement).getPropertyValue('--pink');txt='未守约';}
+      return `<li><div class="date">${date}</div><div><span class="tag" style="${cls}">${txt}</span>${r.do?`<span style="font-size:13px">${esc(r.do.slice(0,24))}</span>`:''}</div></li>`;
+    }).join('')||'<div class="empty">还没有历史记录</div>'}</ul>
+  </div>`;
+  $$('[data-k]').forEach(b=>b.addEventListener('click',()=>{
+    $$('[data-k]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    rev.kept=b.dataset.k;
+  }));
+  $('#btn-save-review').addEventListener('click',()=>{
+    state.reviews[d]={
+      kept:rev.kept||'partial',
+      do:$('#r-do').value.trim(),
+      feel:$('#r-feel').value.trim(),
+      plan:$('#r-plan').value.trim()
+    };
+    save(); toast('复盘已保存'); render();
+  });
+}
+
+/* 确认弹层（替代原生 confirm） */
+let cfCb=null;
+function ask(text,yesText,onYes){
+  $('#cf-title').textContent='请确认';
+  $('#cf-text').textContent=text;
+  $('#cf-yes').textContent=yesText||'确定';
+  cfCb=onYes;
+  $('#m-confirm').classList.add('on');
+}
+$('#cf-no').addEventListener('click',()=>{cfCb=null;$('#m-confirm').classList.remove('on');});
+$('#cf-yes').addEventListener('click',()=>{const cb=cfCb;cfCb=null;$('#m-confirm').classList.remove('on');if(cb)cb();});
+$('#m-confirm').addEventListener('click',e=>{if(e.target===$('#m-confirm')){cfCb=null;$('#m-confirm').classList.remove('on');}});
+
+window.__state=()=>state;
+window.__setState=s=>{state=s;save();render();};
+window.__setView=setView;
+window.__getTodayStr=today;
+render();
+</script>
+</body>
+</html>
